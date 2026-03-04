@@ -19,8 +19,11 @@ return new class extends Migration
             if (!Schema::hasColumn('users', 'role_id')) {
                 $table->unsignedBigInteger('role_id')->default(0)->after('company_id'); // 1=superadmin, 2=manager, etc
             }
+            if (!Schema::hasColumn('users', 'contact')) {
+                $table->string('contact')->nullable()->after('email');
+            }
             if (!Schema::hasColumn('users', 'phone')) {
-                $table->string('phone')->nullable()->after('email');
+                $table->string('phone')->nullable()->after('contact');
             }
             if (!Schema::hasColumn('users', 'isActive')) {
                 $table->boolean('isActive')->default(true)->after('password');
@@ -37,7 +40,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->dropColumn(['company_id', 'role_id', 'phone', 'isActive', 'profile_pic']);
+            $table->dropColumn(['company_id', 'role_id', 'contact', 'phone', 'isActive', 'profile_pic']);
         });
     }
 };

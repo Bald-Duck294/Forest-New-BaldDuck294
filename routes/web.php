@@ -14,7 +14,7 @@ use App\Http\Controllers\ExecutiveAnalyticsController;
 use App\Http\Controllers\GuardDetailController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\AuthController;
-
+use App\Http\Controllers\PlantationController;
 /* Auth Routes */
 
 Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
@@ -28,6 +28,8 @@ Route::get('/', function () {
     }
     return redirect()->route('login');
 });
+
+
 
 /* Protected Routes - Require Authentication */
 Route::middleware(['auth'])->group(function () {
@@ -81,7 +83,16 @@ Route::middleware(['auth'])->group(function () {
     Route::prefix('attendance')->group(function () {
         Route::get('/summary', [AttendanceController::class, 'summary']);
     });
+    Route::prefix('plantation')->group(function () {
 
+        Route::get('/dashboard', [PlantationController::class, 'dashboard']);
+        Route::get('/grids', [PlantationController::class, 'grids']);
+        Route::get('/users', [PlantationController::class, 'users']);
+        Route::get('/analytics', [PlantationController::class, 'analytics']);
+
+        // ADD THIS
+        Route::get('/workflow/{id}', [PlantationController::class, 'workflow'])->name('plantation.workflow');
+    });
 
     /* Patrol */
     Route::prefix('patrol')->group(function () {

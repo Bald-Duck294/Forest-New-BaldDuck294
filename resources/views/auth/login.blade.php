@@ -1,313 +1,131 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - Guard Analytics</title>
+
     <link rel="icon" type="image/svg+xml" href="{{ asset('favicon.svg') }}">
     <link rel="alternate icon" href="{{ asset('favicon.ico') }}">
+
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
 
-        body {
-            font-family: 'Inter', sans-serif;
-            background: #f2f6f3;
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-            position: relative;
-            overflow: hidden;
-        }
+    @vite(['resources/css/app.css','resources/js/app.js'])
 
-        /* Soft vignette with a little green */
-        body::after {
-            content: "";
-            position: fixed;
-            inset: 0;
-            background: radial-gradient(
-                ellipse at center,
-                rgba(255,255,255,0) 55%,
-                rgba(238,246,240,0.9) 100%
-            );
-            pointer-events: none;
-            z-index: 0;
-        }
-
-        /* Subtle nature-inspired shapes */
-        .bg-shapes {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
-            z-index: 0;
-        }
-
-        .shape {
-            position: absolute;
-            border-radius: 50%;
-            background: rgba(79, 111, 82, 0.08);
-            animation: float 20s infinite ease-in-out;
-        }
-
-        .shape:nth-child(1) {
-            width: 300px;
-            height: 300px;
-            top: -100px;
-            left: -100px;
-            animation-delay: 0s;
-        }
-
-        .shape:nth-child(2) {
-            width: 200px;
-            height: 200px;
-            bottom: -50px;
-            right: -50px;
-            animation-delay: 5s;
-        }
-
-        .shape:nth-child(3) {
-            width: 150px;
-            height: 150px;
-            top: 50%;
-            right: 10%;
-            animation-delay: 10s;
-        }
-
-        @keyframes float {
-            0%, 100% { transform: translateY(0) rotate(0deg); }
-            50% { transform: translateY(-30px) rotate(180deg); }
-        }
-
-        .login-container {
-            background: #fcfefc;
-            border-radius: 16px;
-            box-shadow: 0 4px 12px rgba(47, 62, 47, 0.06);
-            padding: 36px;
-            width: 100%;
-            max-width: 420px;
-            position: relative;
-            z-index: 1;
-            animation: slideUp 0.6s ease-out;
-            border: 1px solid rgba(79, 111, 82, 0.12);
-        }
-
-        @keyframes slideUp {
-            from { opacity: 0; transform: translateY(30px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .logo-container {
-            text-align: center;
-            margin-bottom: 24px;
-        }
-
-        .logo-container .logo {
-            display: block;
-            margin: 0 auto 12px;
-            max-width: 200px;
-            height: auto;
-            object-fit: contain;
-        }
-
-        h1 {
-            font-size: 24px;
-            font-weight: 700;
-            color: #1f2f1f;
-            margin-bottom: 6px;
-        }
-
-        .subtitle {
-            color: #4a5568;
-            font-size: 13px;
-        }
-
-        .form-group {
-            margin-bottom: 18px;
-        }
-
-        label {
-            display: block;
-            font-size: 14px;
-            font-weight: 600;
-            color: #1f2f1f;
-            margin-bottom: 8px;
-        }
-
-        .input-wrapper {
-            position: relative;
-        }
-
-        .input-icon {
-            position: absolute;
-            left: 16px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: #4f6f52;
-            font-size: 18px;
-        }
-
-        input[type="text"],
-        input[type="password"] {
-            width: 100%;
-            padding: 12px 16px 12px 44px;
-            border: 2px solid #e2e8f0;
-            border-radius: 10px;
-            font-size: 14px;
-            font-family: 'Inter', sans-serif;
-            transition: all 0.3s ease;
-            background: #fff;
-        }
-
-        input[type="text"]:focus,
-        input[type="password"]:focus {
-            outline: none;
-            border-color: #4f6f52;
-            box-shadow: 0 0 0 4px rgba(79, 111, 82, 0.12);
-        }
-
-        .error-message {
-            color: #e53e3e;
-            font-size: 13px;
-            margin-top: 6px;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .error-message::before {
-            content: "⚠";
-        }
-
-        .input-wrapper.error input {
-            border-color: #e53e3e;
-        }
-
-        .btn-login {
-            width: 100%;
-            padding: 13px;
-            background: #4f6f52;
-            color: #fff;
-            border: none;
-            border-radius: 10px;
-            font-size: 15px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.25s ease;
-            box-shadow: 0 4px 12px rgba(79, 111, 82, 0.25);
-            margin-top: 4px;
-        }
-
-        .btn-login:hover {
-            background: #3f5640;
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(79, 111, 82, 0.3);
-        }
-
-        .btn-login:active {
-            transform: translateY(0);
-        }
-
-        .footer-text {
-            text-align: center;
-            margin-top: 24px;
-            color: #718096;
-            font-size: 12px;
-        }
-
-        @media (max-width: 480px) {
-            .login-container {
-                padding: 28px 20px;
-            }
-
-            h1 {
-                font-size: 22px;
-            }
-        }
-    </style>
 </head>
-<body>
-    <div class="bg-shapes">
-        <div class="shape"></div>
-        <div class="shape"></div>
-        <div class="shape"></div>
+
+<body class="font-[Inter] bg-[#f2f6f3] min-h-screen flex items-center justify-center p-5 relative overflow-hidden">
+
+    <!-- Background circles -->
+    <div class="absolute inset-0 overflow-hidden -z-10">
+
+        <div class="absolute w-[300px] h-[300px] bg-[#4f6f52]/10 rounded-full -top-[100px] -left-[100px] animate-[float_20s_ease-in-out_infinite]"></div>
+
+        <div class="absolute w-[200px] h-[200px] bg-[#4f6f52]/10 rounded-full -bottom-[50px] -right-[50px] animate-[float_20s_ease-in-out_infinite] [animation-delay:5s]"></div>
+
+        <div class="absolute w-[150px] h-[150px] bg-[#4f6f52]/10 rounded-full top-1/2 right-[10%] animate-[float_20s_ease-in-out_infinite] [animation-delay:10s]"></div>
+
     </div>
 
-    <div class="login-container">
-        <div class="logo-container">
-            <img src="{{ asset('images/logo.png') }}" alt="PugArch" class="logo">
-            <h1>Welcome Back</h1>
-            <p class="subtitle">Sign in to access Guard Analytics</p>
+    <!-- Login card -->
+    <div class="bg-[#fcfefc] w-full max-w-[420px] p-9 rounded-2xl border border-[#4f6f52]/20 shadow-[0_4px_12px_rgba(47,62,47,0.06)] animate-[slideUp_0.6s_ease-out]">
+
+        <div class="text-center mb-6">
+
+            <img src="{{ asset('images/logo.png') }}" class="mx-auto mb-3 max-w-[200px]" />
+
+            <h1 class="text-2xl font-bold text-[#1f2f1f] mb-1">
+                Welcome Back
+            </h1>
+
+            <p class="text-[13px] text-gray-500">
+                Sign in to access Guard Analytics
+            </p>
+
         </div>
 
-        <form method="POST" action="{{ route('login') }}" id="loginForm">
+
+        <form method="POST" action="{{ route('login') }}">
             @csrf
 
-            <div class="form-group">
-                <label for="phone">Phone Number</label>
-                <div class="input-wrapper {{ $errors->has('phone') ? 'error' : '' }}">
-                    <i class="input-icon bi bi-telephone-fill"></i>
-                    <input 
-                        type="text" 
-                        id="phone" 
-                        name="phone" 
-                        value="{{ old('phone') }}" 
+
+            <!-- Phone -->
+            <div class="mb-[18px]">
+
+                <label class="block text-sm font-semibold text-[#1f2f1f] mb-2">
+                    Phone Number
+                </label>
+
+                <div class="relative">
+
+                    <i class="bi bi-telephone-fill absolute left-4 top-1/2 -translate-y-1/2 text-[#4f6f52] text-lg"></i>
+
+                    <input
+                        type="text"
+                        name="phone"
+                        value="{{ old('phone') }}"
                         placeholder="Enter 10-digit number"
-                        required
-                        autofocus
-                        pattern="[0-9]{10}"
-                        minlength="10"
-                        maxlength="10"
-                        oninput="this.value = this.value.replace(/[^0-9]/g, '');"
-                        title="Exactly 10 digits required"
-                    >
+                        class="w-full pl-11 pr-4 py-3 border-2 border-gray-200 rounded-[10px] text-sm bg-white transition focus:outline-none focus:border-[#4f6f52] focus:ring-4 focus:ring-[#4f6f52]/20"
+                        required>
+
                 </div>
+
                 @error('phone')
-                    <div class="error-message">{{ $message }}</div>
-                @enderror
-            </div>
-
-            <div class="form-group">
-                <label for="password">Password</label>
-                <div class="input-wrapper {{ $errors->has('password') ? 'error' : '' }}">
-                    <i class="input-icon bi bi-lock-fill"></i>
-                    <input 
-                        type="password" 
-                        id="password" 
-                        name="password" 
-                        placeholder="5-8 characters"
-                        required
-                        minlength="5"
-                        maxlength="8"
-                    >
+                <div class="text-red-500 text-sm mt-1 flex items-center gap-1">
+                    ⚠ {{ $message }}
                 </div>
-                @error('password')
-                    <div class="error-message">{{ $message }}</div>
                 @enderror
+
             </div>
 
-            <button type="submit" class="btn-login">
+
+            <!-- Password -->
+            <div class="mb-[18px]">
+
+                <label class="block text-sm font-semibold text-[#1f2f1f] mb-2">
+                    Password
+                </label>
+
+                <div class="relative">
+
+                    <i class="bi bi-lock-fill absolute left-4 top-1/2 -translate-y-1/2 text-[#4f6f52] text-lg"></i>
+
+                    <input
+                        type="password"
+                        name="password"
+                        placeholder="5-15 characters"
+                        class="w-full pl-11 pr-4 py-3 border-2 border-gray-200 rounded-[10px] text-sm bg-white transition focus:outline-none focus:border-[#4f6f52] focus:ring-4 focus:ring-[#4f6f52]/20"
+                        required>
+
+                </div>
+
+                @error('password')
+                <div class="text-red-500 text-sm mt-1 flex items-center gap-1">
+                    ⚠ {{ $message }}
+                </div>
+                @enderror
+
+            </div>
+
+
+            <button
+                class="w-full py-[13px] bg-[#4f6f52] text-white rounded-[10px] text-[15px] font-semibold shadow-lg transition hover:bg-[#3f5640] hover:-translate-y-[2px] hover:shadow-xl">
+
                 Sign In
+
             </button>
+
         </form>
 
-        <div class="footer-text">
+
+        <p class="text-center text-xs text-gray-400 mt-6">
             © 2026 Guard Analytics. All rights reserved.
-        </div>
+        </p>
+
     </div>
 
-    <script>
-        // Double-enforce numeric input for better mobile experience
-        document.getElementById('phone').addEventListener('keypress', function(e) {
-            if (e.which < 48 || e.which > 57) e.preventDefault();
-        });
-    </script>
 </body>
+
 </html>
