@@ -1,0 +1,32 @@
+const dummayData = [
+    {
+        ID: 1,
+        Type: "Animal sighting",
+        Notes: "-",
+        Location: "Open Location",
+        "Created By": "Manju Lata Mandawi",
+        Range: "KANKER",
+        Beat: "Tultuli Beat ( Piddhapal)",
+        "Created At": "25-02-2026 01:26 PM",
+        payload: {
+            "Sighting Type": "Direct",
+            Species: "Bander",
+            Count: 6,
+            Gender: "Male, Female",
+        },
+    },
+    {
+        ID: 2,
+        Type: "Water source",
+        Notes: "-",
+        Location: "Open Location",
+        "Created By": "Nirmal Nayak",
+        Range: "CHARAMA",
+        Beat: "Khairwahi Beat (Puri)",
+        "Created At": "24-02-2026 10:47 AM",
+        "Sighting Type": null,
+        Species: null,
+        Count: null,
+        Gender: null,
+    },
+];
