@@ -1,169 +1,506 @@
-/* ===============================
-   SIDEBAR BASE
-================================ */
+/* ================================================
+   SIDEBAR — REVAMPED
+   - Hover to expand / collapse
+   - Dark & Light theme aware
+   - Creative active state (glow pill, no arch)
+   - Smooth micro-animations on every interaction
+================================================ */
+
+/* ---------- CSS Variables (Dark Mode Default) ---------- */
+:root {
+    --sb-width-collapsed: 68px;
+    --sb-width-expanded: 248px;
+    --sb-transition: cubic-bezier(0.4, 0, 0.2, 1);
+
+    /* Dark theme */
+    --sb-bg: #1a1c1e;
+    --sb-border: rgba(255, 255, 255, 0.06);
+    --sb-logo-bg: rgba(0, 0, 0, 0.25);
+    --sb-text-muted: #64748b;
+    --sb-link-color: #94a3b8;
+    --sb-link-hover-bg: rgba(255, 255, 255, 0.06);
+    --sb-link-hover-text: #ffffff;
+    --sb-accent: #10b981; /* Emerald */
+    --sb-accent-dim: rgba(16, 185, 129, 0.12);
+    --sb-footer-bg: #16181a;
+    --sb-scrollbar: #2d3748;
+    --sb-section-label: #475569;
+    --sb-divider: rgba(255, 255, 255, 0.06);
+}
+
+/* Light theme override — applied via Bootstrap 5 data-bs-theme */
+[data-bs-theme="light"] {
+    --sb-bg: #ffffff;
+    --sb-border: rgba(0, 0, 0, 0.08);
+    --sb-logo-bg: rgba(0, 0, 0, 0.04);
+    --sb-text-muted: #64748b;
+    --sb-link-color: #374151;
+    --sb-link-hover-bg: rgba(16, 185, 129, 0.08);
+    --sb-link-hover-text: #065f46;
+    --sb-accent: #059669; /* Darker emerald for contrast */
+    --sb-accent-dim: rgba(5, 150, 105, 0.1);
+    --sb-footer-bg: #f8fafc;
+    --sb-scrollbar: #cbd5e1;
+    --sb-section-label: #9ca3af;
+    --sb-divider: rgba(0, 0, 0, 0.06);
+}
+
+/* ================================================
+   BASE SIDEBAR
+================================================ */
 
 .sidebar {
     height: 100vh;
-    width: 240px;
+    width: var(--sb-width-collapsed);
     position: fixed;
     top: 0;
     left: 0;
-    background-color: #2f3e2f;
-    padding-top: 0; /* Let logo area handle padding */
+    background-color: var(--sb-bg);
+    border-right: 1px solid var(--sb-border);
     display: flex;
     flex-direction: column;
+    overflow: hidden;
+    z-index: 1050;
+    transition:
+        width 0.35s var(--sb-transition),
+        background-color 0.3s ease,
+        box-shadow 0.35s var(--sb-transition);
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+    will-change: width;
+}
+
+/* Hover = expand */
+.sidebar:hover {
+    width: var(--sb-width-expanded);
+    box-shadow: 4px 0 32px rgba(0, 0, 0, 0.18);
+}
+
+/* Prevent collapse while hovering inner hover zones */
+.sidebar-pinned {
+    width: var(--sb-width-expanded) !important;
+}
+
+/* ================================================
+   SCROLLBAR
+================================================ */
+
+.sidebar-content {
+    flex-grow: 1;
     overflow-y: auto;
     overflow-x: hidden;
-    z-index: 1045;
-    transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), transform 0.3s ease;
+    padding: 8px 0 16px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--sb-scrollbar) transparent;
 }
 
-/* Collapsed Desktop State */
-.sidebar.collapsed {
-    width: 70px;
+.sidebar-content::-webkit-scrollbar {
+    width: 3px;
 }
-
-/* Mobile Sidebar State */
-@media (max-width: 991px) {
-    .sidebar {
-        transform: translateX(-100%);
-        width: 280px; /* Slightly wider on mobile for better touch targets */
-    }
-    
-    .sidebar.mobile-show {
-        transform: translateX(0);
-        box-shadow: 10px 0 25px rgba(0,0,0,0.5);
-    }
-}
-
-/* Scrollbar */
-.sidebar::-webkit-scrollbar {
-    width: 4px;
-}
-.sidebar::-webkit-scrollbar-thumb {
-    background: #4f6f52;
-    border-radius: 10px;
-}
-.sidebar::-webkit-scrollbar-track {
+.sidebar-content::-webkit-scrollbar-track {
     background: transparent;
 }
+.sidebar-content::-webkit-scrollbar-thumb {
+    background: var(--sb-scrollbar);
+    border-radius: 99px;
+}
 
-/* ===============================
+/* ================================================
    LOGO AREA
-================================ */
+================================================ */
 
-.sidebar-logo {
-    height: 100px;
-    background: rgba(0,0,0,0.15);
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+.sidebar-header {
+    display: flex;
+    align-items: center;
+    padding: 0 14px;
+    height: 4rem;
+    flex-shrink: 0;
+    background: var(--sb-logo-bg);
+    border-bottom: 1px solid var(--sb-border);
+    overflow: hidden;
+    gap: 12px;
+    transition: background 0.3s ease;
+}
+
+.sidebar-logo-icon {
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0;
+    border-radius: 10px;
     overflow: hidden;
     display: flex;
     align-items: center;
     justify-content: center;
+    background: var(--sb-accent);
+    box-shadow: 0 4px 14px rgba(16, 185, 129, 0.3);
+    transition:
+        box-shadow 0.3s ease,
+        transform 0.3s var(--sb-transition);
 }
 
-.sidebar.collapsed .sidebar-logo {
-    height: 70px;
+.sidebar:hover .sidebar-logo-icon {
+    transform: scale(1.05);
+    box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
 }
 
-.logo-full {
-    transition: opacity 0.2s ease, transform 0.3s ease;
-    opacity: 1;
-    transform: scale(1);
+.sidebar-logo-icon img {
+    max-height: 26px;
+    max-width: 26px;
+    object-fit: contain;
+    filter: brightness(0) invert(1);
 }
 
-.sidebar.collapsed .logo-full {
+.sidebar-logo-text {
     opacity: 0;
-    transform: scale(0.8);
-    display: none !important;
+    transform: translateX(-8px);
+    transition:
+        opacity 0.25s ease 0.05s,
+        transform 0.28s var(--sb-transition) 0.05s;
+    white-space: nowrap;
+    overflow: hidden;
 }
 
-.logo-mini {
-    display: none !important;
-    opacity: 0;
-    transform: scale(0.8);
-    transition: all 0.3s ease;
-}
-
-.sidebar.collapsed .logo-mini {
-    display: block !important;
+.sidebar:hover .sidebar-logo-text {
     opacity: 1;
-    transform: scale(1);
+    transform: translateX(0);
 }
 
-/* ===============================
-   NAVIGATION LINKS
-================================ */
-
-.sidebar-content {
-    flex-grow: 1;
-    padding-top: 15px;
+.sidebar-logo-text h6 {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--sb-link-hover-text, #fff);
+    letter-spacing: 0.04em;
+    line-height: 1.2;
 }
+
+.sidebar-logo-text span {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--sb-accent);
+}
+
+/* ================================================
+   SECTION LABELS
+================================================ */
+
+.sidebar-section-label {
+    display: flex;
+    align-items: center;
+    padding: 18px 20px 6px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--sb-section-label);
+    white-space: nowrap;
+    overflow: hidden;
+    gap: 8px;
+}
+
+/* Short line shown when collapsed, full label shown when expanded */
+.sidebar-section-label .label-line {
+    display: block;
+    height: 1px;
+    background: var(--sb-divider);
+    transition: width 0.3s ease;
+    width: 28px;
+    flex-shrink: 0;
+}
+.sidebar-section-label .label-text {
+    opacity: 0;
+    transform: translateX(-6px);
+    transition:
+        opacity 0.22s ease 0.06s,
+        transform 0.25s var(--sb-transition) 0.06s;
+    pointer-events: none;
+}
+
+.sidebar:hover .sidebar-section-label .label-text {
+    opacity: 1;
+    transform: translateX(0);
+}
+.sidebar:hover .sidebar-section-label .label-line {
+    width: 0;
+}
+
+/* ================================================
+   NAV LINKS — BASE
+================================================ */
 
 .sidebar-link {
     display: flex;
     align-items: center;
-    padding: 12px 20px;
-    color: #b8cbb8;
+    gap: 12px;
+    padding: 10px 14px;
+    margin: 2px 8px;
+    color: var(--sb-link-color);
     text-decoration: none;
-    font-size: 14px;
-    border-radius: 8px;
-    margin: 4px 12px;
+    font-size: 13.5px;
+    font-weight: 500;
+    border-radius: 10px;
     white-space: nowrap;
-    transition: all 0.2s ease;
-    border: 1px solid transparent;
+    overflow: hidden;
+    position: relative;
+    transition:
+        background 0.22s ease,
+        color 0.22s ease,
+        transform 0.22s var(--sb-transition),
+        box-shadow 0.22s ease;
 }
 
+/* Icon — always visible */
 .sidebar-link i {
-    min-width: 30px;
-    font-size: 1.2rem;
+    font-size: 1.15rem;
+    flex-shrink: 0;
+    width: 22px;
     display: flex;
     justify-content: center;
-    transition: margin 0.3s ease;
+    align-items: center;
+    transition:
+        color 0.2s ease,
+        transform 0.25s var(--sb-transition);
 }
 
+/* Label text — slides in */
 .sidebar-link .link-text {
-    opacity: 1;
-    transition: opacity 0.2s ease;
+    opacity: 0;
+    transform: translateX(-6px);
+    transition:
+        opacity 0.22s ease 0.04s,
+        transform 0.25s var(--sb-transition) 0.04s;
+    pointer-events: none;
+    white-space: nowrap;
 }
 
-/* Hover & Active States */
+.sidebar:hover .sidebar-link .link-text {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+/* ================================================
+   HOVER EFFECT ON LINKS
+================================================ */
+
 .sidebar-link:hover {
-    background: rgba(255,255,255,0.08);
-    color: #ffffff;
+    background: var(--sb-link-hover-bg);
+    color: var(--sb-link-hover-text);
     transform: translateX(3px);
 }
 
-.sidebar-link.active {
-    background: #4f6f52;
-    color: #ffffff;
-    font-weight: 600;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+.sidebar-link:hover i {
+    color: var(--sb-accent);
+    transform: scale(1.18) rotate(-4deg);
 }
 
-/* Collapsed Overrides */
-.sidebar.collapsed .sidebar-link {
-    margin: 6px 10px;
-    padding: 10px 0;
+/* ================================================
+   ACTIVE STATE — Creative Glow Pill
+   (No left-side arch — uses spotlight glow + dot)
+================================================ */
+
+.sidebar-link.active {
+    background: var(--sb-accent-dim);
+    color: var(--sb-accent);
+    font-weight: 600;
+    transform: none;
+    box-shadow:
+        inset 0 0 0 1px rgba(16, 185, 129, 0.18),
+        0 0 12px rgba(16, 185, 129, 0.1);
+}
+
+.sidebar-link.active i {
+    color: var(--sb-accent);
+}
+
+/* Active dot indicator — right side subtle pip */
+.sidebar-link.active::after {
+    content: "";
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%) scale(1);
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--sb-accent);
+    box-shadow: 0 0 8px 2px rgba(16, 185, 129, 0.5);
+    transition:
+        opacity 0.2s ease,
+        transform 0.3s ease;
+    opacity: 0;
+}
+
+/* Only show dot when sidebar is open */
+.sidebar:hover .sidebar-link.active::after {
+    opacity: 1;
+}
+
+/* Active hover — keep it lit */
+.sidebar-link.active:hover {
+    background: var(--sb-accent-dim);
+    color: var(--sb-accent);
+    transform: translateX(3px);
+    box-shadow:
+        inset 0 0 0 1px rgba(16, 185, 129, 0.25),
+        0 0 18px rgba(16, 185, 129, 0.14);
+}
+
+/* ================================================
+   DIVIDER
+================================================ */
+
+.sidebar-divider {
+    border: none;
+    border-top: 1px solid var(--sb-divider);
+    margin: 8px 16px;
+    opacity: 1;
+}
+
+/* ================================================
+   FOOTER / USER AREA
+================================================ */
+
+.sidebar-footer {
+    padding: 10px;
+    border-top: 1px solid var(--sb-border);
+    background: var(--sb-footer-bg);
+    flex-shrink: 0;
+    overflow: hidden;
+    transition: background 0.3s ease;
+}
+
+.sidebar-user {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    border-radius: 10px;
+    background: var(--sb-link-hover-bg);
+    border: 1px solid var(--sb-border);
+    transition: background 0.2s ease;
+    cursor: default;
+    overflow: hidden;
+}
+
+.sidebar-user:hover {
+    background: var(--sb-accent-dim);
+}
+
+.sidebar-user-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    overflow: hidden;
+    flex-shrink: 0;
+    background: var(--sb-accent);
+    display: flex;
+    align-items: center;
     justify-content: center;
 }
 
-.sidebar.collapsed .sidebar-link i {
-    margin: 0;
+.sidebar-user-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
 }
 
-.sidebar.collapsed .sidebar-link .link-text {
-    display: none;
+.sidebar-user-avatar i {
+    color: #fff;
+    font-size: 1rem;
 }
 
-.sidebar.collapsed .sidebar-divider {
-    margin: 10px 15px !important;
+.sidebar-user-info {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    opacity: 0;
+    transform: translateX(-6px);
+    transition:
+        opacity 0.22s ease 0.04s,
+        transform 0.25s var(--sb-transition) 0.04s;
+    pointer-events: none;
+    white-space: nowrap;
+    flex: 1;
 }
 
-.sidebar.collapsed .sidebar-link:hover {
-    transform: scale(1.1);
+.sidebar:hover .sidebar-user-info {
+    opacity: 1;
+    transform: translateX(0);
 }
 
-.sidebar-divider {
-    opacity: 0.1;
+.sidebar-user-info strong {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--sb-link-hover-text, #fff);
+}
+
+.sidebar-user-info small {
+    font-size: 11px;
+    color: var(--sb-text-muted);
+}
+
+.sidebar-user-logout {
+    flex-shrink: 0;
+    color: var(--sb-text-muted);
+    border: none;
+    background: transparent;
+    padding: 4px 6px;
+    border-radius: 6px;
+    cursor: pointer;
+    opacity: 0;
+    transform: translateX(4px);
+    transition:
+        color 0.2s ease,
+        opacity 0.2s ease 0.06s,
+        transform 0.25s var(--sb-transition) 0.06s;
+}
+
+.sidebar:hover .sidebar-user-logout {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+.sidebar-user-logout:hover {
+    color: var(--sb-accent);
+    background: var(--sb-accent-dim);
+}
+
+/* ================================================
+   MOBILE OVERRIDES
+================================================ */
+
+@media (max-width: 991px) {
+    .sidebar {
+        transform: translateX(-100%);
+        width: var(--sb-width-expanded);
+        transition:
+            transform 0.35s var(--sb-transition),
+            width 0.35s var(--sb-transition),
+            box-shadow 0.35s var(--sb-transition);
+    }
+
+    /* On mobile, hover does NOT open — only .mobile-show does */
+    .sidebar:hover {
+        width: var(--sb-width-expanded);
+    }
+
+    .sidebar.mobile-show {
+        transform: translateX(0);
+        box-shadow: 10px 0 40px rgba(0, 0, 0, 0.35);
+    }
+
+    /* Always show text on mobile (sidebar is fully open) */
+    .sidebar.mobile-show .sidebar-logo-text,
+    .sidebar.mobile-show .sidebar-link .link-text,
+    .sidebar.mobile-show .sidebar-section-label .label-text,
+    .sidebar.mobile-show .sidebar-user-info,
+    .sidebar.mobile-show .sidebar-user-logout {
+        opacity: 1;
+        transform: translateX(0);
+    }
+
+    .sidebar.mobile-show .sidebar-section-label .label-line {
+        width: 0;
+    }
 }

@@ -61,6 +61,16 @@
      </style>
 
      @stack('styles')
+
+     <!-- Theme Initialization (Runs before body to prevent FOUC) -->
+     <script>
+         (function() {
+             const savedTheme = localStorage.getItem('theme');
+             const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+             const theme = savedTheme || (prefersDark ? 'dark' : 'light');
+             document.documentElement.setAttribute('data-bs-theme', theme);
+         })();
+     </script>
  </head>
 
  <body>
@@ -86,7 +96,7 @@
 
          {{-- 1. Navbar --}}
          @if (!isset($hideNavbar) || !$hideNavbar)
-             <div class="w-100" style="position: relative; z-index: 1020;">
+             <div class="w-100 sticky-top" style="z-index: 1020;">
                  @include('layouts.navbar')
              </div>
          @endif

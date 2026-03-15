@@ -5,33 +5,39 @@
 html, body {
     height: 100%;
     overflow: hidden;
-    background: #f6f8f7;
+    background: var(--bs-body-bg);
 }
 
 /* Main content area */
 .content {
-    margin-left: 240px; /* matched to sidebar width */
-    padding: 20px;
+    margin-left: var(--sb-width-collapsed, 68px);
+    padding: 0; /* Attach header flush to the top */
     height: 100vh;
     overflow-y: auto;
     overflow-x: hidden;
     position: relative;
     z-index: 10;
-    transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    
+    transition: margin-left 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+
     /* Enforce stacking order */
     display: flex;
     flex-direction: column;
 }
 
-/* Sidebar Mini Layout Overrides */
-body.sidebar-mini .content {
-    margin-left: 70px;
+/* 
+ * Desktop hover behavior:
+ * When hovering anywhere on the sidebar, the adjacent .content
+ * shrinks its usable area by increasing margin-left. 
+ */
+.sidebar:hover ~ .content {
+    margin-left: var(--sb-width-expanded, 248px);
 }
 
-body.sidebar-mini .left-bg {
-    left: 70px;
-    width: calc(100% - 70px);
+/* Sidebar hover-expand: content does NOT shift — sidebar overlays */
+/* (left-bg stays at 68px always) */
+.left-bg {
+    left: 68px !important;
+    width: calc(100% - 68px) !important;
 }
 
 /* Mobile Layout Adjustments */
@@ -42,10 +48,13 @@ body.sidebar-mini .left-bg {
     }
     .content {
         margin-left: 0 !important;
-        padding: 10px;
+        padding: 0;
         height: auto !important;
         min-height: 100vh;
         overflow-y: visible !important;
+    }
+    .sidebar:hover ~ .content {
+        margin-left: 0 !important; /* Sidebar overlays on mobile */
     }
 }
 
@@ -101,15 +110,15 @@ body.sidebar-mini .left-bg {
     filter: brightness(0.7) contrast(1.1);
 }
 
-/* Soft vignette */
+/* Soft vignette tied to body background */
 body::after {
     content: "";
     position: fixed;
     inset: 0;
     background: radial-gradient(
         ellipse at center,
-        rgba(255,255,255,0) 55%,
-        rgba(246,248,247,0.85) 100%
+        transparent 55%,
+        var(--bs-body-bg) 100%
     );
     pointer-events: none;
     z-index: 1;
