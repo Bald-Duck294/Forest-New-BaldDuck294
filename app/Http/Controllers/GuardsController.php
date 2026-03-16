@@ -27,92 +27,217 @@ class GuardsController extends Controller
     }
 
     //guard list with present, late, absent
+    // public function index()
+    // {
+    //     $user = session('user');
+    //     Log::info($user->name . 'view guard list, User_id: ' . $user->id);
+    //     $cur_date = new DateTime();
+    //     $date = $cur_date->format("Y-m-d");
+    //     $attendance = [];
+    //     $present = [];
+    //     $absent = [];
+    //     $late = [];
+    //     $sites = SiteAssign::where('user_id', $user->id)->first();
+    //     if ($user->role_id == "2") {
+    //         if ($sites) {
+    //             $siteArray = json_decode($sites['site_id'], true);
+
+    //             $attendance = Attendance::whereIn('site_id', $siteArray)->where('dateFormat', $date)->pluck('user_id')->toArray();
+
+    //             $lateAttendance = Attendance::whereIn('site_id', $siteArray)->whereNotNull('lateTime')->where('dateFormat', $date)->pluck('user_id')->toArray();
+
+    //             $present = SiteAssign::leftjoin('users', 'site_assign.user_id', '=', 'users.id')
+    //                 ->whereIn('users.id', $attendance)
+    //                 ->whereNotIn('users.id', $lateAttendance)
+    //                 ->selectRaw('users.*, users.id as id, site_assign.site_name,site_assign.date_range,site_assign.shift_name')
+    //                 ->orderBy('users.name', 'ASC')->get();
+
+    //             $absentArray = SiteAssign::whereIn('site_id', $siteArray)->whereNotIn('user_id', $attendance)->where('role_id', 3)->pluck('user_id')->toArray();
+
+    //             $absent = DB::table('site_assign')
+    //                 //->whereIn('id', $absentArray)
+    //                 ->leftjoin('users', 'site_assign.user_id', '=', 'users.id')
+    //                 ->whereIn('users.id', $absentArray)
+    //                 ->selectRaw('users.*, users.id as id, site_assign.site_name,site_assign.date_range,site_assign.shift_name')
+    //                 ->orderBy('users.name', 'ASC')->get();
+
+    //             $late = SiteAssign::leftjoin('users', 'site_assign.user_id', '=', 'users.id')
+    //                 ->whereIn('users.id', $lateAttendance)
+    //                 ->selectRaw('users.*, users.id as id, site_assign.site_name,site_assign.date_range,site_assign.shift_name')
+    //                 ->orderBy('users.name', 'ASC')->get();
+
+    //             return view('guardslist')->with('present', $present)->with('absent', $absent)->with('late', $late);
+    //         }
+    //     } else if ($user->role_id == '0') {
+    //         $guards = Users::where('role_id', 3)->where('showUser', 1)->get();
+    //         return view('companies/guardlist')->with('guards', $guards);
+    //     } else if ($user->role_id == '7') {
+
+    //         if ($sites) {
+    //             $clientArray = json_decode($sites['site_id'], true);
+
+    //             $userArray = SiteAssign::whereIn('client_id', $clientArray)->pluck('user_id')->toArray();
+
+    //             $attendance = Attendance::whereIn('user_id', $userArray)->where('dateFormat', $date)->where('role_id', 3)->pluck('user_id')->toArray();
+
+    //             $lateAttendance = Attendance::whereIn('user_id', $userArray)->whereNotNull('lateTime')->where('dateFormat', $date)->where('role_id', 3)->pluck('user_id')->toArray();
+
+    //             $present = SiteAssign::leftjoin('users', 'site_assign.user_id', '=', 'users.id')
+    //                 ->whereIn('users.id', $attendance)
+    //                 ->whereNotIn('users.id', $lateAttendance)
+    //                 ->where('users.role_id', 3)
+    //                 ->selectRaw('users.*, users.id as id, site_assign.site_name,site_assign.date_range,site_assign.shift_name')
+    //                 ->orderBy('users.name', 'ASC')->get();
+
+    //             $absentArray = SiteAssign::whereIn('client_id', $clientArray)->whereNotIn('user_id', $attendance)->where('role_id', 3)->pluck('user_id')->toArray();
+    //             // dd($absentArray);
+    //             $absent = DB::table('site_assign')
+    //                 //->whereIn('id', $absentArray)
+    //                 ->leftjoin('users', 'site_assign.user_id', '=', 'users.id')
+    //                 ->where('users.role_id', 3)
+    //                 ->whereIn('users.id', $absentArray)
+    //                 ->selectRaw('users.*, users.id as id, site_assign.site_name,site_assign.date_range,site_assign.shift_name')
+    //                 ->orderBy('users.name', 'ASC')->get();
+
+    //             $late = SiteAssign::leftjoin('users', 'site_assign.user_id', '=', 'users.id')
+    //                 ->whereIn('users.id', $lateAttendance)
+    //                 ->where('users.role_id', 3)
+    //                 ->selectRaw('users.*, users.id as id, site_assign.site_name,site_assign.date_range,site_assign.shift_name')
+    //                 ->orderBy('users.name', 'ASC')->get();
+
+    //             return view('guardslist')->with('present', $present)->with('absent', $absent)->with('late', $late);
+    //         }
+    //     } else {
+    //         $attendance = Attendance::where('company_id', $user->company_id)
+    //             ->where('role_id', 3)
+    //             ->where('dateFormat', $date)
+    //             ->pluck('user_id')
+    //             ->toArray();
+
+    //         $lateAttendance = Attendance::where('company_id', $user->company_id)
+    //             ->where('role_id', 3)->whereNotNull('lateTime')
+    //             ->where('dateFormat', $date)->pluck('user_id')->toArray();
+
+    //         $present = Users::leftJoin('site_assign', 'users.id', '=', 'user_id')
+    //             ->where('users.company_id', $user->company_id)
+    //             ->where('users.showUser', 1)
+    //             ->whereNotIn('users.id', $lateAttendance)
+    //             ->where('users.role_id', 3)->whereIn('users.id', $attendance)
+    //             ->selectRaw('users.*, users.id as id, site_assign.site_name,site_assign.date_range,site_assign.shift_name')
+    //             ->orderBy('name', 'ASC')
+    //             ->get();
+
+    //         $absent = Users::leftjoin('site_assign', 'users.id', '=', 'user_id')
+    //             ->where('users.company_id', $user->company_id)
+    //             ->where('users.showUser', 1)
+    //             ->where('users.role_id', 3)->whereNotIn('users.id', $attendance)
+    //             ->selectRaw('users.*, users.id as id, site_assign.site_name,site_assign.date_range,site_assign.shift_name')
+    //             ->orderBy('name', 'ASC')->get();
+
+    //         $late = Users::leftJoin('site_assign', 'users.id', '=', 'user_id')
+    //             ->where('users.company_id', $user->company_id)
+    //             ->where('users.showUser', 1)
+    //             ->where('users.role_id', 3)->whereIn('users.id', $lateAttendance)
+    //             ->selectRaw('users.*, users.id as id, site_assign.site_name,site_assign.date_range,site_assign.shift_name')
+    //             ->orderBy('name', 'ASC')->get();
+
+    //         return view('guardslist')->with('present', $present)->with('absent', $absent)->with('late', $late);
+    //     }
+    // }
+
+
+    // guard list with present, late, absent, unassigned and KPIs
     public function index()
     {
         $user = session('user');
         Log::info($user->name . 'view guard list, User_id: ' . $user->id);
         $cur_date = new DateTime();
         $date = $cur_date->format("Y-m-d");
+
         $attendance = [];
-        $present = [];
-        $absent = [];
-        $late = [];
+        $present = collect();
+        $absent = collect();
+        $late = collect();
+
+        // --- Calculate KPIs ---
+        $adminsCount = Users::where('company_id', $user->company_id)->where('role_id', 2)->where('showUser', 1)->count();
+        $supervisorsCount = Users::where('company_id', $user->company_id)->where('role_id', 3)->where('showUser', 1)->count();
+        $totalUsersCount = Users::where('company_id', $user->company_id)->where('showUser', 1)->count();
+
+        // --- Get Unassigned Guards ---
+        $assignedUserIds = SiteAssign::where('company_id', $user->company_id)->pluck('user_id')->toArray();
+        $unassigned = Users::whereNotIn('id', $assignedUserIds)
+            ->where('company_id', $user->company_id)
+            ->whereIn('role_id', [3])
+            ->where('showUser', 1)
+            ->get();
+
         $sites = SiteAssign::where('user_id', $user->id)->first();
+
         if ($user->role_id == "2") {
             if ($sites) {
                 $siteArray = json_decode($sites['site_id'], true);
-
                 $attendance = Attendance::whereIn('site_id', $siteArray)->where('dateFormat', $date)->pluck('user_id')->toArray();
-
                 $lateAttendance = Attendance::whereIn('site_id', $siteArray)->whereNotNull('lateTime')->where('dateFormat', $date)->pluck('user_id')->toArray();
 
                 $present = SiteAssign::leftjoin('users', 'site_assign.user_id', '=', 'users.id')
                     ->whereIn('users.id', $attendance)
                     ->whereNotIn('users.id', $lateAttendance)
-                    ->selectRaw('users.*, users.id as id, site_assign.site_name,site_assign.date_range,site_assign.shift_name')
+                    ->selectRaw('users.*, users.id as id, site_assign.site_name, site_assign.date_range, site_assign.shift_name')
                     ->orderBy('users.name', 'ASC')->get();
 
                 $absentArray = SiteAssign::whereIn('site_id', $siteArray)->whereNotIn('user_id', $attendance)->where('role_id', 3)->pluck('user_id')->toArray();
-
                 $absent = DB::table('site_assign')
-                    //->whereIn('id', $absentArray)
                     ->leftjoin('users', 'site_assign.user_id', '=', 'users.id')
                     ->whereIn('users.id', $absentArray)
-                    ->selectRaw('users.*, users.id as id, site_assign.site_name,site_assign.date_range,site_assign.shift_name')
+                    ->selectRaw('users.*, users.id as id, site_assign.site_name, site_assign.date_range, site_assign.shift_name')
                     ->orderBy('users.name', 'ASC')->get();
 
                 $late = SiteAssign::leftjoin('users', 'site_assign.user_id', '=', 'users.id')
                     ->whereIn('users.id', $lateAttendance)
-                    ->selectRaw('users.*, users.id as id, site_assign.site_name,site_assign.date_range,site_assign.shift_name')
+                    ->selectRaw('users.*, users.id as id, site_assign.site_name, site_assign.date_range, site_assign.shift_name')
                     ->orderBy('users.name', 'ASC')->get();
-
-                return view('guardslist')->with('present', $present)->with('absent', $absent)->with('late', $late);
             }
-        } else if ($user->role_id == '0') {
+        }
+        else if ($user->role_id == '0') {
             $guards = Users::where('role_id', 3)->where('showUser', 1)->get();
             return view('companies/guardlist')->with('guards', $guards);
-        } else if ($user->role_id == '7') {
-
+        }
+        else if ($user->role_id == '7') {
             if ($sites) {
                 $clientArray = json_decode($sites['site_id'], true);
-
                 $userArray = SiteAssign::whereIn('client_id', $clientArray)->pluck('user_id')->toArray();
 
                 $attendance = Attendance::whereIn('user_id', $userArray)->where('dateFormat', $date)->where('role_id', 3)->pluck('user_id')->toArray();
-
                 $lateAttendance = Attendance::whereIn('user_id', $userArray)->whereNotNull('lateTime')->where('dateFormat', $date)->where('role_id', 3)->pluck('user_id')->toArray();
 
                 $present = SiteAssign::leftjoin('users', 'site_assign.user_id', '=', 'users.id')
                     ->whereIn('users.id', $attendance)
                     ->whereNotIn('users.id', $lateAttendance)
                     ->where('users.role_id', 3)
-                    ->selectRaw('users.*, users.id as id, site_assign.site_name,site_assign.date_range,site_assign.shift_name')
+                    ->selectRaw('users.*, users.id as id, site_assign.site_name, site_assign.date_range, site_assign.shift_name')
                     ->orderBy('users.name', 'ASC')->get();
 
                 $absentArray = SiteAssign::whereIn('client_id', $clientArray)->whereNotIn('user_id', $attendance)->where('role_id', 3)->pluck('user_id')->toArray();
-                // dd($absentArray);
                 $absent = DB::table('site_assign')
-                    //->whereIn('id', $absentArray)
                     ->leftjoin('users', 'site_assign.user_id', '=', 'users.id')
                     ->where('users.role_id', 3)
                     ->whereIn('users.id', $absentArray)
-                    ->selectRaw('users.*, users.id as id, site_assign.site_name,site_assign.date_range,site_assign.shift_name')
+                    ->selectRaw('users.*, users.id as id, site_assign.site_name, site_assign.date_range, site_assign.shift_name')
                     ->orderBy('users.name', 'ASC')->get();
 
                 $late = SiteAssign::leftjoin('users', 'site_assign.user_id', '=', 'users.id')
                     ->whereIn('users.id', $lateAttendance)
                     ->where('users.role_id', 3)
-                    ->selectRaw('users.*, users.id as id, site_assign.site_name,site_assign.date_range,site_assign.shift_name')
+                    ->selectRaw('users.*, users.id as id, site_assign.site_name, site_assign.date_range, site_assign.shift_name')
                     ->orderBy('users.name', 'ASC')->get();
-
-                return view('guardslist')->with('present', $present)->with('absent', $absent)->with('late', $late);
             }
-        } else {
+        }
+        else {
             $attendance = Attendance::where('company_id', $user->company_id)
                 ->where('role_id', 3)
                 ->where('dateFormat', $date)
-                ->pluck('user_id')
-                ->toArray();
+                ->pluck('user_id')->toArray();
 
             $lateAttendance = Attendance::where('company_id', $user->company_id)
                 ->where('role_id', 3)->whereNotNull('lateTime')
@@ -123,28 +248,27 @@ class GuardsController extends Controller
                 ->where('users.showUser', 1)
                 ->whereNotIn('users.id', $lateAttendance)
                 ->where('users.role_id', 3)->whereIn('users.id', $attendance)
-                ->selectRaw('users.*, users.id as id, site_assign.site_name,site_assign.date_range,site_assign.shift_name')
-                ->orderBy('name', 'ASC')
-                ->get();
+                ->selectRaw('users.*, users.id as id, site_assign.site_name, site_assign.date_range, site_assign.shift_name')
+                ->orderBy('name', 'ASC')->get();
 
             $absent = Users::leftjoin('site_assign', 'users.id', '=', 'user_id')
                 ->where('users.company_id', $user->company_id)
                 ->where('users.showUser', 1)
                 ->where('users.role_id', 3)->whereNotIn('users.id', $attendance)
-                ->selectRaw('users.*, users.id as id, site_assign.site_name,site_assign.date_range,site_assign.shift_name')
+                ->selectRaw('users.*, users.id as id, site_assign.site_name, site_assign.date_range, site_assign.shift_name')
                 ->orderBy('name', 'ASC')->get();
 
             $late = Users::leftJoin('site_assign', 'users.id', '=', 'user_id')
                 ->where('users.company_id', $user->company_id)
                 ->where('users.showUser', 1)
                 ->where('users.role_id', 3)->whereIn('users.id', $lateAttendance)
-                ->selectRaw('users.*, users.id as id, site_assign.site_name,site_assign.date_range,site_assign.shift_name')
+                ->selectRaw('users.*, users.id as id, site_assign.site_name, site_assign.date_range, site_assign.shift_name')
                 ->orderBy('name', 'ASC')->get();
-
-            return view('guardslist')->with('present', $present)->with('absent', $absent)->with('late', $late);
         }
-    }
 
+        // Return everything to the single view
+        return view('guardslist', compact('present', 'absent', 'late', 'unassigned', 'adminsCount', 'supervisorsCount', 'totalUsersCount'));
+    }
     // guard edit - site
     public function guardEdit($client_id, $site_id)
     {
@@ -160,7 +284,8 @@ class GuardsController extends Controller
         $sites = SiteDetails::where('company_id', $user->company_id)->get();
         if ($assignsite->shift_id != null) {
             $shifts = ShiftAssigned::where('id', $assignsite->shift_id)->get();
-        } else {
+        }
+        else {
             $shifts = [];
         }
 
@@ -184,7 +309,7 @@ class GuardsController extends Controller
             "from" => $_POST["startdate"],
             "to" => $_POST["enddate"]
         );
-        $dateArray =  json_encode($date, true);
+        $dateArray = json_encode($date, true);
         // print_r($site);exit;
         $siteassign = SiteAssign::find($id);
         $users = Users::where('id', $siteassign->user_id)->first();
@@ -251,7 +376,8 @@ class GuardsController extends Controller
             if (!empty($unassignedGuards)) {
                 // dd($unassignedGuards , "un guards");
                 return view('unassignguardlist')->with('unassignedGuards', $unassignedGuards);
-            } else {
+            }
+            else {
                 // dd('here');
                 return view('unassignguardlist', ['jsonMessage' => 'no data found']);
             }
@@ -266,11 +392,13 @@ class GuardsController extends Controller
             $clients = ClientDetails::where('company_id', $user->company_id)
                 ->select('count(*) as allcount')
                 ->count();
-        } else if ($user->role_id == '2') {
+        }
+        else if ($user->role_id == '2') {
             $clients = ClientDetails::where('company_id', $user->company_id)
                 ->select('count(*) as allcount')
                 ->count();
-        } else if ($user->role_id == "7") {
+        }
+        else if ($user->role_id == "7") {
             $clients = ClientDetails::where('company_id', $user->company_id)
                 ->select('count(*) as allcount')
                 ->count();
@@ -287,11 +415,13 @@ class GuardsController extends Controller
                 ->where('company_id', $user->company_id)
                 ->select('count(*) as allcount')
                 ->count();
-        } else if ($user->role_id == '2') {
+        }
+        else if ($user->role_id == '2') {
             $sites = SiteAssign::where('user_id', $user->id)->first();
             $siteArray = json_decode($sites['site_id'], true);
             $sitess = DB::table('site_details')->whereIn('id', $siteArray)->select('count(*) as allcount')->count();
-        } else if ($user->role_id == "7") {
+        }
+        else if ($user->role_id == "7") {
             $clients = SiteAssign::where('user_id', $user->id)->pluck('site_id')->toArray();
             // $siteArray = SiteDetails::whereIn('client_id', json_decode($clients[0]))->pluck('id')->toArray();
             $sitess = DB::table('site_details')->whereIn('client_id', json_decode($clients[0], true))->select('count(*) as allcount')->count();
@@ -318,7 +448,8 @@ class GuardsController extends Controller
                 ->selectRaw('users.*, users.id as id, site_assign.site_name')
                 ->select('count(*) as allcount')
                 ->count();
-        } else if ($user->role_id == '2') {
+        }
+        else if ($user->role_id == '2') {
             $sites = SiteAssign::where('user_id', $user->id)->first();
             $siteArray = json_decode($sites['site_id'], true);
             $attendance = Attendance::whereIn('site_id', $siteArray)
@@ -330,7 +461,8 @@ class GuardsController extends Controller
                 ->selectRaw('users.*, users.id as id, site_assign.site_name')
                 ->select('count(*) as allcount')
                 ->count();
-        } else if ($user->role_id == '7') {
+        }
+        else if ($user->role_id == '7') {
             $clients = SiteAssign::where('user_id', $user->id)->first();
             $siteArray = SiteDetails::whereIn('client_id', json_decode($clients->site_id, true))->pluck('id')->toArray();
             $userArray = SiteAssign::whereIn('site_id', $siteArray)->distinct('user_id')->pluck('user_id')->toArray();
@@ -366,7 +498,8 @@ class GuardsController extends Controller
                 ->selectRaw('users.*, users.id as id, site_assign.site_name')
                 ->select('count(*) as allcount')
                 ->count();
-        } else if ($user->role_id == '2') {
+        }
+        else if ($user->role_id == '2') {
             $sites = SiteAssign::where('user_id', $user->id)->first();
             $siteArray = json_decode($sites['site_id'], true);
             $lateAttendance = Attendance::whereIn('site_id', $siteArray)
@@ -379,7 +512,8 @@ class GuardsController extends Controller
                 ->selectRaw('users.*, users.id as id, site_assign.site_name')
                 ->select('count(*) as allcount')
                 ->count();
-        } else if ($user->role_id == '7') {
+        }
+        else if ($user->role_id == '7') {
             $clients = SiteAssign::where('user_id', $user->id)->pluck('site_id')->toArray();
 
             $siteArray = SiteDetails::whereIn('client_id', json_decode($clients[0], true))->pluck('id')->toArray();
@@ -398,7 +532,7 @@ class GuardsController extends Controller
                 ->selectRaw('users.*, users.id as id, site_assign.site_name')
                 ->select('count(*) as allcount')
                 ->count();
-            //dd($late);
+        //dd($late);
         }
 
         return $late;
@@ -434,7 +568,8 @@ class GuardsController extends Controller
                 ->selectRaw('users.*, users.id as id, site_assign.site_name')
                 ->select('count(*) as allcount')
                 ->count();
-        } else if ($user->role_id == '2') {
+        }
+        else if ($user->role_id == '2') {
             $sites = SiteAssign::where('user_id', $user->id)->first();
             $siteArray = json_decode($sites['site_id'], true);
 
@@ -453,7 +588,8 @@ class GuardsController extends Controller
                 ->selectRaw('users.*, users.id as id, site_assign.site_name')
                 ->select('count(*) as allcount')
                 ->count();
-        } else if ($user->role_id == '7') {
+        }
+        else if ($user->role_id == '7') {
             $clients = SiteAssign::where('user_id', $user->id)->pluck('site_id')->toArray();
 
             $siteArray = SiteDetails::whereIn('client_id', json_decode($clients[0], true))->pluck('id')->toArray();
@@ -473,7 +609,7 @@ class GuardsController extends Controller
                 ->selectRaw('users.*, users.id as id, site_assign.site_name')
                 ->select('count(*) as allcount')
                 ->count();
-            //dd($absent);
+        //dd($absent);
         }
         return $absent;
     }
@@ -530,7 +666,8 @@ class GuardsController extends Controller
         if ($roleId === 1) {
             // Admin: All guards
             $userIds = Users::where('company_id', $companyId)->where('role_id', 3)->pluck('id')->toArray();
-        } elseif ($roleId === 2) {
+        }
+        elseif ($roleId === 2) {
             // Supervisor: Only guards assigned to their sites
             $siteIds = SiteAssign::where('user_id', $user->id)
                 ->pluck('site_id')
@@ -540,14 +677,16 @@ class GuardsController extends Controller
                 ->toArray();
 
             $userIds = SiteAssign::whereIn('site_id', $siteIds)->pluck('user_id')->toArray();
-        } elseif ($roleId === 7) {
+        }
+        elseif ($roleId === 7) {
             $siteAssigned = SiteAssign::where('user_id', $user->id)->first();
             $clientSiteIds = json_decode(optional($siteAssigned)->site_id ?? '[]', true);
 
             $userIds = SiteAssign::whereIn('client_id', $clientSiteIds)->pluck('user_id')->toArray();
 
-            // dd($siteAssigned , $clientSiteIds , $userIds , "ids");
-        } else {
+        // dd($siteAssigned , $clientSiteIds , $userIds , "ids");
+        }
+        else {
             // Others: no access
             $userIds = [];
         }
@@ -589,11 +728,11 @@ class GuardsController extends Controller
 
         return $this->excel->download(
             new GuardExport(
-                $guards,
-                $absent,
-                $late,
-                $companyName,
-                $type
+            $guards,
+            $absent,
+            $late,
+            $companyName,
+            $type
             ),
             'assigned guards.xlsx'
         );

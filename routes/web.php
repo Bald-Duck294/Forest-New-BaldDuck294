@@ -23,7 +23,8 @@ use App\Http\Controllers\ClientDetailsController;
 use App\Http\Controllers\SiteController;
 use App\Http\Controllers\SupervisorController;
 use App\Http\Controllers\GuardsController;
-use App\Http\Controllers\ForestReportConfigController;
+use App\Http\Controllers\UsersController;
+use App\Http\Controllers\ForestController;
 use App\Http\Controllers\ModuleController;
 use App\Http\Controllers\GlobalSuperAdminController;
 /* Auth Routes */
@@ -362,45 +363,75 @@ Route::prefix('plantation')->group(function () {
     Route::get('/create', [PlantationController::class, 'create'])->name('plantation.create');
     Route::post('/store', [PlantationController::class, 'store'])->name('plantation.store');
 
-    Route::get('/view/{id}', [PlantationController::class, 'show'])->name('plantation.show');
-    Route::get('/workflow/{id}', [PlantationController::class, 'workflow'])->name('plantation.workflow');
-    Route::post('/workflow/{id}', [PlantationController::class, 'saveWorkflow'])->name('plantation.workflow.save');
+    Route::get('/view/{id}', [PlantationController::class , 'show'])->name('plantation.show');
+    Route::get('/workflow/{id}', [PlantationController::class , 'workflow'])->name('plantation.workflow');
+    Route::post('/workflow/{id}', [PlantationController::class , 'saveWorkflow'])->name('plantation.workflow.save');
 });
 
-Route::prefix('report-configs')->group(function () {
 
-    Route::get('/', [ForestReportConfigController::class, 'index'])
-        ->name('report-configs.index');
 
-    Route::get('/create', [ForestReportConfigController::class, 'create'])
-        ->name('report-configs.create');
+Route::prefix('guards')->group(function () {
 
-    Route::get('/reports-dashboard', [ForestReportConfigController::class, 'reportsDashboard'])
-        ->name('events.reports.dashboard');
+    Route::get('/', [GuardsController::class , 'index'])->name('guards');
 
-    Route::get('/reports', [ForestReportConfigController::class, 'reportsTable'])
-        ->name('events.reports.table');
-    Route::get('/report/{id}', [ForestReportConfigController::class, 'show'])
-        ->name('events.report.show');
-    Route::post(
-        '/report/{id}/update-status',
-        [ForestReportConfigController::class, 'updateStatus']
-    )
-        ->name('events.report.updateStatus');
+    Route::get('/guardEdit/{clientId}/{id}', [GuardsController::class , 'guardEdit'])
+        ->name('guards.guard_edit');
 
-    Route::post('/', [ForestReportConfigController::class, 'store'])
-        ->name('report-configs.store');
+    Route::get('/{id}', [GuardsController::class , 'getSites'])
+        ->name('guards.getsites');
 
-    Route::get('/{config}/edit', [ForestReportConfigController::class, 'edit'])
-        ->name('report-configs.edit');
+    Route::get('/getShifts/{id}', [GuardsController::class , 'getShifts'])
+        ->name('guards.getshifts');
 
-    Route::put('/{config}', [ForestReportConfigController::class, 'update'])
-        ->name('report-configs.update');
+    Route::post('/editAction/{id}', [GuardsController::class , 'editAction'])
+        ->name('guards.editaction');
 
-    Route::delete('/{config}', [ForestReportConfigController::class, 'destroy'])
-        ->name('report-configs.destroy');
+    Route::get('/guardexport/exp', [GuardsController::class , 'assignedExport'])
+        ->name('assigned.export');
 });
 
+
+Route::get('/unAssignGuards', [GuardsController::class , 'unAssignGuards'])
+    ->name('unAssignGuards');
+
+Route::get('/unassigned/guard_export', [GuardsController::class , 'unassigned_export'])
+    ->name('unassigned_guard.export');
+
+
+Route::prefix('fetch')->group(function () {
+
+    Route::get('/clients', [GuardsController::class , 'fetchClients'])->name('fetchClients');
+
+    Route::get('/sites', [GuardsController::class , 'fetchSites'])->name('fetchSites');
+
+    Route::get('/checkin', [GuardsController::class , 'fetchCheckIn'])->name('fetchCheckIn');
+
+    Route::get('/lateshow', [GuardsController::class , 'fetchLateShow'])->name('fetchLateShow');
+
+    Route::get('/noshow', [GuardsController::class , 'fetchNoShow'])->name('fetchNoShow');
+
+    Route::get('/log', [GuardsController::class , 'fetchLog'])->name('fetchLog');
+
+});
+
+Route::prefix('forest')->group(function () {
+
+    Route::get('/dashboard', [ForestController::class , 'index'])
+        ->name('forest.olddashboard');
+
+    Route::get('/live', [ForestController::class , 'liveData'])
+        ->name('forest.live');
+
+    Route::get('/user-summary', [ForestController::class , 'userSummary'])
+        ->name('forest.userSummary');
+
+});
+
+Route::get('/users/edit/{id}', [UsersController::class , 'edit'])
+    ->name('users.edit');
+
+Route::post('/users/update/{id}', [UsersController::class , 'update'])
+    ->name('users.update');
 Route::prefix('modules')->group(function () {
 
     Route::get('/', [ModuleController::class, 'index'])
