@@ -24,6 +24,8 @@ use App\Http\Controllers\SiteController;
 use App\Http\Controllers\SupervisorController;
 use App\Http\Controllers\GuardsController;
 use App\Http\Controllers\ForestReportConfigController;
+use App\Http\Controllers\ModuleController;
+use App\Http\Controllers\GlobalSuperAdminController;
 /* Auth Routes */
 
 Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
@@ -32,10 +34,18 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 /* Root redirect - redirect to login if not authenticated */
 Route::get('/', function () {
-    if (Auth::check()) {
-        return redirect()->route('dashboard');
+
+    if (!Auth::check()) {
+        return redirect()->route('login');
     }
-    return redirect()->route('login');
+
+    $user = session('user');
+
+    if ($user && (int)$user->role_id === 8) {
+        return redirect()->route('global.dashboard');
+    }
+
+    return redirect()->route('dashboard');
 });
 
 
@@ -44,6 +54,10 @@ Route::get('/', function () {
 Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/home', [DashboardController::class, 'index']); // Alias for home
+
+
+    Route::get('/global-dashboard', [GlobalSuperAdminController::class, 'dashboard'])
+        ->name('global.dashboard');
 
     /* Profile */
     Route::get('/profile/{user}', [ProfileController::class, 'show'])->name('profile');
@@ -386,3 +400,30 @@ Route::prefix('report-configs')->group(function () {
     Route::delete('/{config}', [ForestReportConfigController::class, 'destroy'])
         ->name('report-configs.destroy');
 });
+
+Route::prefix('modules')->group(function () {
+
+    Route::get('/', [ModuleController::class, 'index'])
+        ->name('modules.index');
+
+    Route::post('/update', [ModuleController::class, 'update'])
+        ->name('modules.update');
+});
+
+
+
+Route::get('/companies/create', [GlobalSuperAdminController::class, 'createCompany'])
+    ->name('companies.create');
+
+Route::post('/companies/store', [GlobalSuperAdminController::class, 'storeCompany'])
+    ->name('companies.store');
+
+Route::get(
+    '/companies/{id}/edit',
+    [GlobalSuperAdminController::class, 'editCompany']
+)->name('companies.edit');
+
+Route::post(
+    '/companies/{id}/update',
+    [GlobalSuperAdminController::class, 'updateCompany']
+)->name('companies.update');

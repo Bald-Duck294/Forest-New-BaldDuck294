@@ -49,7 +49,7 @@ class AuthController extends Controller
 
             // Store user in session
             $request->session()->put('user', Auth::user());
-            
+
             // Store company_id in session if it exists
             if (Auth::user()->company_id) {
                 $request->session()->put('company_id', Auth::user()->company_id);
@@ -69,33 +69,37 @@ class AuthController extends Controller
      */
     protected function redirectBasedOnRole($user)
     {
-        // SuperAdmin (role_id = 1) - Can see everything
+        // Global Super Admin
+        if ($user->role_id == 8) {
+            return redirect()->route('global.dashboard');
+        }
+
+        // Super Admin
         if ($user->isSuperAdmin()) {
-            return redirect()->intended('/analytics/executive');
+            return redirect()->route('analytics.executive');
         }
 
-        // Admin (role_id = 7) - Can see clients, supervisors and guards
+        // Admin
         if ($user->isAdmin()) {
-            return redirect()->intended('/analytics/executive');
+            return redirect()->route('analytics.executive');
         }
 
-        // Supervisor (role_id = 2) - Can see only guards under them
+        // Supervisor
         if ($user->isSupervisor()) {
-            return redirect()->intended('dashboard');
+            return redirect()->route('dashboard');
         }
 
-        // Default redirect
-        return redirect()->intended('dashboard');
+        return redirect()->route('dashboard');
     }
 
     public function logout(Request $request)
     {
         Auth::logout();
-        
+
         $request->session()->invalidate();
-        
+
         $request->session()->regenerateToken();
-        
+
         return redirect()->route('login');
     }
 }
