@@ -31,21 +31,17 @@ class AttendanceController extends Controller
 
             $accessibleUserIds = RoleBasedFilterService::getAccessibleUserIds();
 
-            /* ================= DATE RANGE ================= */
+            /* ================= FILTER DATE ================= */
 
-            if ($request->filled('start_date') && $request->filled('end_date')) {
-                $startDate = Carbon::parse($request->start_date)->startOfDay();
-                $endDate = Carbon::parse($request->end_date)->endOfDay();
-            }
-            else {
-                $startDate = now()->subDays(30)->startOfDay();
-                $endDate = now()->endOfDay();
-            }
+            $filterDate = $request->date
+                ? Carbon::parse($request->date)
+                : now();
 
-            $dates = collect(CarbonPeriod::create($startDate, $endDate))
-                ->map(fn($d) => $d->copy());
+            $startDate = $filterDate->copy()->startOfDay();
+            $endDate = $filterDate->copy()->endOfDay();
 
-            $totalDaysInRange = $dates->count();
+            $dates = collect([$filterDate->copy()]);
+            $totalDaysInRange = 1;
 
 
             /* ================= USERS ================= */
@@ -56,21 +52,21 @@ class AttendanceController extends Controller
                 ->whereIn('users.id', $accessibleUserIds)
                 ->leftJoin('site_assign', 'users.id', '=', 'site_assign.user_id')
                 ->select(
-                'users.id',
-                'users.name',
-                'users.profile_pic',
-                'site_assign.client_name as range',
-                'site_assign.site_id',
-                'site_assign.site_name'
-            )
+                    'users.id',
+                    'users.name',
+                    'users.profile_pic',
+                    'site_assign.client_name as range',
+                    'site_assign.site_id',
+                    'site_assign.site_name'
+                )
                 ->groupBy(
-                'users.id',
-                'users.name',
-                'users.profile_pic',
-                'site_assign.client_name',
-                'site_assign.site_id',
-                'site_assign.site_name'
-            )
+                    'users.id',
+                    'users.name',
+                    'users.profile_pic',
+                    'site_assign.client_name',
+                    'site_assign.site_id',
+                    'site_assign.site_name'
+                )
                 ->get()
                 ->keyBy('id');
 
@@ -81,18 +77,15 @@ class AttendanceController extends Controller
 
             $attendance = DB::table('attendance')
                 ->where('company_id', $companyId)
-                ->whereBetween('dateFormat', [
-                $startDate->format('Y-m-d'),
-                $endDate->format('Y-m-d')
-            ])
+                ->whereBetween('dateFormat', [$startDate, $endDate])
                 ->whereIn('user_id', $userIds)
                 ->select('user_id', DB::raw('DATE(dateFormat) as date'))
                 ->get()
                 ->mapWithKeys(function ($r) {
-                return [
-                $r->user_id . '_' . $r->date => true
-                ];
-            });
+                    return [
+                        $r->user_id . '_' . $r->date => true
+                    ];
+                });
 
 
             /* ================= GRID ================= */
@@ -141,6 +134,20 @@ class AttendanceController extends Controller
 
             /* ================= KPIs ================= */
 
+            $defaulters = collect($grid)
+                ->map(function ($g) {
+
+                    return [
+                        'user_id' => $g['user']->id,
+                        'name' => $g['user']->name,
+                        'days_present' => $g['summary']['present'],
+                        'days_absent' => $g['summary']['total'] - $g['summary']['present']
+                    ];
+                })
+                ->sortByDesc('days_absent')
+                ->take(10)
+                ->values();
+
             $totalGuards = $users->count();
 
             $totalPresentManDays = collect($grid)
@@ -154,64 +161,9 @@ class AttendanceController extends Controller
                 ? round(($totalPresentManDays / $totalPossibleManDays) * 100, 1)
                 : 0;
 
-
-            /* ================= DAILY TREND ================= */
-
-            $dailyTrend = $dates->map(function ($dt) use ($grid) {
-
-                $dateStr = $dt->toDateString();
-
-                $presentList = [];
-                $absentList = [];
-
-                foreach ($grid as $uid => $data) {
-
-                    $userObj = [
-                        'id' => $uid,
-                        'name' => \App\Helpers\FormatHelper::formatName($data['user']->name)
-                    ];
-
-                    if (!empty($data['days'][$dateStr]['present'])) {
-                        $presentList[] = $userObj;
-                    }
-                    else {
-                        $absentList[] = $userObj;
-                    }
-                }
-
-                return [
-                'date' => $dt->format('d M'),
-                'full_date' => $dateStr,
-                'present' => count($presentList),
-                'absent' => count($absentList),
-                'present_list' => $presentList,
-                'absent_list' => $absentList
-                ];
-            });
-
-
-            /* ================= TOP DEFAULTERS ================= */
-
-            $defaulters = collect($grid)
-                ->map(function ($g) {
-
-                return [
-                'user_id' => $g['user']->id,
-                'name' => $g['user']->name,
-                'days_present' => $g['summary']['present'],
-                'days_absent' => $g['summary']['total'] - $g['summary']['present']
-                ];
-            })
-                ->sortByDesc('days_absent')
-                ->take(10)
-                ->values();
-
-
-            /* ================= DASHBOARD KPIs ================= */
-
             $presentToday = DB::table('attendance')
                 ->where('company_id', $companyId)
-                ->whereDate('dateFormat', today())
+                ->whereBetween('dateFormat', [$startDate, $endDate])
                 ->distinct()
                 ->count('user_id');
 
@@ -219,61 +171,95 @@ class AttendanceController extends Controller
 
             $lateToday = DB::table('attendance')
                 ->where('company_id', $companyId)
-                ->whereDate('dateFormat', today())
+                ->whereBetween('dateFormat', [$startDate, $endDate])
                 ->whereNotNull('lateTime')
                 ->where('lateTime', '!=', '0')
                 ->count();
 
             $activeSites = DB::table('attendance')
                 ->where('company_id', $companyId)
-                ->whereDate('dateFormat', today())
+                ->whereBetween('dateFormat', [$startDate, $endDate])
                 ->distinct()
                 ->count('site_id');
 
             $pendingRequests = \Illuminate\Support\Facades\Schema::hasTable('leave_requests')
-                ?DB::table('leave_requests')->where('status', 'pending')->count()
+                ? DB::table('leave_requests')->where('status', 'pending')->count()
                 : 0;
 
             $recentCheckins = DB::table('attendance')
                 ->join('users', 'attendance.user_id', '=', 'users.id')
-                ->whereDate('attendance.dateFormat', today())
+                ->whereBetween('attendance.dateFormat', [$startDate, $endDate])
                 ->orderByDesc('attendance.entryDateTime')
                 ->limit(6)
                 ->select(
-                'users.name',
-                'users.profile_pic',
-                DB::raw("TIME(attendance.entryDateTime) as time"),
-                'attendance.site_id as site'
-            )
+                    'users.name',
+                    'users.profile_pic',
+                    DB::raw("TIME(attendance.entryDateTime) as time"),
+                    'attendance.site_id as site'
+                )
                 ->get();
 
-            $last7 = $dailyTrend->sortByDesc('full_date')->take(7)->sortBy('full_date')->values();
-            $weeklyLabels = $last7->pluck('date')->toArray();
-            $weeklyPresent = $last7->pluck('present')->toArray();
-            $weeklyAbsent = $last7->pluck('absent')->toArray();
 
+            /* ================= WEEKLY TREND ================= */
+
+            $dailyTrend = collect([
+                [
+                    'date' => $filterDate->format('d M'),
+                    'full_date' => $filterDate->toDateString(),
+                    'present' => $presentToday,
+                    'absent' => $absentToday
+                ]
+            ]);
+            /* ================= WEEKLY TREND ================= */
+
+            $weekStart = $filterDate->copy()->subDays(6)->startOfDay();
+            $weekEnd   = $filterDate->copy()->endOfDay();
+
+            $weeklyData = DB::table('attendance')
+                ->select(
+                    DB::raw('DATE(dateFormat) as date'),
+                    DB::raw('COUNT(DISTINCT user_id) as present')
+                )
+                ->where('company_id', $companyId)
+                ->whereBetween('dateFormat', [$weekStart, $weekEnd])
+                ->groupBy(DB::raw('DATE(dateFormat)'))
+                ->orderBy('date')
+                ->get()
+                ->keyBy('date');
+
+            $weeklyLabels = [];
+            $weeklyPresent = [];
+            $weeklyAbsent = [];
+
+            for ($i = 6; $i >= 0; $i--) {
+
+                $date = $filterDate->copy()->subDays($i)->toDateString();
+
+                $present = $weeklyData[$date]->present ?? 0;
+                $absent = max(0, $totalGuards - $present);
+
+                $weeklyLabels[] = Carbon::parse($date)->format('d M');
+                $weeklyPresent[] = $present;
+                $weeklyAbsent[] = $absent;
+            }
             $filterData = $this->filterData();
-        }
-        catch (\Exception $e) {
+        } catch (\Exception $e) {
 
             $grid = [];
             $dates = [];
             $dailyTrend = collect([]);
-            $defaulters = collect([]);
 
-            $presentPct = 0;
-            $totalPresentManDays = 0;
-            $totalAbsentManDays = 0;
-            $totalGuards = 0;
-
-            $startDate = now();
-            $endDate = now();
             $presentToday = 0;
             $absentToday = 0;
             $lateToday = 0;
             $activeSites = 0;
             $pendingRequests = 0;
             $recentCheckins = collect([]);
+            $presentPct = 0;
+            $totalPresentManDays = 0;
+            $defaulters = collect([]);
+            $totalAbsentManDays = 0;
+            $totalGuards = 0;
             $weeklyLabels = [];
             $weeklyPresent = [];
             $weeklyAbsent = [];
@@ -281,84 +267,149 @@ class AttendanceController extends Controller
             $filterData = ['ranges' => [], 'beats' => [], 'users' => []];
         }
 
+
         return view('attendance.explorer', array_merge(
             $filterData,
             compact(
-            'grid',
-            'dates',
-            'totalGuards',
-            'presentPct',
-            'totalPresentManDays',
-            'totalAbsentManDays',
-            'dailyTrend',
-            'defaulters',
-            'startDate',
-            'endDate',
-            'presentToday',
-            'absentToday',
-            'lateToday',
-            'activeSites',
-            'pendingRequests',
-            'recentCheckins',
-            'weeklyLabels',
-            'weeklyPresent',
-            'weeklyAbsent'
-        )
+                'grid',
+                'dates',
+                'totalGuards',
+                'presentPct',
+                'totalPresentManDays',
+                'totalAbsentManDays',
+                'dailyTrend',
+                'defaulters',
+                'startDate',
+                'endDate',
+                'presentToday',
+                'absentToday',
+                'lateToday',
+                'activeSites',
+                'pendingRequests',
+                'recentCheckins',
+                'weeklyLabels',
+                'weeklyPresent',
+                'weeklyAbsent',
+                'filterDate'
+            )
         ));
     }
 
-    public function logs()
+    public function logs(Request $request)
     {
         $user = session('user');
         $companyId = $user->company_id ?? 56;
 
-        $logs = DB::table('attendance')
+        $employee = $request->employee;
+        $site = $request->site;
+        $client = $request->client;
+        $range = $request->range;
+
+        /* ---------- BASE QUERY ---------- */
+
+        $query = DB::table('attendance')
             ->where('company_id', $companyId)
-            ->where('inOutStatus', 'IN')
+            ->where('inOutStatus', 'IN');
+
+        /* ---------- EMPLOYEE FILTER ---------- */
+
+        if ($employee) {
+            $query->where('user_id', $employee);
+        }
+
+        /* ---------- SITE FILTER ---------- */
+
+        if ($site) {
+            $query->where('site_id', $site);
+        }
+
+        /* ---------- CLIENT FILTER ---------- */
+
+        if ($client) {
+            $query->where('client_name', $client);
+        }
+
+        /* ---------- DATE RANGE FILTER ---------- */
+
+        if ($range == 'today') {
+            $query->whereDate('dateFormat', today());
+        }
+
+        if ($range == 'week') {
+            $query->whereBetween('dateFormat', [
+                now()->startOfWeek(),
+                now()->endOfWeek()
+            ]);
+        }
+
+        if (!$range || $range == '30days') {
+            $query->whereBetween('dateFormat', [
+                now()->subDays(30),
+                now()
+            ]);
+        }
+
+        /* ---------- LOGS TABLE ---------- */
+
+        $logs = $query
             ->orderByDesc('entryDateTime')
             ->paginate(10);
 
-        /* ---------- METRICS ---------- */
+        /* ---------- METRICS (USE SAME FILTERED QUERY) ---------- */
 
-        $total = DB::table('attendance')
-            ->where('company_id', $companyId)
-            ->where('inOutStatus', 'IN')
-            ->count();
+        $filtered = clone $query;
 
-        $onTime = DB::table('attendance')
-            ->where('company_id', $companyId)
-            ->where('inOutStatus', 'IN')
+        $total = $filtered->count();
+
+        $onTime = (clone $query)
             ->where(function ($q) {
-            $q->whereNull('lateTime')
-                ->orWhere('lateTime', '0');
-        })
+                $q->whereNull('lateTime')
+                    ->orWhere('lateTime', '0');
+            })
             ->count();
 
         $onTimePercent = $total > 0
             ? round(($onTime / $total) * 100, 1)
             : 0;
 
-        $avgLate = DB::table('attendance')
-            ->where('company_id', $companyId)
+        $avgLate = (clone $query)
             ->where('lateTime', '>', 0)
             ->avg('lateTime');
 
         $avgLate = $avgLate ? round($avgLate) : 0;
 
-        $incidents = DB::table('attendance')
-            ->where('company_id', $companyId)
+        $incidents = (clone $query)
             ->where('emergency_attend', 1)
             ->count();
+        $sites = DB::table('site_details')
+            ->where('company_id', $companyId)
+            ->select('id', 'name')
+            ->get();
+        $employees = DB::table('users')
+            ->where('company_id', $companyId)
+            ->where('isActive', 1)
+            ->select('id', 'name')
+            ->get();
+
+        $clients = DB::table('site_details')
+            ->where('company_id', $companyId)
+            ->select('client_name')
+            ->distinct()
+            ->get();
 
         return view('attendance.logs', compact(
             'logs',
             'onTimePercent',
             'avgLate',
-            'incidents'
+            'incidents',
+            'sites',
+            'employees',
+            'clients'
         ));
     }
     public function requests()
     {
+      
         $user = session('user');
         $companyId = $user->company_id ?? 56;
 
@@ -375,8 +426,8 @@ class AttendanceController extends Controller
         DB::table('attendance_requests')
             ->where('id', $id)
             ->update([
-            'status' => 'Approved'
-        ]);
+                'status' => 'Approved'
+            ]);
 
         return back()->with('success', 'Request approved');
     }
@@ -386,9 +437,9 @@ class AttendanceController extends Controller
         DB::table('attendance_requests')
             ->where('id', $id)
             ->update([
-            'status' => 'Rejected',
-            'remark' => $request->remark
-        ]);
+                'status' => 'Rejected',
+                'remark' => $request->remark
+            ]);
 
         return back()->with('success', 'Request rejected');
     }
@@ -402,14 +453,14 @@ class AttendanceController extends Controller
         $sites = DB::table('site_details')
             ->where('company_id', $companyId)
             ->select(
-            'id',
-            'name',
-            'address',
-            'city',
-            'state',
-            'pincode',
-            'client_name'
-        )
+                'id',
+                'name',
+                'address',
+                'city',
+                'state',
+                'pincode',
+                'client_name'
+            )
             ->get();
 
         // Guards currently checked in
@@ -421,5 +472,62 @@ class AttendanceController extends Controller
             ->groupBy('site_id');
 
         return view('attendance.map', compact('sites', 'guards'));
+    }
+
+    public function export(Request $request)
+    {
+        $user = session('user');
+        $companyId = $user->company_id ?? 56;
+
+        $date = $request->date
+            ? Carbon::parse($request->date)->toDateString()
+            : today()->toDateString();
+
+        $data = DB::table('attendance')
+            ->join('users', 'attendance.user_id', '=', 'users.id')
+            ->where('attendance.company_id', $companyId)
+            ->whereDate('attendance.dateFormat', $date)
+            ->select(
+                'users.name',
+                'attendance.site_id',
+                'attendance.dateFormat',
+                'attendance.entryDateTime',
+                'attendance.lateTime'
+            )
+            ->get();
+
+        $filename = "attendance_$date.csv";
+
+        $headers = [
+            "Content-Type" => "text/csv",
+            "Content-Disposition" => "attachment; filename=$filename",
+        ];
+
+        $callback = function () use ($data) {
+
+            $file = fopen('php://output', 'w');
+
+            fputcsv($file, [
+                'Name',
+                'Site',
+                'Date',
+                'Check In Time',
+                'Late Minutes'
+            ]);
+
+            foreach ($data as $row) {
+                fputcsv($file, [
+                    $row->name,
+                    $row->site_id,
+                    $row->dateFormat,
+                    $row->entryDateTime,
+                    $row->lateTime
+                ]);
+            }
+
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
     }
 }

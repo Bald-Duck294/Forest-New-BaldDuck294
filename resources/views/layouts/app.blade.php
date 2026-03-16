@@ -82,14 +82,7 @@
          @include('layouts.sidebar')
      @endif
 
-     {{-- Decorative Backgrounds --}}
-     {{-- <div class="nature-bg left-bg"></div>
-    <div class="nature-bg right-bg"></div> --}}
-
-     @if (!isset($hideBackground) || !$hideBackground)
-         <div class="nature-bg left-bg"></div>
-         <div class="nature-bg right-bg"></div>
-     @endif
+    
 
      {{-- Main Content Area --}}
      <div class="content d-flex flex-column" id="mainContent">
