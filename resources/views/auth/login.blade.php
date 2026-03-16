@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -9,118 +10,136 @@
     <link rel="icon" type="image/svg+xml" href="{{ asset('favicon.svg') }}">
     <link rel="alternate icon" href="{{ asset('favicon.ico') }}">
 
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
 
-    @vite(['resources/css/app.css','resources/js/app.js'])
+    <!-- Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #f2f6f3;
+        }
+
+        .login-card {
+            max-width: 420px;
+            border-radius: 16px;
+        }
+
+        .input-icon {
+            position: absolute;
+            top: 50%;
+            left: 14px;
+            transform: translateY(-50%);
+            color: #4f6f52;
+        }
+
+        .form-control {
+            padding-left: 40px;
+            height: 48px;
+        }
+
+        .btn-login {
+            background: #4f6f52;
+            border: none;
+        }
+
+        .btn-login:hover {
+            background: #3f5640;
+        }
+    </style>
 </head>
 
-<body class="font-[Inter] bg-[#f2f6f3] min-h-screen flex items-center justify-center p-5 relative overflow-hidden">
+<body class="d-flex align-items-center justify-content-center min-vh-100 p-3">
 
-    <!-- Background circles -->
-    <div class="absolute inset-0 overflow-hidden -z-10">
+    <div class="card shadow-sm border login-card p-4">
 
-        <div class="absolute w-[300px] h-[300px] bg-[#4f6f52]/10 rounded-full -top-[100px] -left-[100px] animate-[float_20s_ease-in-out_infinite]"></div>
+        <div class="text-center mb-4">
 
-        <div class="absolute w-[200px] h-[200px] bg-[#4f6f52]/10 rounded-full -bottom-[50px] -right-[50px] animate-[float_20s_ease-in-out_infinite] [animation-delay:5s]"></div>
+            <img src="{{ asset('images/logo.png') }}" class="mb-3" style="max-width:200px">
 
-        <div class="absolute w-[150px] h-[150px] bg-[#4f6f52]/10 rounded-full top-1/2 right-[10%] animate-[float_20s_ease-in-out_infinite] [animation-delay:10s]"></div>
-
-    </div>
-
-    <!-- Login card -->
-    <div class="bg-[#fcfefc] w-full max-w-[420px] p-9 rounded-2xl border border-[#4f6f52]/20 shadow-[0_4px_12px_rgba(47,62,47,0.06)] animate-[slideUp_0.6s_ease-out]">
-
-        <div class="text-center mb-6">
-
-            <img src="{{ asset('images/logo.png') }}" class="mx-auto mb-3 max-w-[200px]" />
-
-            <h1 class="text-2xl font-bold text-[#1f2f1f] mb-1">
+            <h3 class="fw-bold mb-1">
                 Welcome Back
-            </h1>
+            </h3>
 
-            <p class="text-[13px] text-gray-500">
+            <p class="text-muted small">
                 Sign in to access Guard Analytics
             </p>
 
         </div>
 
-
         <form method="POST" action="{{ route('login') }}">
             @csrf
 
-
             <!-- Phone -->
-            <div class="mb-[18px]">
+            <div class="mb-3">
 
-                <label class="block text-sm font-semibold text-[#1f2f1f] mb-2">
+                <label class="form-label fw-semibold">
                     Phone Number
                 </label>
 
-                <div class="relative">
+                <div class="position-relative">
 
-                    <i class="bi bi-telephone-fill absolute left-4 top-1/2 -translate-y-1/2 text-[#4f6f52] text-lg"></i>
+                    <i class="bi bi-telephone-fill input-icon"></i>
 
                     <input
                         type="text"
                         name="phone"
+                        maxlength="10"
                         value="{{ old('phone') }}"
                         placeholder="Enter 10-digit number"
-                        class="w-full pl-11 pr-4 py-3 border-2 border-gray-200 rounded-[10px] text-sm bg-white transition focus:outline-none focus:border-[#4f6f52] focus:ring-4 focus:ring-[#4f6f52]/20"
+                        class="form-control"
                         required>
 
                 </div>
 
                 @error('phone')
-                <div class="text-red-500 text-sm mt-1 flex items-center gap-1">
+                <div class="text-danger small mt-1">
                     ⚠ {{ $message }}
                 </div>
                 @enderror
 
             </div>
 
-
             <!-- Password -->
-            <div class="mb-[18px]">
+            <div class="mb-3">
 
-                <label class="block text-sm font-semibold text-[#1f2f1f] mb-2">
+                <label class="form-label fw-semibold">
                     Password
                 </label>
 
-                <div class="relative">
+                <div class="position-relative">
 
-                    <i class="bi bi-lock-fill absolute left-4 top-1/2 -translate-y-1/2 text-[#4f6f52] text-lg"></i>
+                    <i class="bi bi-lock-fill input-icon"></i>
 
                     <input
                         type="password"
                         name="password"
                         placeholder="5-15 characters"
-                        class="w-full pl-11 pr-4 py-3 border-2 border-gray-200 rounded-[10px] text-sm bg-white transition focus:outline-none focus:border-[#4f6f52] focus:ring-4 focus:ring-[#4f6f52]/20"
+                        class="form-control"
                         required>
 
                 </div>
 
                 @error('password')
-                <div class="text-red-500 text-sm mt-1 flex items-center gap-1">
+                <div class="text-danger small mt-1">
                     ⚠ {{ $message }}
                 </div>
                 @enderror
 
             </div>
 
-
-            <button
-                class="w-full py-[13px] bg-[#4f6f52] text-white rounded-[10px] text-[15px] font-semibold shadow-lg transition hover:bg-[#3f5640] hover:-translate-y-[2px] hover:shadow-xl">
-
+            <button class="btn btn-login text-white w-100 py-2 fw-semibold">
                 Sign In
-
             </button>
 
         </form>
 
-
-        <p class="text-center text-xs text-gray-400 mt-6">
+        <p class="text-center text-muted small mt-4">
             © 2026 Guard Analytics. All rights reserved.
         </p>
 
@@ -129,3 +148,4 @@
 </body>
 
 </html>
+
