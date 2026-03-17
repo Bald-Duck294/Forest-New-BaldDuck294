@@ -409,7 +409,7 @@ class AttendanceController extends Controller
     }
     public function requests()
     {
-      
+
         $user = session('user');
         $companyId = $user->company_id ?? 56;
 

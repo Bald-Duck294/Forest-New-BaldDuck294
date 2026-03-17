@@ -27,6 +27,7 @@ use App\Http\Controllers\UsersController;
 use App\Http\Controllers\ForestController;
 use App\Http\Controllers\ModuleController;
 use App\Http\Controllers\GlobalSuperAdminController;
+use App\Http\Controllers\ForestReportConfigController;
 /* Auth Routes */
 
 Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
@@ -363,75 +364,74 @@ Route::prefix('plantation')->group(function () {
     Route::get('/create', [PlantationController::class, 'create'])->name('plantation.create');
     Route::post('/store', [PlantationController::class, 'store'])->name('plantation.store');
 
-    Route::get('/view/{id}', [PlantationController::class , 'show'])->name('plantation.show');
-    Route::get('/workflow/{id}', [PlantationController::class , 'workflow'])->name('plantation.workflow');
-    Route::post('/workflow/{id}', [PlantationController::class , 'saveWorkflow'])->name('plantation.workflow.save');
+    Route::get('/view/{id}', [PlantationController::class, 'show'])->name('plantation.show');
+    Route::get('/workflow/{id}', [PlantationController::class, 'workflow'])->name('plantation.workflow');
+    Route::post('/workflow/{id}', [PlantationController::class, 'saveWorkflow'])->name('plantation.workflow.save');
 });
 
 
 
 Route::prefix('guards')->group(function () {
 
-    Route::get('/', [GuardsController::class , 'index'])->name('guards');
+    Route::get('/', [GuardsController::class, 'index'])->name('guards');
 
-    Route::get('/guardEdit/{clientId}/{id}', [GuardsController::class , 'guardEdit'])
+    Route::get('/guardEdit/{clientId}/{id}', [GuardsController::class, 'guardEdit'])
         ->name('guards.guard_edit');
 
-    Route::get('/{id}', [GuardsController::class , 'getSites'])
+    Route::get('/{id}', [GuardsController::class, 'getSites'])
         ->name('guards.getsites');
 
-    Route::get('/getShifts/{id}', [GuardsController::class , 'getShifts'])
+    Route::get('/getShifts/{id}', [GuardsController::class, 'getShifts'])
         ->name('guards.getshifts');
 
-    Route::post('/editAction/{id}', [GuardsController::class , 'editAction'])
+    Route::post('/editAction/{id}', [GuardsController::class, 'editAction'])
         ->name('guards.editaction');
 
-    Route::get('/guardexport/exp', [GuardsController::class , 'assignedExport'])
+    Route::get('/guardexport/exp', [GuardsController::class, 'assignedExport'])
         ->name('assigned.export');
 });
 
 
-Route::get('/unAssignGuards', [GuardsController::class , 'unAssignGuards'])
+Route::get('/unAssignGuards', [GuardsController::class, 'unAssignGuards'])
     ->name('unAssignGuards');
 
-Route::get('/unassigned/guard_export', [GuardsController::class , 'unassigned_export'])
+Route::get('/unassigned/guard_export', [GuardsController::class, 'unassigned_export'])
     ->name('unassigned_guard.export');
 
 
 Route::prefix('fetch')->group(function () {
 
-    Route::get('/clients', [GuardsController::class , 'fetchClients'])->name('fetchClients');
+    Route::get('/clients', [GuardsController::class, 'fetchClients'])->name('fetchClients');
 
-    Route::get('/sites', [GuardsController::class , 'fetchSites'])->name('fetchSites');
+    Route::get('/sites', [GuardsController::class, 'fetchSites'])->name('fetchSites');
 
-    Route::get('/checkin', [GuardsController::class , 'fetchCheckIn'])->name('fetchCheckIn');
+    Route::get('/checkin', [GuardsController::class, 'fetchCheckIn'])->name('fetchCheckIn');
 
-    Route::get('/lateshow', [GuardsController::class , 'fetchLateShow'])->name('fetchLateShow');
+    Route::get('/lateshow', [GuardsController::class, 'fetchLateShow'])->name('fetchLateShow');
 
-    Route::get('/noshow', [GuardsController::class , 'fetchNoShow'])->name('fetchNoShow');
+    Route::get('/noshow', [GuardsController::class, 'fetchNoShow'])->name('fetchNoShow');
 
-    Route::get('/log', [GuardsController::class , 'fetchLog'])->name('fetchLog');
-
+    Route::get('/log', [GuardsController::class, 'fetchLog'])->name('fetchLog');
 });
 
 Route::prefix('forest')->group(function () {
 
-    Route::get('/dashboard', [ForestController::class , 'index'])
+    Route::get('/dashboard', [ForestController::class, 'index'])
         ->name('forest.olddashboard');
 
-    Route::get('/live', [ForestController::class , 'liveData'])
+    Route::get('/live', [ForestController::class, 'liveData'])
         ->name('forest.live');
 
-    Route::get('/user-summary', [ForestController::class , 'userSummary'])
+    Route::get('/user-summary', [ForestController::class, 'userSummary'])
         ->name('forest.userSummary');
-
 });
 
-Route::get('/users/edit/{id}', [UsersController::class , 'edit'])
+Route::get('/users/edit/{id}', [UsersController::class, 'edit'])
     ->name('users.edit');
 
-Route::post('/users/update/{id}', [UsersController::class , 'update'])
+Route::post('/users/update/{id}', [UsersController::class, 'update'])
     ->name('users.update');
+
 Route::prefix('modules')->group(function () {
 
     Route::get('/', [ModuleController::class, 'index'])
@@ -458,3 +458,47 @@ Route::post(
     '/companies/{id}/update',
     [GlobalSuperAdminController::class, 'updateCompany']
 )->name('companies.update');
+
+
+Route::prefix('global')->group(function () {
+
+    Route::get('/superadmins', [GlobalSuperAdminController::class, 'superAdmins'])
+        ->name('global.superadmins');
+
+    Route::get('/superadmins/{id}', [GlobalSuperAdminController::class, 'viewSuperAdmin'])
+        ->name('global.superadmins.view');
+
+    Route::get('/admins', [GlobalSuperAdminController::class, 'admins'])
+        ->name('global.admins');
+
+    Route::get('/admins/{id}', [GlobalSuperAdminController::class, 'viewAdmin'])
+        ->name('global.admins.view');
+
+    Route::get('/users/edit/{id}', [GlobalSuperAdminController::class, 'editUser'])
+        ->name('global.users.edit');
+
+    Route::post('/users/update/{id}', [GlobalSuperAdminController::class, 'updateUser'])
+        ->name('global.users.update');
+    Route::get('/companies', [GlobalSuperAdminController::class, 'companies'])
+        ->name('global.companies');
+    Route::get('/enter-simulation/{id}', [GlobalSuperAdminController::class, 'viewCompanyDashboard'])->name('global.enter_simulation');
+    Route::get('/exit-simulation', [GlobalSuperAdminController::class, 'exitCompanyDashboard'])->name('global.exit_simulation');
+});
+Route::prefix('report-configs')
+    ->name('report-configs.')
+    ->controller(ForestReportConfigController::class)
+    ->group(function () {
+
+        Route::get('/', 'index')->name('index');
+        Route::get('/create', 'create')->name('create');
+        Route::post('/', 'store')->name('store');
+
+        Route::get('/{id}/edit', 'edit')->name('edit');
+        Route::put('/{id}', 'update')->name('update');
+        Route::delete('/{id}', 'destroy')->name('destroy');
+        Route::get('/reports-table', 'reportsTable')->name('table');
+        Route::get('/reports/{id}', 'show')->name('show');
+        Route::post('/reports/{id}/update-status', 'updateStatus')->name('updateStatus');
+        // 🔥 THIS WAS MISSING
+        Route::get('/reports-dashboard', 'reportsDashboard')->name('dashboard');
+    });

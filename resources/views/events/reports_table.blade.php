@@ -97,7 +97,7 @@ $hideGlobalFilters = true;
 
                         <td class="text-end">
 
-                            <a href="{{ route('events.report.show',$report->id) }}"
+                            <a href="{{ route('report-configs.show',$report->id) }}"
                                 class="btn btn-sm btn-outline-primary me-2">
                                 <i class="bi bi-eye"></i> View
                             </a>

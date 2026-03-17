@@ -42,7 +42,7 @@ $hideGlobalFilters = true;
 
         <div class="col-md-4">
 
-            <a href="{{ route('events.reports.table') }}" class="text-decoration-none">
+            <a href="{{ route('report-configs.table')}}" class="text-decoration-none">
 
                 <div class="card shadow-sm border-1 h-100 hover-shadow">
 
