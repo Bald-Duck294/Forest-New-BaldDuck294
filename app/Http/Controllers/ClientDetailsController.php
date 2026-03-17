@@ -43,36 +43,81 @@ class ClientDetailsController extends Controller
     }
 
     //client list page
+    // public function index()
+    // {
+    //     $user = session('user');
+    //     // dd($user);
+    //     if ($user->role_id == 7) {
+
+    //         $sites = SiteAssign::where('company_id', $user->company_id)->where('user_id', $user->id)->first();
+    //         //dd($sites);
+    //         $sitesIds = json_decode($sites->site_id, true);
+    //         if (isset($sitesIds)) {
+
+    //             $records = ClientDetails::where('company_id', $user->company_id)->whereIn('id', $sitesIds)->get();
+    //             //dd($records);
+    //         } else {
+
+    //             $records = ClientDetails::where('company_id', $user->company_id)->get();
+    //         }
+    //     } else {
+    //         $records = ClientDetails::where('company_id', $user->company_id)->get();
+    //     }
+
+    //     return view('clientdetails')->with('clients', $records);
+    // }
+
     public function index()
     {
         $user = session('user');
-        // dd($user);
+
         if ($user->role_id == 7) {
-
             $sites = SiteAssign::where('company_id', $user->company_id)->where('user_id', $user->id)->first();
-            //dd($sites);
-            $sitesIds = json_decode($sites->site_id, true);
-            if (isset($sitesIds)) {
+            $sitesIds = json_decode($sites->site_id ?? '[]', true);
 
-                $records = ClientDetails::where('company_id', $user->company_id)->whereIn('id', $sitesIds)->get();
-                //dd($records);
-            } else {
-
-                $records = ClientDetails::where('company_id', $user->company_id)->get();
+            if (!empty($sitesIds)) {
+                $records = ClientDetails::where('company_id', $user->company_id)->whereIn('id', $sitesIds)->paginate(10);
             }
-        } else {
-            $records = ClientDetails::where('company_id', $user->company_id)->get();
+            else {
+                $records = ClientDetails::where('company_id', $user->company_id)->paginate(10);
+            }
+        }
+        else {
+            $records = ClientDetails::where('company_id', $user->company_id)->paginate(10);
         }
 
         return view('clientdetails')->with('clients', $records);
     }
-
     //client list page
     public function getClients()
     {
         $user = session('user');
-        $records = ClientDetails::where('company_id', $user->company_id)->get();
+        $records = ClientDetails::where('company_id', $user->company_id)->paginate(10);
         return view('clientdetails')->with('clients', $records);
+    }
+
+    /* ... Keep your existing create(), getCity(), create_action(), editClient(), editaction(), deleteClient() methods exactly as they were ... */
+
+    // status change to inactive
+    public function statusInactive($clientId)
+    {
+        $client = ClientDetails::find($clientId);
+        if ($client) {
+            $client->isActive = "0";
+            $client->save();
+        }
+        return back()->with('success', 'Status changed to Inactive successfully!');
+    }
+
+    // status change to active
+    public function statusActive($clientId)
+    {
+        $client = ClientDetails::find($clientId);
+        if ($client) {
+            $client->isActive = "1";
+            $client->save();
+        }
+        return back()->with('success', 'Status changed to Active successfully!');
     }
 
     //create client form
@@ -130,7 +175,8 @@ class ClientDetailsController extends Controller
                 return redirect('clients/create')
                     ->withErrors($validator)
                     ->withInput();
-            } else {
+            }
+            else {
 
                 $number = $request->contactnumber;
                 if (ClientDetails::where('contact', $number)->exists()) {
@@ -140,7 +186,8 @@ class ClientDetailsController extends Controller
                     return redirect('clients/create')
                         ->withErrors($validator)
                         ->withInput();
-                } else {
+                }
+                else {
                     $getstate = DB::table('states')->where('code', $_POST['state'])->first();
 
                     $new_client = new ClientDetails();
@@ -163,7 +210,7 @@ class ClientDetailsController extends Controller
 
                     $company = CompanyDetails::where('id', $user->company_id)->first();
                     $new_user = new RegistrationData();
-                    dd($new_user, "new user");
+                    // dd($new_user, "new user");
                     $new_user->firstName = $name[0];
                     if (isset($name[1])) {
                         $new_user->lastName = $name[1];
@@ -225,7 +272,8 @@ class ClientDetailsController extends Controller
                 return redirect()->route('clients.editClient', $id)
                     ->withErrors($validator)
                     ->withInput();
-            } else {
+            }
+            else {
 
                 $client = ClientDetails::find($id);
 
@@ -237,7 +285,8 @@ class ClientDetailsController extends Controller
                     return redirect()->route('clients.editClient', $id)
                         ->withErrors($validator)
                         ->withInput();
-                } else {
+                }
+                else {
                     $name = explode(" ", $_POST['name']);
                     $mobile = $_POST['contactnumber'];
                     $company = CompanyDetails::where('id', $user->company_id)->first();
@@ -277,23 +326,23 @@ class ClientDetailsController extends Controller
 
                     return \Redirect::route('clients')->with('success', 'Client updated successfully.');
                 }
-                //else {
-                //     $client = ClientDetails::find($id);
-                //     $client->name = $_POST['name'];
-                //     $client->address = $_POST['address'];
-                //     $client->state = $state->name;
-                //     $client->city = $_POST['city'];
-                //     $client->pincode = $_POST['pincode'];
-                //     $client->spokesperson = $_POST['contactperson'];
-                //     $client->contact = $_POST['contactnumber'];
-                //     $client->email = $_POST['email'];
-                //     $client->relationManager = $_POST['relationshipmanager'];
-                //     $client->relationManagerContact     = $_POST['relationshipmanagercontact'];
-                //     $client->company_id = $user->company_id;
-                //     $client->save();
+            //else {
+            //     $client = ClientDetails::find($id);
+            //     $client->name = $_POST['name'];
+            //     $client->address = $_POST['address'];
+            //     $client->state = $state->name;
+            //     $client->city = $_POST['city'];
+            //     $client->pincode = $_POST['pincode'];
+            //     $client->spokesperson = $_POST['contactperson'];
+            //     $client->contact = $_POST['contactnumber'];
+            //     $client->email = $_POST['email'];
+            //     $client->relationManager = $_POST['relationshipmanager'];
+            //     $client->relationManagerContact     = $_POST['relationshipmanagercontact'];
+            //     $client->company_id = $user->company_id;
+            //     $client->save();
 
-                //     return \Redirect::route('clients')->with('success', 'Client updated successfully.');
-                // }
+            //     return \Redirect::route('clients')->with('success', 'Client updated successfully.');
+            // }
             }
         }
     }
@@ -325,23 +374,6 @@ class ClientDetailsController extends Controller
         }
     }
 
-    // status change to inactive
-    public function statusActive($clientId)
-    {
-        $client = ClientDetails::find($clientId);
-        $client->isActive = "0";
-        $client->save();
-        return redirect()->route('clients')->with('success', 'Status change successfully !');
-    }
-
-    // status change to active
-    public function statusInactive($clientId)
-    {
-        $client = ClientDetails::find($clientId);
-        $client->isActive = "1";
-        $client->save();
-        return redirect()->route('clients')->with('success', 'Status change successfully !');
-    }
 
     // shift list
     public function getShifts($client_id, $site_id)
@@ -388,7 +420,8 @@ class ClientDetailsController extends Controller
                 return redirect()->route('clients.getshiftscreate', [$client_id, $site_id])
                     ->withErrors($validator)
                     ->withInput();
-            } else {
+            }
+            else {
 
                 $time = array(
                     "start" => date('h:i a', strtotime($_POST["start"])),
@@ -458,7 +491,8 @@ class ClientDetailsController extends Controller
                 return redirect()->route('clients.shift_edit', [$id, $client_id, $site_id])
                     ->withErrors($validator)
                     ->withInput();
-            } else {
+            }
+            else {
 
                 $time = array(
                     "start" => date('h:i a', strtotime($_POST["start"])),
@@ -576,7 +610,8 @@ class ClientDetailsController extends Controller
                 $wktPolygon = $this->convertToWktPolygon($pointsArray);
                 $poly = DB::raw("ST_GeomFromText('$wktPolygon')");
                 $poly_lat_lng = $_GET['poly_coords'];
-            } else {
+            }
+            else {
 
                 $poly = NULL;
                 $poly_lat_lng = NULL;
@@ -642,7 +677,8 @@ class ClientDetailsController extends Controller
             ]);
             if ($result) {
                 return "Geofence Created";
-            } else {
+            }
+            else {
                 return "Something went wrong!";
             }
             return redirect()->route('clients.getshifts', [$client_id, $site_id]);
@@ -677,7 +713,8 @@ class ClientDetailsController extends Controller
 
                 $poly = DB::raw("ST_GeomFromText('$wktPolygon')");
                 $poly_lat_lng = $_GET['poly_coords'];
-            } else {
+            }
+            else {
                 $poly = NULL;
                 $poly_lat_lng = NULL;
             }
@@ -711,7 +748,8 @@ class ClientDetailsController extends Controller
             ]);
             if ($result) {
                 return "Geofence Created";
-            } else {
+            }
+            else {
                 return "Something went wrong!";
             }
             return redirect()->route('clients.getclientgeofences', [$client_id, $site_id]);
@@ -799,7 +837,8 @@ class ClientDetailsController extends Controller
                     'startdate' => 'required',
                     'enddate' => 'required',
                 ]);
-            } else {
+            }
+            else {
                 $validator = Validator::make($request->all(), [
                     'shift' => 'required',
                     'guard' => 'required',
@@ -812,11 +851,13 @@ class ClientDetailsController extends Controller
                 return redirect()->route('clients.clientguard_create', [$client_id, $site_id])
                     ->withErrors($validator)
                     ->withInput();
-            } else {
+            }
+            else {
                 $shifts = $_POST['shift'];
                 if (isset($_POST['weekoff'])) {
                     $weekoff = json_encode($_POST['weekoff']);
-                } else {
+                }
+                else {
                     $weekoff = [];
                 }
                 //DB::enableQueryLog();
@@ -826,7 +867,7 @@ class ClientDetailsController extends Controller
                 if ($site_id == 0) {
                     $sites = SiteDetails::where('id', $request->site)->first();
                     $client = ClientDetails::where("id", $request->client)->first();
-                    //dd($sites, $client);
+                //dd($sites, $client);
                 }
                 //  else if (isset($admin)) {
                 //     // if ($admin->role_id == 7) {
@@ -885,7 +926,8 @@ class ClientDetailsController extends Controller
                         $siteassign->weekoff = $weekoff;
                         // $siteassign->timestamp = date('Y-m-d H:i:s');
                         $siteassign->save();
-                    } else {
+                    }
+                    else {
                         $date = array(
                             "from" => $_POST["startdate"],
                             "to" => $_POST["enddate"]
@@ -918,13 +960,14 @@ class ClientDetailsController extends Controller
                     $message = "You have been assigned to site " . $sites->name . ". Your shift timing will be from " . $a->start . " to " . $a->end;
                     if (count($adminFcm) > 0) {
                         $fcm = new FCMNotify;
-                        // $fcm->sendNotification($title, $message, $adminFcm);
+                    // $fcm->sendNotification($title, $message, $adminFcm);
                     }
                 }
 
                 if ($site_id == 0) {
                     return redirect()->route('clients.clientguard_read', [$client->id, $site_id, $request->userId]);
-                } else {
+                }
+                else {
                     return redirect()->route('clients.getclientguards', [$client_id, $site_id]);
                 }
             }
@@ -975,7 +1018,8 @@ class ClientDetailsController extends Controller
 
             if (isset($_POST['weekoff'])) {
                 $weekoff = json_encode($_POST['weekoff']);
-            } else {
+            }
+            else {
                 $weekoff = [];
             }
             $shifts = $_POST['shift'];
@@ -1013,7 +1057,8 @@ class ClientDetailsController extends Controller
                     $siteassign->weekoff = $weekoff;
                     // $siteassign->timestamp = date('Y-m-d H:i:s');
                     $siteassign->save();
-                } else {
+                }
+                else {
                     // dd("else");
                     $siteassign = SiteAssign::find($id);
                     // print_r($siteassign);exit;
@@ -1041,7 +1086,7 @@ class ClientDetailsController extends Controller
                 $message = "You have been assigned to site " . $sites->name . ". Your shift timing will be from " . $a->start . " to " . $a->end;
                 if (count($adminFcm) > 0) {
                     $fcm = new FCMNotify;
-                    // $fcm->sendNotification($title, $message, $adminFcm);
+                // $fcm->sendNotification($title, $message, $adminFcm);
                 }
             }
             return redirect()->route('clients.getclientguards', [$client_id, $site_id]);
@@ -1065,13 +1110,15 @@ class ClientDetailsController extends Controller
                 // dd($users, "if block");
 
                 return view('clientguardread')->with("user", $users)->with('site_assign', $site_assign)->with('guardTourLog', $guardTourLog)->with('attendance', $attendance)->with('client_id', $client_id)->with('site_id', $site_id)->with('id', $id)->with('moduleList', $moduleList);
-            } else {
+            }
+            else {
                 $site_assign = SiteAssign::where('user_id', $id)->first();
                 $users = Users::where('id', $id)->first();
                 if ($users != null) {
 
                     $moduleList = json_decode($users->module);
-                } else {
+                }
+                else {
                     $moduleList = DB::table('checkList')->where('type', 'modulePermission')->first();
 
                     $moduleList = json_decode($moduleList->checkList);
@@ -1099,7 +1146,7 @@ class ClientDetailsController extends Controller
             $message = "You have been unassigned from " . $gaurd->site_name . ". Please wait to get reassign or contact supervisor ";
             if (count($adminFcm) > 0) {
                 $fcm = new FCMNotify;
-                // $fcm->sendNotification($title, $message, $adminFcm);
+            // $fcm->sendNotification($title, $message, $adminFcm);
             }
             SiteAssign::where('id', $id)->delete();
             ActivityLog::create([
@@ -1136,7 +1183,8 @@ class ClientDetailsController extends Controller
             $guardDetails = GuardTour::where([['id', $tour_id]])->first();
             if (count($checkpoints) == 0) {
                 $MasterCreated = '';
-            } else {
+            }
+            else {
                 $MasterCreated = GuardTour::where([['id', $checkpoints[0]->tourId]])->first();
             }
 
@@ -1159,7 +1207,8 @@ class ClientDetailsController extends Controller
             Log::channel('create')->info($user->name . ' view complaint list');
             if ($user->role_id == '1') {
                 $complaints = ClientComplaints::where('status', 'Awaiting')->where('company_id', $user->company_id)->get();
-            } else {
+            }
+            else {
                 $complaints = ClientComplaints::where('status', 'Awaiting')->where('client_id', $user->client_id)->get();
             }
             return view('complaints')->with('complaints', $complaints);
@@ -1241,7 +1290,7 @@ class ClientDetailsController extends Controller
         $response = curl_exec($ch);
         if (count($adminFcm) > 0) {
             $fcm = new FCMNotify;
-            // $fcm->sendNotification($title, $message, $adminFcm);
+        // $fcm->sendNotification($title, $message, $adminFcm);
         }
         return redirect()->route('complaints')->with('success', 'Complaint raised successfully');
         ;
@@ -1263,12 +1312,12 @@ class ClientDetailsController extends Controller
         ]);
         ClientComplaints::where('id', $notificationId)
             ->update([
-                'status' => "Resolved",
-                'actionDateTime' => date('Y-m-d h:i:s'),
-                'actionRemark' => $request->remark,
-                'actionById' => $user->id,
-                'actionByName' => $user->name,
-            ]);
+            'status' => "Resolved",
+            'actionDateTime' => date('Y-m-d h:i:s'),
+            'actionRemark' => $request->remark,
+            'actionById' => $user->id,
+            'actionByName' => $user->name,
+        ]);
         Notifications::where('notification_id', $notificationId)
             ->update(['readStatusForAdmin' => 1]);
         //dd($user);
@@ -1304,7 +1353,7 @@ class ClientDetailsController extends Controller
         // dd($response);
         if (count($adminFcm) > 0) {
             $fcm = new FCMNotify;
-            // $fcm->sendNotification($title, $message, $adminFcm);
+        // $fcm->sendNotification($title, $message, $adminFcm);
         }
         return "success";
     }

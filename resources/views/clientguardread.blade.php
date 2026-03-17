@@ -5,403 +5,293 @@
 @endphp
 @extends('layouts.app')
 
+@section('title', 'Employee Details')
+
 @push('styles')
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <style>
-        /* ==== LIGHT & DARK THEME VARIABLES ==== */
-        :root {
-            --primary: #2563eb;
-            --primary-hover: #1d4ed8;
-            --bg-color: #f8fafc;
-            --card-bg: #ffffff;
-            --text-main: #0f172a;
-            --text-muted: #64748b;
-            --border-color: #e2e8f0;
-            --badge-bg: #f1f5f9;
-            --warning: #f59e0b;
-            --warning-hover: #d97706;
-        }
+        /* =========================================
+           LOCAL COMPONENT STYLES 
+           (Hooked to Global Sapphire Variables)
+        ========================================= */
 
-        [data-bs-theme="dark"],
-        body.dark-mode,
-        body.dark {
-            --bg-color: #0f172a;
-            --card-bg: #1e293b;
-            --text-main: #f8fafc;
-            --text-muted: #94a3b8;
-            --border-color: #334155;
-            --badge-bg: #334155;
-        }
-
-        body {
-            background-color: var(--bg-color);
-            color: var(--text-main);
-        }
-
-        /* ==== CORE LAYOUT ==== */
-        .main-content-wrapper {
-            padding: 24px;
-            width: 100%;
-            overflow-x: hidden;
-        }
-
-        .profile-card {
-            background: var(--card-bg);
+        /* Cards */
+        .dash-card {
+            background: var(--bg-card);
             border: 1px solid var(--border-color);
-            border-radius: 16px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-            overflow: hidden;
-            margin-bottom: 2rem;
-        }
-
-        /* ==== HEADER ==== */
-        .profile-header {
-            border-bottom: 1px solid var(--border-color);
-            padding: 20px 28px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 15px;
-        }
-
-        .profile-header h4 {
-            margin: 0;
-            font-size: 18px;
-            font-weight: 700;
-            color: var(--text-main);
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .btn-edit-profile {
-            background-color: var(--card-bg);
-            color: var(--text-main);
-            border: 1px solid var(--border-color);
-            padding: 8px 16px;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            transition: 0.2s;
-            text-decoration: none;
-        }
-
-        .btn-edit-profile:hover {
-            background-color: var(--badge-bg);
-            color: var(--primary);
-            border-color: var(--primary);
-        }
-
-        /* ==== BODY & GRID ==== */
-        .profile-body {
-            padding: 32px 28px;
-        }
-
-        .profile-img-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            text-align: center;
-            padding-bottom: 24px;
-        }
-
-        .profile-img {
-            height: 120px;
-            width: 120px;
-            border-radius: 50%;
-            object-fit: cover;
-            border: 1px solid var(--border-color);
-            padding: 4px;
-            margin-bottom: 16px;
-            cursor: pointer;
-            transition: transform 0.2s ease;
-            background: var(--card-bg);
-        }
-
-        .profile-img:hover {
-            transform: scale(1.05);
-            border-color: var(--primary);
-        }
-
-        .profile-name {
-            font-size: 18px;
-            font-weight: 700;
-            color: var(--text-main);
-            margin-bottom: 4px;
-        }
-
-        .profile-id {
-            font-size: 13px;
-            color: var(--text-muted);
-            margin-bottom: 12px;
-            font-family: monospace;
-        }
-
-        .role-badge {
-            background: var(--badge-bg);
-            color: var(--text-main);
-            padding: 4px 12px;
-            border-radius: 6px;
-            font-size: 12px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            border: 1px solid var(--border-color);
-        }
-
-        /* ==== DETAILS SECTION ==== */
-        .details-section {
-            border-left: 1px solid var(--border-color);
-            padding-left: 32px;
-        }
-
-        @media (max-width: 768px) {
-            .details-section {
-                border-left: none;
-                border-top: 1px solid var(--border-color);
-                padding-left: 0;
-                padding-top: 32px;
-                margin-top: 16px;
-            }
-        }
-
-        .section-title {
-            font-size: 12px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            color: var(--text-muted);
-            margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .info-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 24px;
-            margin-bottom: 32px;
-        }
-
-        .info-group {
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-        }
-
-        .info-label {
-            font-size: 12px;
-            font-weight: 500;
-            color: var(--text-muted);
-        }
-
-        .info-value {
-            font-size: 14px;
-            font-weight: 600;
-            color: var(--text-main);
-        }
-
-        .site-value {
-            color: var(--primary);
-            font-weight: 700;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02);
+            transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
         }
 
         /* Action Buttons */
-        .action-row {
-            display: flex;
-            gap: 12px;
-            margin-top: 16px;
-            border-top: 1px solid var(--border-color);
-            padding-top: 24px;
+        .btn-sapphire {
+            background-color: var(--sapphire-primary);
+            color: #ffffff;
+            border: none;
+            font-weight: 600;
+            padding: 8px 16px;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-size: 0.9rem;
+            text-decoration: none;
         }
+        .btn-sapphire:hover { opacity: 0.9; transform: translateY(-1px); color: #ffffff; }
 
-        .btn-action-modify {
-            background: var(--card-bg);
+        .btn-sapphire-outline {
+            background-color: transparent;
+            color: var(--text-main);
             border: 1px solid var(--border-color);
-            color: var(--text-main);
+            font-weight: 600;
             padding: 8px 16px;
             border-radius: 8px;
-            font-size: 13px;
-            font-weight: 600;
-            display: flex;
+            transition: all 0.2s ease;
+            display: inline-flex;
             align-items: center;
-            gap: 6px;
+            justify-content: center;
+            gap: 8px;
+            font-size: 0.9rem;
             text-decoration: none;
-            transition: 0.2s;
+        }
+        .btn-sapphire-outline:hover { 
+            background-color: var(--table-hover); 
+            color: var(--sapphire-primary); 
+            border-color: var(--sapphire-primary); 
         }
 
-        .btn-action-modify:hover {
-            background: var(--badge-bg);
-            border-color: var(--text-muted);
+        /* Soft Badges */
+        .badge-soft {
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .badge-soft-primary { background: rgba(59, 130, 246, 0.15); color: var(--sapphire-primary); }
+        .badge-soft-muted { background: rgba(100, 116, 139, 0.15); color: var(--text-muted); }
+
+        /* Profile Specifics */
+        .profile-img-wrapper {
+            position: relative;
+            width: 140px;
+            height: 140px;
+            margin: 0 auto 1.5rem auto;
+        }
+        .profile-img {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 4px solid var(--bg-body);
+            background: var(--bg-body);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.08);
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+        .profile-img:hover { transform: scale(1.05); }
+
+        /* Info Typography */
+        .section-title {
+            font-size: 0.95rem;
+            font-weight: 700;
             color: var(--text-main);
-        }
-
-        .btn-action-assign {
-            background: var(--primary);
-            border: 1px solid var(--primary);
-            color: #fff;
-            padding: 8px 16px;
-            border-radius: 8px;
-            font-size: 13px;
-            font-weight: 600;
+            margin-bottom: 1.5rem;
             display: flex;
             align-items: center;
-            gap: 6px;
-            text-decoration: none;
-            transition: 0.2s;
+            gap: 8px;
+            padding-bottom: 12px;
+            border-bottom: 1px dashed var(--border-color);
         }
+        
+        .info-label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+        .info-value {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--text-main);
+            margin-bottom: 0;
+            line-height: 1.4;
+        }
+        .info-value.highlight { color: var(--sapphire-primary); }
 
-        .btn-action-assign:hover {
-            background: var(--primary-hover);
-            color: #fff;
-        }
+        /* Modal Overrides */
+        .sapphire-modal { background-color: var(--bg-card); border: 1px solid var(--border-color); border-radius: 16px; overflow: hidden; }
+        .sapphire-modal .btn-close { filter: var(--bs-theme) == 'dark' ? 'invert(1)' : 'none'; }
     </style>
 @endpush
 
 @section('content')
-    <div class="main-content-wrapper">
-        <div class="profile-card">
+    <div class="container-fluid py-4">
 
-            <div class="profile-header">
-                <h4>
-                    <a href="javascript:history.back()" class="text-muted mr-2" style="text-decoration: none;">
-                        <i class="bi bi-arrow-left"></i>
-                    </a>
-                    <i class="bi bi-person-badge text-primary"></i> Employee Details
-                </h4>
+        {{-- PAGE HEADER --}}
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
+            <div>
+                <a href="javascript:history.back()" class="text-decoration-none mb-1 d-inline-block" style="color: var(--text-muted); font-size: 0.85rem; font-weight: 600;">
+                    <i class="bi bi-arrow-left me-1"></i> Go Back
+                </a>
+                <h4 class="fw-bold mb-0" style="color: var(--text-main);">Employee Details</h4>
+            </div>
 
+            <div>
                 @if (isset($user))
-                    <a href="{{ route('users.edit', $user->id) }}" class="btn-edit-profile">
-                        <i class="bi bi-pencil"></i> Edit Profile
+                    <a href="{{ route('users.edit', $user->id) }}" class="btn-sapphire-outline shadow-sm">
+                        <i class="bi bi-pencil-square"></i> Edit Profile
                     </a>
                 @endif
             </div>
+        </div>
 
-            <div class="profile-body">
-                <div class="row m-0">
-
-                    <div class="col-md-4 p-0">
-                        <div class="profile-img-container">
-                            @if (isset($user->profile_pic) && $user->profile_pic != '')
-                                <img class="profile-img" src="{{ $user->profile_pic }}"
-                                    onclick="openImageModal('{{ $user->profile_pic }}')" alt="Profile Image" />
-                            @else
-                                <img class="profile-img" src="{{ asset('assets/img/default-avatar.png') }}"
-                                    alt="Default Avatar" />
-                            @endif
-
-                            <div class="profile-name">{{ $user->name ?? 'N/A' }}</div>
-                            <div class="profile-id">{{ $user->gen_id ?? 'ID: N/A' }}</div>
-                            <div class="role-badge">Employee</div>
-                        </div>
+        <div class="row g-4">
+            
+            {{-- LEFT COLUMN: PROFILE CARD --}}
+            <div class="col-12 col-lg-4 col-xl-3">
+                <div class="dash-card p-4 text-center h-100">
+                    <div class="profile-img-wrapper">
+                        @if (isset($user->profile_pic) && $user->profile_pic != '')
+                            <img class="profile-img" src="{{ $user->profile_pic }}" onclick="openImageModal('{{ $user->profile_pic }}')" alt="Profile Image" />
+                        @else
+                            <img class="profile-img" src="{{ asset('assets/img/default-avatar.png') }}" alt="Default Avatar" />
+                        @endif
                     </div>
 
-                    <div class="col-md-8 p-0 details-section">
-
-                        <div class="section-title">
-                            <i class="bi bi-person-vcard"></i> Personal Information
-                        </div>
-                        <div class="info-grid">
-                            <div class="info-group">
-                                <span class="info-label">Phone Number</span>
-                                <span class="info-value">{{ $user->contact ?? 'N/A' }}</span>
-                            </div>
-                            <div class="info-group">
-                                <span class="info-label">Email Address</span>
-                                <span class="info-value">{{ $user->email ?? 'N/A' }}</span>
-                            </div>
-                            <div class="info-group">
-                                <span class="info-label">Date of Birth</span>
-                                <span
-                                    class="info-value">{{ isset($user->dob) ? date('d M Y', strtotime($user->dob)) : 'N/A' }}</span>
-                            </div>
-                            <div class="info-group">
-                                <span class="info-label">Gender</span>
-                                <span class="info-value">{{ $user->gender ?? 'N/A' }}</span>
-                            </div>
-                            <div class="info-group" style="grid-column: 1 / -1;">
-                                <span class="info-label">Residential Address</span>
-                                <span class="info-value">{{ $user->address ?? 'N/A' }}</span>
-                            </div>
-                        </div>
-
-                        <div class="section-title mt-4">
-                            <i class="bi bi-geo-alt"></i> Current Assignment
-                        </div>
-                        <div class="info-grid">
-                            <div class="info-group">
-                                <span class="info-label">Assigned Site</span>
-                                @if (isset($site_assign) && $site_assign->site_name)
-                                    <span class="info-value site-value">{{ $site_assign->site_name }}</span>
-                                @else
-                                    <span class="info-value text-muted fst-italic">No Site Assigned</span>
-                                @endif
-                            </div>
-                            <div class="info-group">
-                                <span class="info-label">Shift Name</span>
-                                <span class="info-value">{{ $site_assign->shift_name ?? 'N/A' }}</span>
-                            </div>
-                            <div class="info-group">
-                                <span class="info-label">Shift Duration</span>
-                                <span class="info-value">
-                                    @if (isset($site_assign->shift_time))
-                                        @php $time = json_decode($site_assign->shift_time); @endphp
-                                        {{ $time->start ?? '' }} - {{ $time->end ?? '' }}
-                                    @else
-                                        N/A
-                                    @endif
-                                </span>
-                            </div>
-                            <div class="info-group">
-                                <span class="info-label">Assignment Period</span>
-                                <span class="info-value">
-                                    @if (isset($site_assign->date_range))
-                                        @php $range = json_decode($site_assign->date_range); @endphp
-                                        {{ date('d M Y', strtotime($range->from)) }} to
-                                        {{ date('d M Y', strtotime($range->to)) }}
-                                    @else
-                                        N/A
-                                    @endif
-                                </span>
-                            </div>
-                        </div>
-
-                        @if ($sessionUser && $sessionUser->role_id != 4)
-                            <div class="action-row">
-                                @if (isset($site_assign) && $site_assign != '')
-                                    <a href="{{ route('guards.guard_edit', [$client_id ?? 0, $site_assign->id]) }}"
-                                        class="btn-action-modify">
-                                        <i class="bi bi-sliders"></i> Modify Assignment
-                                    </a>
-                                @else
-                                    <a href="{{ route('clients.clientguard_create', [$id ?? 0, 0]) }}"
-                                        class="btn-action-assign">
-                                        <i class="bi bi-plus-circle"></i> Assign to Site
-                                    </a>
-                                @endif
-                            </div>
-                        @endif
-
+                    <h4 class="fw-bold mb-1" style="color: var(--text-main);">{{ $user->name ?? 'N/A' }}</h4>
+                    <p class="font-monospace mb-3" style="color: var(--text-muted); font-size: 0.85rem;">{{ $user->gen_id ?? 'ID: N/A' }}</p>
+                    
+                    <div>
+                        <span class="badge-soft badge-soft-primary">Employee</span>
                     </div>
                 </div>
             </div>
+
+            {{-- RIGHT COLUMN: DETAILS --}}
+            <div class="col-12 col-lg-8 col-xl-9">
+                <div class="dash-card p-4 h-100 d-flex flex-column">
+                    
+                    {{-- Personal Information Section --}}
+                    <div class="mb-4">
+                        <div class="section-title">
+                            <i class="bi bi-person-vcard text-primary" style="color: var(--sapphire-primary) !important;"></i> Personal Information
+                        </div>
+                        
+                        <div class="row g-4">
+                            <div class="col-sm-6 col-md-4">
+                                <div class="info-label">Phone Number</div>
+                                <div class="info-value font-monospace">{{ $user->contact ?? 'N/A' }}</div>
+                            </div>
+                            <div class="col-sm-6 col-md-4">
+                                <div class="info-label">Email Address</div>
+                                <div class="info-value text-break">{{ $user->email ?? 'N/A' }}</div>
+                            </div>
+                            <div class="col-sm-6 col-md-4">
+                                <div class="info-label">Date of Birth</div>
+                                <div class="info-value">{{ isset($user->dob) ? date('d M Y', strtotime($user->dob)) : 'N/A' }}</div>
+                            </div>
+                            <div class="col-sm-6 col-md-4">
+                                <div class="info-label">Gender</div>
+                                <div class="info-value">{{ $user->gender ?? 'N/A' }}</div>
+                            </div>
+                            <div class="col-12 col-md-8">
+                                <div class="info-label">Residential Address</div>
+                                <div class="info-value">{{ $user->address ?? 'N/A' }}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- Current Assignment Section --}}
+                    <div class="mb-4 flex-grow-1">
+                        <div class="section-title">
+                            <i class="bi bi-geo-alt text-primary" style="color: var(--sapphire-primary) !important;"></i> Current Assignment
+                        </div>
+                        
+                        <div class="row g-4">
+                            <div class="col-sm-6 col-md-4">
+                                <div class="info-label">Assigned Site</div>
+                                @if (isset($site_assign) && $site_assign->site_name)
+                                    <div class="info-value highlight">{{ $site_assign->site_name }}</div>
+                                @else
+                                    <div class="info-value" style="color: var(--text-muted); font-style: italic;">No Site Assigned</div>
+                                @endif
+                            </div>
+                            
+                            <div class="col-sm-6 col-md-4">
+                                <div class="info-label">Shift Name</div>
+                                <div class="info-value">{{ $site_assign->shift_name ?? 'N/A' }}</div>
+                            </div>
+                            
+                            <div class="col-sm-6 col-md-4">
+                                <div class="info-label">Shift Duration</div>
+                                <div class="info-value">
+                                    @if (isset($site_assign->shift_time))
+                                        @php $time = json_decode($site_assign->shift_time); @endphp
+                                        {{ $time->start ?? '' }} <span style="color: var(--text-muted); font-size: 0.8rem; margin: 0 4px;">to</span> {{ $time->end ?? '' }}
+                                    @else
+                                        N/A
+                                    @endif
+                                </div>
+                            </div>
+                            
+                            <div class="col-12">
+                                <div class="info-label">Assignment Period</div>
+                                <div class="info-value">
+                                    @if (isset($site_assign->date_range))
+                                        @php $range = json_decode($site_assign->date_range); @endphp
+                                        <span class="badge-soft badge-soft-muted mt-1">
+                                            {{ date('d M Y', strtotime($range->from)) }} 
+                                            <i class="bi bi-arrow-right mx-2"></i> 
+                                            {{ date('d M Y', strtotime($range->to)) }}
+                                        </span>
+                                    @else
+                                        N/A
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- Action Row (Footer of Card) --}}
+                    @if ($sessionUser && $sessionUser->role_id != 4)
+                        <div class="pt-3 mt-auto d-flex justify-content-end" style="border-top: 1px solid var(--border-color);">
+                            @if (isset($site_assign) && $site_assign != '')
+                                <a href="{{ route('guards.guard_edit', [$client_id ?? 0, $site_assign->id]) }}" class="btn-sapphire-outline">
+                                    <i class="bi bi-sliders"></i> Modify Assignment
+                                </a>
+                            @else
+                                <a href="{{ route('clients.clientguard_create', [$id ?? 0, 0]) }}" class="btn-sapphire">
+                                    <i class="bi bi-plus-circle"></i> Assign to Site
+                                </a>
+                            @endif
+                        </div>
+                    @endif
+
+                </div>
+            </div>
+
         </div>
     </div>
 
+    {{-- Bootstrap 5 Modal for Profile Picture --}}
     <div class="modal fade" id="profileImageModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content" style="background: transparent; border: none;">
+            <div class="modal-content sapphire-modal" style="background: transparent; border: none; box-shadow: none;">
                 <div class="modal-header border-0 pb-0 justify-content-end">
-                    <button type="button" class="btn-close btn-close-white" data-dismiss="modal" aria-label="Close"
-                        style="background-color: rgba(255,255,255,0.8); padding: 10px; border-radius: 50%;"></button>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" style="background-color: var(--bg-card); padding: 12px; border-radius: 50%; opacity: 1; box-shadow: 0 4px 12px rgba(0,0,0,0.15);"></button>
                 </div>
-                <div class="modal-body text-center pt-0">
-                    <img id="modalImage" src=""
-                        style="max-width: 100%; max-height: 80vh; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+                <div class="modal-body text-center pt-2">
+                    <img id="modalImage" src="" style="max-width: 100%; max-height: 75vh; border-radius: 16px; box-shadow: 0 10px 40px rgba(0,0,0,0.3); border: 2px solid var(--border-color);">
                 </div>
             </div>
         </div>

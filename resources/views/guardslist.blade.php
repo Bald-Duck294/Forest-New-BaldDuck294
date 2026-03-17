@@ -1,78 +1,40 @@
 @php
     $hideGlobalFilters = true;
-    $hideGlobalFilters = true;
     $hideBackground = true;
 @endphp
 @extends('layouts.app')
 
 @push('styles')
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
     <style>
-        /* ==== LIGHT & DARK THEME VARIABLES ==== */
-        :root {
-            --primary: #2563eb;
-            --bg-color: #f8fafc;
-            --card-bg: #ffffff;
-            --text-main: #0f172a;
-            --text-muted: #64748b;
-            --border-color: #e2e8f0;
-            --table-header: #f1f5f9;
-            --table-hover: #f8fafc;
-        }
+        /* =========================================
+                                           LOCAL COMPONENT STYLES
+                                           (Hooked to Global Sapphire Variables)
+                                        ========================================= */
 
-        /* Target standard bootstrap dark mode attribute or custom dark class */
-        [data-bs-theme="dark"],
-        body.dark-mode,
-        body.dark {
-            --bg-color: #0f172a;
-            --card-bg: #1e293b;
-            --text-main: #f8fafc;
-            --text-muted: #94a3b8;
-            --border-color: #334155;
-            --table-header: #0f172a;
-            --table-hover: #334155;
-        }
-
-        body {
-            background-color: var(--bg-color);
-            color: var(--text-main);
-        }
-
-        /* ==== CORE LAYOUT ==== */
-        .main-content-wrapper {
-            padding: 24px;
-            width: 100%;
-            overflow-x: hidden;
-        }
-
-        /* ==== KPI CARDS ==== */
-        .kpi-row {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 20px;
-            margin-bottom: 24px;
-        }
-
-        .kpi-card {
-            background: var(--card-bg);
+        /* Cards */
+        .dash-card {
+            background: var(--bg-card);
             border: 1px solid var(--border-color);
             border-radius: 12px;
-            padding: 20px;
-            display: flex;
-            align-items: center;
-            gap: 16px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02);
+            transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+        }
+
+        /* Interactive Hover Lift */
+        .hover-lift {
             cursor: pointer;
-            /* Added for clickability */
-            transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
         }
 
-        .kpi-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.05);
-            border-color: var(--primary);
+        .hover-lift:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.05);
+            border-color: var(--sapphire-primary);
         }
 
+        /* KPI Specifics */
         .kpi-icon {
             width: 48px;
             height: 48px;
@@ -80,211 +42,224 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 24px;
+            font-size: 1.5rem;
+            flex-shrink: 0;
         }
 
         .kpi-info h6 {
             margin: 0;
-            font-size: 12px;
+            font-size: 0.75rem;
             color: var(--text-muted);
             text-transform: uppercase;
             font-weight: 600;
+            letter-spacing: 0.5px;
         }
 
         .kpi-info h3 {
             margin: 4px 0 0;
-            font-size: 24px;
+            font-size: 1.5rem;
             font-weight: 700;
             color: var(--text-main);
+            line-height: 1;
         }
 
-        /* ==== TABLE CARD & FILTERS ==== */
-        .card {
-            border-radius: 16px;
+        /* Action Buttons */
+        .btn-sapphire-outline {
+            background-color: transparent;
+            color: var(--text-main);
             border: 1px solid var(--border-color);
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-            background: var(--card-bg);
-        }
-
-        .card-header {
-            background: transparent;
-            border-bottom: 1px solid var(--border-color);
-            padding: 20px 24px;
-            display: flex;
-            justify-content: space-between;
+            font-weight: 500;
+            padding: 6px 14px;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+            display: inline-flex;
             align-items: center;
-            flex-wrap: wrap;
-            gap: 15px;
+            gap: 6px;
+            font-size: 0.85rem;
+            text-decoration: none;
         }
 
-        .card-header h4 {
-            margin: 0;
-            font-weight: 700;
-            color: var(--text-main);
-            font-size: 18px;
+        .btn-sapphire-outline:hover {
+            background-color: var(--table-hover);
+            color: var(--sapphire-primary);
+            border-color: var(--sapphire-primary);
         }
 
-        /* Filter Buttons */
+        .btn-view-sm {
+            background: var(--table-hover);
+            color: var(--sapphire-primary);
+            border: 1px solid var(--border-color);
+            padding: 4px 12px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+
+        .btn-view-sm:hover {
+            background: var(--sapphire-primary);
+            color: #ffffff;
+            border-color: var(--sapphire-primary);
+        }
+
+        /* Filter Toggle Group */
         .filter-group {
-            display: flex;
-            gap: 8px;
-            background: var(--table-header);
+            display: inline-flex;
+            background: var(--bg-body);
             padding: 4px;
-            border-radius: 10px;
+            border-radius: 8px;
             border: 1px solid var(--border-color);
         }
 
         .filter-btn {
-            border: none;
             background: transparent;
-            padding: 6px 16px;
-            border-radius: 8px;
-            font-size: 13px;
-            font-weight: 600;
             color: var(--text-muted);
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .filter-btn.active {
-            background: var(--card-bg);
-            color: var(--primary);
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-            border: 1px solid var(--border-color);
-        }
-
-        /* ==== TABLE STYLING ==== */
-        .card-body {
-            padding: 24px;
-        }
-
-        .table {
-            color: var(--text-main);
-        }
-
-        .table thead th {
-            background: var(--table-header) !important;
-            border-bottom: 1px solid var(--border-color) !important;
-            color: var(--text-muted) !important;
-            font-weight: 600;
-            font-size: 12px;
-            text-transform: uppercase;
-            padding: 14px 16px;
-            white-space: nowrap;
-        }
-
-        .table tbody td {
-            padding: 16px;
-            vertical-align: middle;
-            color: var(--text-main);
-            font-size: 14px;
-            border-bottom: 1px solid var(--border-color) !important;
-        }
-
-        .table tbody tr:hover td {
-            background-color: var(--table-hover) !important;
-            color: var(--text-main);
-        }
-
-        .table tbody tr:last-child td {
-            border-bottom: none !important;
-        }
-
-        .table a.employee-name {
-            color: var(--primary);
-            font-weight: 600;
-            text-decoration: none;
-        }
-
-        .table a.employee-name:hover {
-            text-decoration: underline;
-        }
-
-        /* Badges */
-        .badge-status {
-            padding: 6px 12px;
-            border-radius: 9999px;
-            font-size: 11px;
-            font-weight: 600;
-            text-transform: uppercase;
-        }
-
-        .badge-success {
-            background: #dcfce7;
-            color: #16a34a;
-        }
-
-        .badge-danger {
-            background: #fef2f2;
-            color: #dc2626;
-        }
-
-        /* Action Button */
-        .btn-action-view {
-            background: var(--primary);
-            color: #fff;
             border: none;
             padding: 6px 16px;
             border-radius: 6px;
-            font-size: 13px;
-            font-weight: 500;
-            text-decoration: none;
-            display: inline-block;
-            transition: background 0.2s;
-        }
-
-        .btn-action-view:hover {
-            background: #1d4ed8;
-            color: #fff;
-        }
-
-        /* Export Button */
-        .btn-export {
-            background: var(--primary);
-            color: #fff;
-            border: none;
-            padding: 8px 20px;
-            border-radius: 8px;
-            font-size: 14px;
+            font-size: 0.85rem;
             font-weight: 600;
-            text-decoration: none;
-            display: flex;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        .filter-btn.active {
+            background: var(--bg-card);
+            color: var(--sapphire-primary);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        /* Soft Badges */
+        .badge-soft {
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            display: inline-flex;
             align-items: center;
-            gap: 8px;
-            transition: 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
-        .btn-export:hover {
-            background: #1d4ed8;
-            color: #fff;
+        .badge-soft-primary {
+            background: rgba(59, 130, 246, 0.15);
+            color: var(--sapphire-primary);
         }
 
-        /* DataTables Dark Mode Overrides */
+        .badge-soft-success {
+            background: rgba(16, 185, 129, 0.15);
+            color: var(--sapphire-success);
+        }
+
+        .badge-soft-warning {
+            background: rgba(245, 158, 11, 0.15);
+            color: var(--sapphire-warning);
+        }
+
+        .badge-soft-danger {
+            background: rgba(239, 68, 68, 0.15);
+            color: var(--sapphire-danger);
+        }
+
+        .badge-soft-muted {
+            background: rgba(100, 116, 139, 0.15);
+            color: var(--text-muted);
+        }
+
+        /* Tables */
+        .dash-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 0;
+        }
+
+        .dash-table th {
+            color: var(--text-muted) !important;
+            font-weight: 600;
+            font-size: 0.75rem;
+            border-bottom: 1px solid var(--border-color) !important;
+            padding: 1rem;
+            background-color: var(--bg-card) !important;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .dash-table td {
+            color: var(--text-main);
+            font-weight: 500;
+            font-size: 0.85rem;
+            border-bottom: 1px dashed var(--border-color) !important;
+            padding: 1rem;
+            vertical-align: middle;
+            background-color: transparent !important;
+        }
+
+        .dash-table tr:hover td {
+            background-color: var(--table-hover) !important;
+        }
+
+        .dash-table tr:last-child td {
+            border-bottom: none !important;
+        }
+
+        .employee-name-link {
+            font-weight: 600;
+            color: var(--sapphire-primary);
+            text-decoration: none;
+            transition: color 0.2s ease;
+        }
+
+        .employee-name-link:hover {
+            color: var(--text-main);
+            text-decoration: underline;
+        }
+
+        /* DataTables Sapphire Integration */
         .dataTables_wrapper .dataTables_length,
         .dataTables_wrapper .dataTables_filter,
-        .dataTables_wrapper .dataTables_info {
-            color: var(--text-main) !important;
+        .dataTables_wrapper .dataTables_info,
+        .dataTables_wrapper .dataTables_paginate {
+            color: var(--text-muted) !important;
+            font-size: 0.85rem;
+            padding: 0 1rem;
+            margin-top: 1rem;
+            margin-bottom: 1rem;
         }
 
         .dataTables_wrapper .dataTables_length select,
         .dataTables_wrapper .dataTables_filter input {
-            background: var(--card-bg);
+            background-color: var(--bg-body);
             color: var(--text-main);
             border: 1px solid var(--border-color);
+            border-radius: 6px;
             padding: 4px 8px;
             outline: none;
-            border-radius: 6px;
+            transition: border-color 0.2s ease;
+        }
+
+        .dataTables_wrapper .dataTables_filter input:focus {
+            border-color: var(--sapphire-primary);
         }
 
         .dataTables_wrapper .dataTables_paginate .paginate_button {
             color: var(--text-main) !important;
+            border: 1px solid transparent !important;
+            border-radius: 6px;
+            padding: 4px 10px;
+            margin: 0 2px;
+        }
+
+        .dataTables_wrapper .dataTables_paginate .paginate_button:hover {
+            background: var(--table-hover) !important;
+            border-color: var(--border-color) !important;
+            color: var(--sapphire-primary) !important;
         }
 
         .dataTables_wrapper .dataTables_paginate .paginate_button.current {
-            background: var(--primary) !important;
+            background: var(--sapphire-primary) !important;
             color: white !important;
             border: none !important;
-            border-radius: 6px;
         }
     </style>
 @endpush
@@ -292,191 +267,218 @@
 @section('content')
     <?php $company = session('company'); ?>
 
-    <div class="main-content-wrapper">
+    <div class="container-fluid py-4">
 
-        <div class="kpi-row">
-            <div class="kpi-card" onclick="clearFilters()">
-                <div class="kpi-icon" style="background: rgba(59, 130, 246, 0.1); color: #3b82f6;"><i
-                        class="bi bi-people-fill"></i></div>
-                <div class="kpi-info">
-                    <h6>Total Users</h6>
-                    <h3>{{ $totalUsersCount ?? 0 }}</h3>
+        {{-- COMPACT HEADER --}}
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
+            <div>
+                <h4 class="fw-bold mb-1" style="color: var(--text-main);">Employees</h4>
+                <p class="mb-0" style="color: var(--text-muted); font-size: 0.85rem;">
+                    Manage user roles, site assignments, and operational statuses.
+                </p>
+            </div>
+            <div>
+                <a href="{{ route('assigned.export') }}" class="btn-sapphire-outline shadow-sm">
+                    <i class="bi bi-download"></i> Export Data
+                </a>
+            </div>
+        </div>
+
+        {{-- KPI CARDS --}}
+        <div class="row g-3 mb-4">
+            <div class="col-12 col-sm-6 col-xl-3">
+                <div class="dash-card hover-lift p-3 d-flex align-items-center gap-3" onclick="clearFilters()">
+                    <div class="kpi-icon badge-soft-primary"><i class="bi bi-people-fill"></i></div>
+                    <div class="kpi-info">
+                        <h6>Total Users</h6>
+                        <h3>{{ $totalUsersCount ?? 0 }}</h3>
+                    </div>
                 </div>
             </div>
 
-            <div class="kpi-card" onclick="filterRole('Admin')">
-                <div class="kpi-icon" style="background: rgba(139, 92, 246, 0.1); color: #8b5cf6;"><i
-                        class="bi bi-shield-lock-fill"></i></div>
-                <div class="kpi-info">
-                    <h6>Admins</h6>
-                    <h3>{{ $adminsCount ?? 0 }}</h3>
+            <div class="col-12 col-sm-6 col-xl-3">
+                <div class="dash-card hover-lift p-3 d-flex align-items-center gap-3" onclick="filterRole('Admin')">
+                    <div class="kpi-icon badge-soft-success"><i class="bi bi-shield-lock-fill"></i></div>
+                    <div class="kpi-info">
+                        <h6>Admins</h6>
+                        <h3>{{ $adminsCount ?? 0 }}</h3>
+                    </div>
                 </div>
             </div>
 
-            <div class="kpi-card" onclick="filterRole('Supervisor')">
-                <div class="kpi-icon" style="background: rgba(217, 119, 6, 0.1); color: #d97706;"><i
-                        class="bi bi-person-badge-fill"></i></div>
-                <div class="kpi-info">
-                    <h6>Supervisors</h6>
-                    <h3>{{ $supervisorsCount ?? 0 }}</h3>
+            <div class="col-12 col-sm-6 col-xl-3">
+                <div class="dash-card hover-lift p-3 d-flex align-items-center gap-3" onclick="filterRole('Supervisor')">
+                    <div class="kpi-icon badge-soft-warning"><i class="bi bi-person-badge-fill"></i></div>
+                    <div class="kpi-info">
+                        <h6>Supervisors</h6>
+                        <h3>{{ $supervisorsCount ?? 0 }}</h3>
+                    </div>
                 </div>
             </div>
 
-            <div class="kpi-card"
-                onclick="filterTable('Unassigned'); $('.filter-btn').removeClass('active'); $('#btn-unassigned').addClass('active');">
-                <div class="kpi-icon" style="background: rgba(239, 68, 68, 0.1); color: #ef4444;"><i
-                        class="bi bi-person-dash-fill"></i></div>
-                <div class="kpi-info">
-                    <h6>Unassigned</h6>
-                    <h3>{{ count($unassigned ?? []) }}</h3>
+            <div class="col-12 col-sm-6 col-xl-3">
+                <div class="dash-card hover-lift p-3 d-flex align-items-center gap-3"
+                    onclick="filterTable('Unassigned'); $('.filter-btn').removeClass('active'); $('#btn-unassigned').addClass('active');">
+                    <div class="kpi-icon badge-soft-danger"><i class="bi bi-person-dash-fill"></i></div>
+                    <div class="kpi-info">
+                        <h6>Unassigned</h6>
+                        <h3>{{ count($unassigned ?? []) }}</h3>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <div class="card">
-            <div class="card-header">
-                <h4>Employees</h4>
+        {{-- TABLE CARD --}}
+        <div class="dash-card p-0 overflow-hidden">
 
-                <div class="d-flex align-items-center gap-3">
-                    <div class="filter-group">
-                        <button id="btn-all" class="filter-btn active"
-                            onclick="filterTable(''); filterRole('');">All</button>
-                        <button id="btn-assigned" class="filter-btn" onclick="filterTable('Assigned')">Assigned</button>
-                        <button id="btn-unassigned" class="filter-btn"
-                            onclick="filterTable('Unassigned')">Unassigned</button>
-                    </div>
+            <div class="p-3 d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3"
+                style="border-bottom: 1px solid var(--border-color);">
+                <h5 class="fw-bold mb-0 ms-2" style="color: var(--text-main);">User Directory</h5>
 
-                    <a href="{{ route('assigned.export') }}" class="btn-export">
-                        <i class="bi bi-download"></i> Export
-                    </a>
+                <div class="filter-group shadow-sm">
+                    <button id="btn-all" class="filter-btn active" onclick="filterTable(''); filterRole('');">All</button>
+                    <button id="btn-assigned" class="filter-btn" onclick="filterTable('Assigned')">Assigned</button>
+                    <button id="btn-unassigned" class="filter-btn" onclick="filterTable('Unassigned')">Unassigned</button>
                 </div>
             </div>
 
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table" id="employeeTable">
-                        <thead>
-                            <tr>
-                                <th style="width: 60px;">SR. NO.</th>
-                                <th>EMPLOYEE NAME</th>
-                                <th>ROLE</th>
-                                <th>SITE ASSIGN</th>
-                                <th>CONTACT</th>
-                                <th>DURATION</th>
-                                <th>SHIFT</th>
-                                <th>STATUS</th>
-                                <th style="display:none;">ASSIGNMENT_FILTER</th>
-                                <th>ACTION</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php $sr = 1; ?>
+            <div class="table-responsive">
+                <table class="table dash-table" id="employeeTable">
+                    <thead>
+                        <tr>
+                            <th class="ps-4" style="width: 60px;">#</th>
+                            <th>Employee Name</th>
+                            <th>Role</th>
+                            <th>Site Assign</th>
+                            <th>Contact</th>
+                            <th>Duration</th>
+                            <th>Shift</th>
+                            <th>Status</th>
+                            <th style="display:none;">Assignment_Filter</th>
+                            <th class="text-end pe-4">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php $sr = 1; ?>
 
-                            {{-- === PRESENT / LATE / ABSENT (ASSIGNED) === --}}
+                        {{-- === PRESENT / LATE / ABSENT (ASSIGNED) === --}}
+                        @php
+                            $assignedUsers = collect();
+                            if (isset($present)) {
+                                $assignedUsers = $assignedUsers->concat($present);
+                            }
+                            if (isset($late)) {
+                                $assignedUsers = $assignedUsers->concat($late);
+                            }
+                            if (isset($absent)) {
+                                $assignedUsers = $assignedUsers->concat($absent);
+                            }
+                            $assignedUsers = $assignedUsers->unique('id');
+                        @endphp
+
+                        @foreach ($assignedUsers as $row)
                             @php
-                                $assignedUsers = collect();
-                                if (isset($present)) {
-                                    $assignedUsers = $assignedUsers->concat($present);
-                                }
-                                if (isset($late)) {
-                                    $assignedUsers = $assignedUsers->concat($late);
-                                }
-                                if (isset($absent)) {
-                                    $assignedUsers = $assignedUsers->concat($absent);
-                                }
-                                $assignedUsers = $assignedUsers->unique('id');
+                                $isActive = isset($row->showUser) && $row->showUser == 1;
                             @endphp
+                            <tr>
+                                <td class="ps-4 fw-semibold" style="color: var(--text-muted);">{{ $sr++ }}</td>
+                                <td>
+                                    <a class="employee-name-link"
+                                        href="{{ route('clients.clientguard_read', [0, 0, $row->id]) }}">
+                                        {{ $row->name ?? $row->user_name }}
+                                    </a>
+                                </td>
+                                <td>
+                                    @if ($row->role_id == 2)
+                                        <span class="badge-soft badge-soft-success">Admin</span>
+                                    @elseif($row->role_id == 3)
+                                        <span class="badge-soft badge-soft-warning">Supervisor</span>
+                                    @else
+                                        <span class="badge-soft badge-soft-primary">Guard</span>
+                                    @endif
+                                </td>
+                                <td>{{ $row->site_name ?? 'N/A' }}</td>
+                                <td class="font-monospace">{{ $row->contact ?? 'N/A' }}</td>
+                                <td>
+                                    @if (isset($row->date_range))
+                                        <?php $range = json_decode($row->date_range); ?>
+                                        <div style="font-size: 0.8rem; line-height: 1.4;">
+                                            <span
+                                                style="color: var(--text-main);">{{ date('d M Y', strtotime($range->from)) }}</span>
+                                            <br><span style="color: var(--text-muted); font-size: 0.7rem;">to</span><br>
+                                            <span
+                                                style="color: var(--text-main);">{{ date('d M Y', strtotime($range->to)) }}</span>
+                                        </div>
+                                    @else
+                                        <span style="color: var(--text-muted);">N/A</span>
+                                    @endif
+                                </td>
+                                <td>{{ $row->shift_name ?? 'N/A' }}</td>
+                                <td>
+                                    @if ($isActive)
+                                        <span class="badge-soft badge-soft-success"><i class="bi bi-circle-fill me-1"
+                                                style="font-size: 0.4rem;"></i> Active</span>
+                                    @else
+                                        <span class="badge-soft badge-soft-danger"><i class="bi bi-circle-fill me-1"
+                                                style="font-size: 0.4rem;"></i> Inactive</span>
+                                    @endif
+                                </td>
+                                <td style="display:none;">Assigned</td>
+                                <td class="text-end pe-4">
+                                    <a href="{{ route('clients.clientguard_read', [0, 0, $row->id]) }}"
+                                        class="btn-view-sm">View</a>
+                                </td>
+                            </tr>
+                        @endforeach
 
-                            @foreach ($assignedUsers as $row)
+                        {{-- === UNASSIGNED === --}}
+                        @if (isset($unassigned))
+                            @foreach ($unassigned as $row)
                                 @php
                                     $isActive = isset($row->showUser) && $row->showUser == 1;
                                 @endphp
                                 <tr>
-                                    <td>{{ $sr++ }}</td>
-                                    <td><a class="employee-name"
-                                            href="{{ route('clients.clientguard_read', [0, 0, $row->id]) }}">{{ $row->name ?? $row->user_name }}</a>
+                                    <td class="ps-4 fw-semibold" style="color: var(--text-muted);">{{ $sr++ }}</td>
+                                    <td>
+                                        <a class="employee-name-link"
+                                            href="{{ route('clients.clientguard_read', [0, 0, $row->id]) }}">
+                                            {{ $row->name }}
+                                        </a>
                                     </td>
                                     <td>
-                                        <span class="text-muted fw-bold"
-                                            style="font-size: 12px; text-transform: uppercase;">
-                                            @if ($row->role_id == 2)
-                                                Admin
-                                            @elseif($row->role_id == 3)
-                                                Supervisor
-                                            @else
-                                                Guard
-                                            @endif
-                                        </span>
-                                    </td>
-                                    <td>{{ $row->site_name ?? 'N/A' }}</td>
-                                    <td>{{ $row->contact ?? 'N/A' }}</td>
-                                    <td>
-                                        @if (isset($row->date_range))
-                                            <?php $range = json_decode($row->date_range); ?>
-                                            {{ date('d M Y', strtotime($range->from)) }} <br>to<br>
-                                            {{ date('d M Y', strtotime($range->to)) }}
+                                        @if ($row->role_id == 2)
+                                            <span class="badge-soft badge-soft-success">Admin</span>
+                                        @elseif($row->role_id == 3)
+                                            <span class="badge-soft badge-soft-warning">Supervisor</span>
                                         @else
-                                            N/A
+                                            <span class="badge-soft badge-soft-primary">Guard</span>
                                         @endif
                                     </td>
-                                    <td>{{ $row->shift_name ?? 'N/A' }}</td>
+                                    <td><span style="color: var(--text-muted); font-style: italic;">No Site Linked</span>
+                                    </td>
+                                    <td class="font-monospace">{{ $row->contact ?? 'N/A' }}</td>
+                                    <td><span style="color: var(--text-muted);">N/A</span></td>
+                                    <td><span style="color: var(--text-muted);">N/A</span></td>
                                     <td>
                                         @if ($isActive)
-                                            <span class="badge-status badge-success">Active</span>
+                                            <span class="badge-soft badge-soft-success"><i class="bi bi-circle-fill me-1"
+                                                    style="font-size: 0.4rem;"></i> Active</span>
                                         @else
-                                            <span class="badge-status badge-danger">Inactive</span>
+                                            <span class="badge-soft badge-soft-danger"><i class="bi bi-circle-fill me-1"
+                                                    style="font-size: 0.4rem;"></i> Inactive</span>
                                         @endif
                                     </td>
-                                    <td style="display:none;">Assigned</td>
-                                    <td><a href="{{ route('clients.clientguard_read', [0, 0, $row->id]) }}"
-                                            class="btn-action-view">View</a></td>
+                                    <td style="display:none;">Unassigned</td>
+                                    <td class="text-end pe-4">
+                                        <a href="{{ route('clients.clientguard_read', [0, 0, $row->id]) }}"
+                                            class="btn-view-sm">View</a>
+                                    </td>
                                 </tr>
                             @endforeach
+                        @endif
 
-                            {{-- === UNASSIGNED === --}}
-                            @if (isset($unassigned))
-                                @foreach ($unassigned as $row)
-                                    @php
-                                        $isActive = isset($row->showUser) && $row->showUser == 1;
-                                    @endphp
-                                    <tr>
-                                        <td>{{ $sr++ }}</td>
-                                        <td><a class="employee-name"
-                                                href="{{ route('clients.clientguard_read', [0, 0, $row->id]) }}">{{ $row->name }}</a>
-                                        </td>
-                                        <td>
-                                            <span class="text-muted fw-bold"
-                                                style="font-size: 12px; text-transform: uppercase;">
-                                                @if ($row->role_id == 2)
-                                                    Admin
-                                                @elseif($row->role_id == 3)
-                                                    Supervisor
-                                                @else
-                                                    Guard
-                                                @endif
-                                            </span>
-                                        </td>
-                                        <td><span class="text-muted fst-italic">No Site Linked</span></td>
-                                        <td>{{ $row->contact ?? 'N/A' }}</td>
-                                        <td>N/A</td>
-                                        <td>N/A</td>
-                                        <td>
-                                            @if ($isActive)
-                                                <span class="badge-status badge-success">Active</span>
-                                            @else
-                                                <span class="badge-status badge-danger">Inactive</span>
-                                            @endif
-                                        </td>
-                                        <td style="display:none;">Unassigned</td>
-                                        <td><a href="{{ route('clients.clientguard_read', [0, 0, $row->id]) }}"
-                                                class="btn-action-view">View</a></td>
-                                    </tr>
-                                @endforeach
-                            @endif
-
-                        </tbody>
-                    </table>
-                </div>
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
@@ -500,12 +502,16 @@
                 "columnDefs": [{
                         "orderable": false,
                         "targets": 9
-                    }, // Action column is now index 9
+                    }, // Action column
                     {
                         "visible": false,
                         "targets": 8
-                    } // Hidden Assignment filter is now index 8
-                ]
+                    } // Hidden Assignment filter
+                ],
+                "drawCallback": function(settings) {
+                    // Ensures styling remains after pagination/search
+                    $('.dataTables_paginate > .pagination').addClass('pagination-sm');
+                }
             });
 
             // Filter button UI states
@@ -518,9 +524,10 @@
         // Search the exact Role string in the 3rd Column (index 2)
         function filterRole(role) {
             if (table) {
-                // regex strict match '^Admin$' to prevent partial overlaps
-                let regexQuery = role ? '^' + role + '$' : '';
-                table.column(2).search(regexQuery, true, false).draw();
+                // Remove the HTML tags from the search by doing a raw text search, DataTables is smart enough
+                // But since we use badges, we can just search the text inside
+                let regexQuery = role ? role : '';
+                table.column(2).search(regexQuery, false, true).draw();
             }
         }
 

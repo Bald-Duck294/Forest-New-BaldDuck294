@@ -1,5 +1,5 @@
 @php
-$hideGlobalFilters = true;
+    $hideGlobalFilters = true;
 @endphp
 @extends('layouts.app')
 
@@ -7,259 +7,257 @@ $hideGlobalFilters = true;
 
 @section('content')
 
-<div class="container-fluid py-4">
+    <style>
+        /* Custom Filter Button Styles to match Overview */
+        .custom-date-input,
+        .custom-select-input {
+            background-color: var(--bg-card, #fff);
+            color: var(--text-main, #000);
+            border: 1px solid var(--border-color, #dee2e6);
+            border-radius: 8px;
+            padding: 8px 12px;
+            outline: none;
+            transition: all 0.2s ease;
+            font-size: 0.9rem;
+        }
 
-    {{-- FILTERS --}}
-    <div class="card shadow-sm mb-4">
+        html[data-bs-theme="dark"] .custom-date-input {
+            color-scheme: dark;
+        }
 
-        <div class="card-body">
+        html[data-bs-theme="light"] .custom-date-input {
+            color-scheme: light;
+        }
 
+        .custom-filter-btn {
+            background-color: var(--sapphire-primary, #3B82F6);
+            color: #ffffff;
+            border: none;
+            border-radius: 8px;
+            padding: 8px 20px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .custom-filter-btn:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+            color: #ffffff;
+        }
+
+        /* Adjust KPI boxes for 3-column layout */
+        .kpi-box-logs {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1.25rem 1.5rem;
+            border-radius: 12px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            transition: transform 0.2s ease, border-color 0.2s ease;
+            height: 100%;
+            cursor: pointer;
+        }
+
+        .kpi-box-logs:hover {
+            transform: translateY(-3px);
+            border-color: var(--sapphire-primary);
+        }
+    </style>
+
+    <div class="container-fluid py-4">
+
+        {{-- FILTERS SECTION --}}
+        <div class="dash-card mb-4 p-3">
             <form method="GET">
-
                 <div class="row g-3 align-items-end">
 
                     <div class="col-md-2">
-                        <label class="form-label small fw-semibold">Date Range</label>
-                        <select class="form-select" name="range">
-                            <option value="30days" {{ request('range') == '30days' ? 'selected' : '' }}>Last 30 Days</option>
+                        <label class="form-label small fw-semibold" style="color: var(--text-muted);">Date Range</label>
+                        <select class="form-select custom-select-input w-100" name="range">
+                            <option value="30days" {{ request('range') == '30days' ? 'selected' : '' }}>Last 30 Days
+                            </option>
                             <option value="today" {{ request('range') == 'today' ? 'selected' : '' }}>Today</option>
                             <option value="week" {{ request('range') == 'week' ? 'selected' : '' }}>This Week</option>
                         </select>
                     </div>
 
-                    <div class="col-md-2">
-                        <label class="form-label small fw-semibold">Employee</label>
-                        <select class="form-select" name="employee">
-
+                    <div class="col-md-3">
+                        <label class="form-label small fw-semibold" style="color: var(--text-muted);">Employee</label>
+                        <select class="form-select custom-select-input w-100" name="employee">
                             <option value="">All Employees</option>
-
-                            @foreach($employees as $emp)
-                            <option value="{{ $emp->id }}"
-                                {{ request('employee') == $emp->id ? 'selected' : '' }}>
-                                {{ $emp->name }}
-                            </option>
+                            @foreach ($employees as $emp)
+                                <option value="{{ $emp->id }}" {{ request('employee') == $emp->id ? 'selected' : '' }}>
+                                    {{ $emp->name }}
+                                </option>
                             @endforeach
-
                         </select>
                     </div>
 
-                    <div class="col-md-2">
-                        <label class="form-label small fw-semibold">Site</label>
-                        <select class="form-select" name="site">
-
+                    <div class="col-md-3">
+                        <label class="form-label small fw-semibold" style="color: var(--text-muted);">Site</label>
+                        <select class="form-select custom-select-input w-100" name="site">
                             <option value="">All Sites</option>
-
-                            @foreach($sites as $site)
-                            <option value="{{ $site->id }}"
-                                {{ request('site') == $site->id ? 'selected' : '' }}>
-                                {{ $site->name }}
-                            </option>
+                            @foreach ($sites as $site)
+                                <option value="{{ $site->id }}" {{ request('site') == $site->id ? 'selected' : '' }}>
+                                    {{ $site->name }}
+                                </option>
                             @endforeach
-
                         </select>
                     </div>
 
                     <div class="col-md-2">
-                        <label class="form-label small fw-semibold">Client</label>
-                        <select class="form-select" name="client">
-
+                        <label class="form-label small fw-semibold" style="color: var(--text-muted);">Client</label>
+                        <select class="form-select custom-select-input w-100" name="client">
                             <option value="">All Clients</option>
-
-                            @foreach($clients as $client)
-                            <option value="{{ $client->client_name }}"
-                                {{ request('client') == $client->client_name ? 'selected' : '' }}>
-                                {{ $client->client_name }}
-                            </option>
+                            @foreach ($clients as $client)
+                                <option value="{{ $client->client_name }}"
+                                    {{ request('client') == $client->client_name ? 'selected' : '' }}>
+                                    {{ $client->client_name }}
+                                </option>
                             @endforeach
-
                         </select>
                     </div>
 
-                    <!-- Apply Button -->
                     <div class="col-md-2">
-                        <button class="btn btn-primary w-100">
-                            Apply
+                        <button type="submit" class="custom-filter-btn w-100 h-100">
+                            Apply Filters
                         </button>
                     </div>
 
-                    <!-- Export Buttons -->
-                    <!-- <div class="col-md-2 d-flex gap-2">
-                        <button type="submit" name="export" value="csv" class="btn btn-outline-success">
-                            <i class="bi bi-filetype-csv"></i>
-                        </button>
-
-                        <button type="submit" name="export" value="pdf" class="btn btn-outline-danger">
-                            <i class="bi bi-file-earmark-pdf"></i>
-                        </button>
-                    </div> -->
-
                 </div>
-
             </form>
-
         </div>
 
-    </div>
-
-    {{-- SUMMARY CARDS --}}
-
-    <div class="row mt-4 g-3 mb-4">
-
-        <!-- On Time -->
-        <div class="col-md-3">
-            <div class="card shadow-sm border-1 h-100 hover-card"
-                onclick="window.location.href='{{ route('attendance.logs') }}'">
-
-                <div class="card-body d-flex align-items-center gap-3">
-
-                    <div class="bg-success-subtle text-success p-3 rounded">
-                        <i class="bi bi-check-circle fs-4"></i>
+        {{-- SUMMARY CARDS --}}
+        <div class="row g-4 mb-4">
+            <div class="col-12 col-md-4">
+                <div class="kpi-box-logs">
+                    <div class="kpi-icon badge-soft-success">
+                        <i class="bi bi-check-circle-fill"></i>
                     </div>
-
-                    <div>
-                        <div class="text-muted small">On-time Completion</div>
-                        <h5 class="fw-bold mb-0">{{ $onTimePercent }}%</h5>
+                    <div class="kpi-info">
+                        <h4>On-time Completion</h4>
+                        <h2>{{ $onTimePercent ?? 0 }}%</h2>
                     </div>
+                </div>
+            </div>
 
+            <div class="col-12 col-md-4">
+                <div class="kpi-box-logs">
+                    <div class="kpi-icon badge-soft-warning">
+                        <i class="bi bi-clock-history"></i>
+                    </div>
+                    <div class="kpi-info">
+                        <h4>Avg Lateness</h4>
+                        <h2>{{ $avgLate ?? 0 }}m</h2>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12 col-md-4">
+                <div class="kpi-box-logs">
+                    <div class="kpi-icon badge-soft-danger">
+                        <i class="bi bi-exclamation-triangle-fill"></i>
+                    </div>
+                    <div class="kpi-info">
+                        <h4>Unresolved Incidents</h4>
+                        <h2>{{ $incidents ?? 0 }}</h2>
+                    </div>
                 </div>
             </div>
         </div>
 
+        {{-- LOGS TABLE --}}
+        <div class="dash-card p-0 overflow-hidden">
 
-        <!-- Avg Late -->
-        <div class="col-md-3">
-            <div class="card shadow-sm border-1 h-100 hover-card">
+            <div class="table-responsive">
+                <table class="table table-borderless dash-table mb-0 align-middle">
+                    <thead>
+                        <tr>
+                            <th class="ps-4">Employee Name</th>
+                            <th>Site Name</th>
+                            <th>Duration</th>
+                            <th>Status</th>
+                            <th class="text-end pe-4">Action</th>
+                        </tr>
+                    </thead>
 
-                <div class="card-body d-flex align-items-center gap-3">
+                    <tbody>
+                        @forelse($logs as $log)
+                            <tr>
+                                <td class="ps-4">
+                                    <div class="d-flex align-items-center gap-3">
+                                        @if (isset($log->profile_pic))
+                                            <img src="{{ asset($log->profile_pic) }}" width="40" height="40"
+                                                class="rounded-circle shadow-sm"
+                                                style="object-fit: cover; border: 2px solid var(--border-color);">
+                                        @else
+                                            <div class="rounded-circle shadow-sm d-flex align-items-center justify-content-center"
+                                                style="width:40px; height:40px; background-color: var(--border-color); color: var(--text-muted);">
+                                                <i class="bi bi-person-fill fs-5"></i>
+                                            </div>
+                                        @endif
+                                        <div>
+                                            <div class="fw-semibold" style="color: var(--text-main);">
+                                                {{ $log->name ?? 'Unknown User' }}</div>
+                                        </div>
+                                    </div>
+                                </td>
 
-                    <div class="bg-warning-subtle text-warning p-3 rounded">
-                        <i class="bi bi-clock fs-4"></i>
-                    </div>
+                                <td>
+                                    <div style="color: var(--text-main);">{{ $log->site_name ?? 'N/A' }}</div>
+                                </td>
 
-                    <div>
-                        <div class="text-muted small">Avg Lateness</div>
-                        <h5 class="fw-bold mb-0">{{ $avgLate }}m</h5>
-                    </div>
+                                <td style="color: var(--text-main);">
+                                    {{ $log->duration_for_calc ?? '-' }}
+                                </td>
 
-                </div>
+                                <td>
+                                    @if (($log->emergency_attend ?? 0) == 1)
+                                        <span class="badge badge-soft-danger rounded-pill px-3">
+                                            Emergency
+                                        </span>
+                                    @elseif(($log->lateTime ?? 0) > 0)
+                                        <span class="badge badge-soft-warning rounded-pill px-3">
+                                            Late ({{ $log->lateTime }}m)
+                                        </span>
+                                    @else
+                                        <span class="badge badge-soft-success rounded-pill px-3">
+                                            On-time
+                                        </span>
+                                    @endif
+                                </td>
+
+                                <td class="text-end pe-4">
+                                    <a href="#" class="fw-semibold text-decoration-none"
+                                        style="color: var(--sapphire-primary); font-size: 0.9rem;">
+                                        View Details
+                                    </a>
+                                </td>
+
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="5" class="text-center py-5" style="color: var(--text-muted);">
+                                    <i class="bi bi-inbox fs-2 d-block mb-2 opacity-50"></i>
+                                    No attendance records found for the selected criteria.
+                                </td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
             </div>
         </div>
 
-
-        <!-- Incidents -->
-        <div class="col-md-3">
-            <div class="card shadow-sm border-1 h-100 hover-card">
-
-                <div class="card-body d-flex align-items-center gap-3">
-
-                    <div class="bg-danger-subtle text-danger p-3 rounded">
-                        <i class="bi bi-exclamation-triangle fs-4"></i>
-                    </div>
-
-                    <div>
-                        <div class="text-muted small">Unresolved Incidents</div>
-                        <h5 class="fw-bold mb-0">{{ $incidents }}</h5>
-                    </div>
-
-                </div>
-            </div>
+        <div class="mt-4 px-2">
+            {{ $logs->links('pagination::bootstrap-5') }}
         </div>
 
     </div>
-
-    {{-- TABLE --}}
-    <div class="card shadow-sm">
-
-        <div class="table-responsive">
-
-            <table class="table align-middle mb-0">
-
-                <thead class="table">
-                    <tr>
-                        <th>Employee Name</th>
-                        <th>Site Name</th>
-                        <th>Entry Time</th>
-                        <th>Exit Time</th>
-                        <th>Duration</th>
-                        <th>Status</th>
-                        <th class="text-end">Action</th>
-                    </tr>
-                </thead>
-
-                <tbody>
-
-                    @forelse($logs as $log)
-                    <tr>
-
-                        <td>
-                            <div class="d-flex align-items-center gap-2">
-
-                                <div class="rounded-circle bg-secondary" style="width:36px;height:36px;"></div>
-
-                                <div>
-                                    <div class="fw-semibold">{{ $log->name }}</div>
-                                    <small class="text-muted">{{ $log->client_name }}</small>
-                                </div>
-
-                            </div>
-                        </td>
-
-                        <td>
-                            <div>{{ $log->site_name }}</div>
-                            <small class="text-muted">{{ $log->client_name }}</small>
-                        </td>
-
-                        <td>{{ $log->entry_time ?? '-' }}</td>
-
-                        <td>{{ $log->exit_time ?? '-' }}</td>
-
-                        <td>{{ $log->duration_for_calc ?? '-' }}</td>
-
-                        <td>
-
-                            @if ($log->emergency_attend == 1)
-                            <span class="badge bg-danger-subtle text-danger">
-                                Emergency
-                            </span>
-                            @elseif($log->lateTime > 0)
-                            <span class="badge bg-warning-subtle text-warning">
-                                Late ({{ $log->lateTime }}m)
-                            </span>
-                            @else
-                            <span class="badge bg-success-subtle text-success">
-                                On-time
-                            </span>
-                            @endif
-
-                        </td>
-
-                        <td class="text-end">
-                            <a class="text-primary fw-semibold">View Details</a>
-                        </td>
-
-                    </tr>
-
-                    @empty
-
-                    <tr>
-                        <td colspan="7" class="text-center py-4 text-muted">
-                            No attendance records found
-                        </td>
-                    </tr>
-                    @endforelse
-
-                </tbody>
-
-            </table>
-
-        </div>
-
-    </div>
-    <div class="p-3">
-        {{ $logs->links('pagination::bootstrap-5') }}
-    </div>
-
-
-</div>
 
 @endsection

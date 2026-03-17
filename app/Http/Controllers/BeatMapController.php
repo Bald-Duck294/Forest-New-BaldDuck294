@@ -48,7 +48,8 @@ class BeatMapController extends Controller
             if ($rangeId) {
                 $availableBeats = SiteDetails::where('client_id', $rangeId)->get(['id', 'name']);
             }
-        } elseif ($authUser->role_id == 7) {
+        }
+        elseif ($authUser->role_id == 7) {
             // Admin/Client: Assigned ranges
             $assign = SiteAssign::where('user_id', $authUser->id)->first();
             if ($assign && $assign->client_id) {
@@ -58,7 +59,8 @@ class BeatMapController extends Controller
                     $availableBeats = SiteDetails::where('client_id', $rangeId)->get(['id', 'name']);
                 }
             }
-        } elseif ($authUser->role_id == 2) {
+        }
+        elseif ($authUser->role_id == 2) {
             // Supervisor: Assigned beats
             $assign = SiteAssign::where('user_id', $authUser->id)->first();
             if ($assign && $assign->site_id) {
@@ -73,7 +75,8 @@ class BeatMapController extends Controller
                     $availableBeats = SiteDetails::whereIn('id', $siteIds)->where('client_id', $rangeId)->get(['id', 'name']);
                 }
             }
-        } elseif ($authUser->role_id == 3) {
+        }
+        elseif ($authUser->role_id == 3) {
             // Guard: Assigned beat
             $assign = SiteAssign::where('user_id', $authUser->id)->first();
             if ($assign && $assign->site_id) {
@@ -125,7 +128,8 @@ class BeatMapController extends Controller
                     $query->whereIn('site_id', $scopedSiteIds);
                 }
             }
-        } elseif ($authUser->role_id == 3) {
+        }
+        elseif ($authUser->role_id == 3) {
             $assign = SiteAssign::where('user_id', $authUser->id)->first();
             if ($assign && $assign->site_id) {
                 if (!$siteId) {
@@ -137,7 +141,8 @@ class BeatMapController extends Controller
 
         if ($siteId) {
             $query->where('site_id', $siteId);
-        } elseif ($rangeId) {
+        }
+        elseif ($rangeId) {
             $query->where('range_id', $rangeId);
         }
 
@@ -157,11 +162,40 @@ class BeatMapController extends Controller
 
         $geofences = [];
         if ($siteId || $rangeId) {
-            $qGeo = DB::table('site_geofences')->whereNull('deleted_at');
+            $qGeo = DB::table('site_geofences')->whereNull('deleted_at')->where('company_id', $authUser->company_id);
             if ($siteId) {
                 $qGeo->where('site_id', $siteId);
-            } else {
+            }
+            else {
                 $qGeo->where('client_id', $rangeId);
+            }
+            $geofences = $qGeo->get();
+        }
+        else {
+            // Default scoping for initial load
+            $qGeo = DB::table('site_geofences')->whereNull('deleted_at')->where('company_id', $authUser->company_id);
+            if ($authUser->role_id == 2) {
+                $assign = SiteAssign::where('user_id', $authUser->id)->first();
+                if ($assign && $assign->site_id) {
+                    $scopedSiteIds = is_array(json_decode($assign->site_id, true)) ? json_decode($assign->site_id, true) : [$assign->site_id];
+                    $qGeo->whereIn('site_id', $scopedSiteIds);
+                }
+            }
+            elseif ($authUser->role_id == 3) {
+                $assign = SiteAssign::where('user_id', $authUser->id)->first();
+                if ($assign && $assign->site_id) {
+                    $qGeo->where('site_id', $assign->site_id);
+                }
+            }
+            elseif ($authUser->role_id == 7) {
+                $assign = SiteAssign::where('user_id', $authUser->id)->first();
+                if ($assign && $assign->client_id) {
+                    $clientIds = is_array(json_decode($assign->client_id, true)) ? json_decode($assign->client_id, true) : [$assign->client_id];
+                    $qGeo->whereIn('client_id', $clientIds);
+                }
+            }
+            else {
+            // Role 1 or fallback
             }
             $geofences = $qGeo->get();
         }
@@ -191,8 +225,9 @@ class BeatMapController extends Controller
             $attrs = $feature->attributes;
             if (is_string($attrs)) {
                 $attrs = json_decode($attrs, true) ?: [];
-            } elseif (is_object($attrs)) {
-                $attrs = (array) $attrs;
+            }
+            elseif (is_object($attrs)) {
+                $attrs = (array)$attrs;
             }
 
             $data[$feature->layer_type][] = [
@@ -223,13 +258,15 @@ class BeatMapController extends Controller
         if (is_string($data)) {
             // Force UTF-8 encoding and replace invalid sequences
             return mb_convert_encoding($data, 'UTF-8', 'UTF-8');
-        } elseif (is_array($data)) {
+        }
+        elseif (is_array($data)) {
             $cleaned = [];
             foreach ($data as $key => $value) {
                 $cleaned[$key] = $this->cleanUtf8($value);
             }
             return $cleaned;
-        } elseif (is_object($data)) {
+        }
+        elseif (is_object($data)) {
             // Handle stdClass/Collection objects
             if ($data instanceof \Illuminate\Support\Collection) {
                 return $data->map(fn($item) => $this->cleanUtf8($item));
@@ -287,9 +324,10 @@ class BeatMapController extends Controller
             }
             return array_map(function ($polygon) {
                 return array_map(function ($ring) {
-                    return array_map([$this, 'swapLatLog'], $ring);
-                }, $polygon);
-            }, $coords);
+                        return array_map([$this, 'swapLatLog'], $ring);
+                    }
+                        , $polygon);
+                }, $coords);
         }
 
         return $coords;

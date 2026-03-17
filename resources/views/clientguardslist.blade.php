@@ -7,23 +7,71 @@
 
 @section('content')
     <style>
+        /* Define Theme Variables */
         :root {
+            /* Light Theme */
             --primary: #2563eb;
             --primary-hover: #1d4ed8;
             --border: #e2e8f0;
-            --bg: #f8fafc;
-            --text: #0f172a;
-            --muted: #64748b;
+            --bg-card: #ffffff;
+            --bg-body: #f8fafc;
+            --bg-header: #f1f5f9;
+            --bg-hover: #f8fafc;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+
+            /* Button Colors */
+            --btn-view-bg: #eff6ff;
+            --btn-view-text: #3b82f6;
+            --btn-edit-bg: #f0fdf4;
+            --btn-edit-text: #22c55e;
+            --btn-delete-bg: #fef2f2;
+            --btn-delete-text: #ef4444;
+            --btn-back-bg: #f1f5f9;
+            --btn-back-hover: #e2e8f0;
+
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
         }
 
+        /* Dark Theme Support (Auto-detect & Manual Class Support) */
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --primary: #3b82f6;
+                --primary-hover: #60a5fa;
+                --border: #334155;
+                --bg-card: #1e293b;
+                --bg-body: #0f172a;
+                --bg-header: #0f172a;
+                --bg-hover: #334155;
+                --text-main: #f8fafc;
+                --text-muted: #94a3b8;
+
+                --btn-view-bg: rgba(59, 130, 246, 0.15);
+                --btn-view-text: #60a5fa;
+                --btn-edit-bg: rgba(34, 197, 94, 0.15);
+                --btn-edit-text: #4ade80;
+                --btn-delete-bg: rgba(239, 68, 68, 0.15);
+                --btn-delete-text: #f87171;
+                --btn-back-bg: #334155;
+                --btn-back-hover: #475569;
+
+                --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+            }
+        }
+
+        /* Base Card Styles */
         .card {
             border-radius: 16px;
             border: 1px solid var(--border);
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
-            background: #fff;
+            box-shadow: var(--shadow);
+            background: var(--bg-card);
             margin-bottom: 24px;
+            color: var(--text-main);
+            transition: background-color 0.3s, border-color 0.3s;
+            margin-top: 1rem;
         }
 
+        /* Responsive Header */
         .card-header {
             background: transparent;
             border-bottom: 1px solid var(--border);
@@ -31,38 +79,54 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .header-title-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
         }
 
         .card-header h4 {
             margin: 0;
             font-weight: 700;
-            color: var(--text);
+            color: var(--text-main);
             font-size: 18px;
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 8px;
         }
 
         .card-body {
             padding: 24px;
         }
 
+        /* Table Styling */
+        .table {
+            width: 100%;
+            margin-bottom: 0;
+            color: var(--text-main);
+        }
+
         .table thead th {
-            background: #f1f5f9;
+            background: var(--bg-header);
             border-bottom: 2px solid var(--border);
-            color: var(--muted);
+            color: var(--text-muted);
             font-weight: 600;
             font-size: 12px;
             text-transform: uppercase;
             letter-spacing: 0.05em;
-            padding: 12px 16px;
+            padding: 14px 16px;
             white-space: nowrap;
         }
 
         .table tbody td {
-            padding: 14px 16px;
+            padding: 16px;
             vertical-align: middle;
-            color: var(--text);
+            color: var(--text-main);
             font-size: 14px;
             border-bottom: 1px solid var(--border);
         }
@@ -72,45 +136,71 @@
         }
 
         .table tbody tr:hover {
-            background-color: #f8fafc;
+            background-color: var(--bg-hover);
         }
 
+        /* Action Buttons */
         .btn-action {
-            width: 32px;
-            height: 32px;
+            width: 36px;
+            height: 36px;
             display: inline-flex;
             align-items: center;
             justify-content: center;
             border-radius: 8px;
             border: none;
             margin-right: 4px;
-            transition: all 0.2s;
+            transition: all 0.2s ease-in-out;
             cursor: pointer;
             text-decoration: none !important;
             font-size: 16px;
         }
 
-        .btn-view { background: #eff6ff; color: #3b82f6; }
-        .btn-view:hover { background: #3b82f6; color: #fff; }
+        .btn-view {
+            background: var(--btn-view-bg);
+            color: var(--btn-view-text);
+        }
 
-        .btn-edit { background: #f0fdf4; color: #22c55e; }
-        .btn-edit:hover { background: #22c55e; color: #fff; }
+        .btn-view:hover {
+            background: var(--btn-view-text);
+            color: #fff;
+            transform: translateY(-2px);
+        }
 
-        .btn-delete { background: #fef2f2; color: #ef4444; }
-        .btn-delete:hover { background: #ef4444; color: #fff; }
+        .btn-edit {
+            background: var(--btn-edit-bg);
+            color: var(--btn-edit-text);
+        }
 
+        .btn-edit:hover {
+            background: var(--btn-edit-text);
+            color: #fff;
+            transform: translateY(-2px);
+        }
+
+        .btn-delete {
+            background: var(--btn-delete-bg);
+            color: var(--btn-delete-text);
+        }
+
+        .btn-delete:hover {
+            background: var(--btn-delete-text);
+            color: #fff;
+            transform: translateY(-2px);
+        }
+
+        /* Primary Button */
         .simple-button {
             display: inline-flex;
             align-items: center;
-            gap: 6px;
+            gap: 8px;
             background: var(--primary);
             color: #fff !important;
             border-radius: 10px;
-            padding: 8px 16px;
+            padding: 10px 20px;
             font-weight: 600;
-            font-size: 13px;
+            font-size: 14px;
             border: none;
-            transition: all 0.2s;
+            transition: all 0.2s ease;
             text-decoration: none !important;
             white-space: nowrap;
             cursor: pointer;
@@ -118,32 +208,31 @@
 
         .simple-button:hover {
             background: var(--primary-hover);
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
-            color: #fff !important;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
         }
 
+        /* Back Button */
         .btn-back {
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            width: 34px;
-            height: 34px;
-            background: #f1f5f9;
+            width: 38px;
+            height: 38px;
+            background: var(--btn-back-bg);
             border: 1px solid var(--border);
-            border-radius: 8px;
-            color: var(--text);
-            text-decoration: none;
-            transition: all 0.2s;
+            border-radius: 10px;
+            color: var(--text-main);
+            text-decoration: none !important;
+            transition: all 0.2s ease;
             flex-shrink: 0;
         }
 
         .btn-back:hover {
-            background: #e2e8f0;
-            color: var(--text);
+            background: var(--btn-back-hover);
+            color: var(--text-main);
+            transform: translateX(-2px);
         }
-
-        .btn-back i { font-size: 18px; }
 
         .actions-cell {
             display: flex;
@@ -152,32 +241,53 @@
             flex-wrap: nowrap;
         }
 
+        /* Empty State */
         .empty-state {
             text-align: center;
             padding: 60px 20px;
-            color: var(--muted);
+            color: var(--text-muted);
         }
 
         .empty-state i {
             font-size: 48px;
-            margin-bottom: 12px;
+            margin-bottom: 16px;
             display: block;
+            opacity: 0.5;
+        }
+
+        /* Mobile Responsiveness */
+        @media (max-width: 768px) {
+            .card-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .simple-button {
+                width: 100%;
+                justify-content: center;
+            }
         }
     </style>
 
     <div class="card">
         <div class="card-header">
-            <h4>
-                <a href="javascript:history.back()" class="btn-back" title="Back">
+            <div class="header-title-wrapper">
+                <a href="javascript:history.back()" class="btn-back" title="Go Back">
                     <i class="bi bi-arrow-left"></i>
                 </a>
-                <i class="bi bi-people-fill" style="color: var(--primary);"></i>
-                @if(isset($clientName)) {{ $clientName->name }} — @endif
-                @if(isset($siteName)) {{ ucfirst($siteName->name) }} — @endif
-                Assigned Employees
-            </h4>
+                <h4>
+                    <i class="bi bi-people-fill" style="color: var(--primary);"></i>
+                    @if (isset($clientName))
+                        {{ $clientName->name }} —
+                    @endif
+                    @if (isset($siteName))
+                        {{ ucfirst($siteName->name) }} —
+                    @endif
+                    Assigned Employees
+                </h4>
+            </div>
 
-            @if($user->role_id != 4)
+            @if ($user->role_id != 4)
                 <a href="{{ route('clients.clientguard_create', [$client_id, $site_id]) }}" class="simple-button">
                     <i class="bi bi-person-plus-fill"></i> Assign Employee
                 </a>
@@ -193,54 +303,62 @@
                             <th>Employee Name</th>
                             <th>Duration</th>
                             <th>Shift</th>
-                            <th style="width:130px; text-align:center;">Actions</th>
+                            <th style="width:140px; text-align:center;">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
-                        @if($guards && count($guards) > 0)
+                        @if ($guards && count($guards) > 0)
                             @php $sr = 1; @endphp
-                            @foreach($guards as $row)
+                            @foreach ($guards as $row)
                                 @php
-                                    $shiftRows  = DB::table('shift_assigned')->whereRaw('id in (' . $row->shift_id . ')')->get();
-                                    $dateRange  = json_decode($row->date_range);
+                                    $shiftRows = DB::table('shift_assigned')
+                                        ->whereRaw('id in (' . $row->shift_id . ')')
+                                        ->get();
+                                    $dateRange = json_decode($row->date_range);
                                 @endphp
                                 <tr>
                                     <td>{{ $sr++ }}</td>
                                     <td><strong>{{ $row->user_name }}</strong></td>
                                     <td>
-                                        @if($dateRange)
-                                            {{ date('d M Y', strtotime($dateRange->from)) }}
-                                            &rarr;
-                                            {{ date('d M Y', strtotime($dateRange->to)) }}
+                                        @if ($dateRange)
+                                            <span
+                                                style="white-space: nowrap;">{{ date('d M Y', strtotime($dateRange->from)) }}</span>
+                                            <span style="color: var(--text-muted); margin: 0 4px;">&rarr;</span>
+                                            <span
+                                                style="white-space: nowrap;">{{ date('d M Y', strtotime($dateRange->to)) }}</span>
                                         @else
-                                            —
+                                            <span style="color: var(--text-muted);">—</span>
                                         @endif
                                     </td>
                                     <td>
-                                        @foreach($shiftRows as $shiftRow)
+                                        @foreach ($shiftRows as $shiftRow)
                                             @php $timing = json_decode($shiftRow->shift_time); @endphp
-                                            {{ $shiftRow->shift_name }}
-                                            @if($timing)
-                                                ({{ $timing->start }} – {{ $timing->end }})
-                                            @endif
-                                            @if(!$loop->last) <br> @endif
+                                            <div style="margin-bottom: {{ !$loop->last ? '4px' : '0' }}">
+                                                <span style="font-weight: 500;">{{ $shiftRow->shift_name }}</span>
+                                                @if ($timing)
+                                                    <span
+                                                        style="color: var(--text-muted); font-size: 0.9em; margin-left: 4px;">
+                                                        ({{ $timing->start }} – {{ $timing->end }})
+                                                    </span>
+                                                @endif
+                                            </div>
                                         @endforeach
                                     </td>
                                     <td class="actions-cell">
                                         <a class="btn-action btn-view"
                                             href="{{ route('clients.clientguard_read', [$client_id, $site_id, $row->user_id]) }}"
-                                            title="View">
+                                            title="View Details">
                                             <i class="bi bi-eye-fill"></i>
                                         </a>
-                                        @if($user->role_id != 4)
+                                        @if ($user->role_id != 4)
                                             <a class="btn-action btn-edit"
                                                 href="{{ route('guards.guard_edit', [$client_id, $row->id]) }}"
-                                                title="Edit">
+                                                title="Edit Employee">
                                                 <i class="bi bi-pencil-fill"></i>
                                             </a>
                                             <button class="btn-action btn-delete"
                                                 onclick="deleteGuard('{{ $client_id }}','{{ $site_id }}','{{ $row->id }}')"
-                                                title="Release">
+                                                title="Release Employee">
                                                 <i class="bi bi-person-dash-fill"></i>
                                             </button>
                                         @endif
@@ -252,7 +370,8 @@
                                 <td colspan="5">
                                     <div class="empty-state">
                                         <i class="bi bi-people"></i>
-                                        <p>No employees assigned to this site yet.</p>
+                                        <h4>No employees found</h4>
+                                        <p>There are no employees currently assigned to this site.</p>
                                     </div>
                                 </td>
                             </tr>
@@ -265,20 +384,20 @@
 @endsection
 
 @push('scripts')
-<script>
-    async function deleteGuard(client_id, site_id, id) {
-        var deleted = await showSweetAlert(
-            'Release Confirmation',
-            'Are you sure you want to release this employee?',
-            'Release', true, 'Cancel'
-        );
-        if (deleted) {
-            var url = '{{ route('clients.guardDelete', [':client_id', ':site_id', ':id']) }}';
-            url = url.replace(':client_id', client_id)
-                     .replace(':site_id', site_id)
-                     .replace(':id', id);
-            window.location = url;
+    <script>
+        async function deleteGuard(client_id, site_id, id) {
+            var deleted = await showSweetAlert(
+                'Release Confirmation',
+                'Are you sure you want to release this employee?',
+                'Release', true, 'Cancel'
+            );
+            if (deleted) {
+                var url = '{{ route('clients.guardDelete', [':client_id', ':site_id', ':id']) }}';
+                url = url.replace(':client_id', client_id)
+                    .replace(':site_id', site_id)
+                    .replace(':id', id);
+                window.location = url;
+            }
         }
-    }
-</script>
+    </script>
 @endpush

@@ -25,11 +25,16 @@ use App\Http\Controllers\SupervisorController;
 use App\Http\Controllers\GuardsController;
 use App\Http\Controllers\UsersController;
 use App\Http\Controllers\ForestController;
+use App\Http\Controllers\ForestReportConfigController;
+use App\Http\Controllers\RegistrationController;
+use App\Http\Controllers\PatrollingController;
+use App\Http\Controllers\PatrolAnalysisController;
+use App\Http\Controllers\WebBoundaryController;
 /* Auth Routes */
 
-Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
-Route::post('/login', [AuthController::class, 'login']);
-Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+Route::get('/login', [AuthController::class , 'showLoginForm'])->name('login');
+Route::post('/login', [AuthController::class , 'login']);
+Route::post('/logout', [AuthController::class , 'logout'])->name('logout');
 
 /* Root redirect - redirect to login if not authenticated */
 Route::get('/', function () {
@@ -43,28 +48,28 @@ Route::get('/', function () {
 
 /* Protected Routes - Require Authentication */
 Route::middleware(['auth'])->group(function () {
-    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
-    Route::get('/home', [DashboardController::class, 'index']); // Alias for home
+    Route::get('/dashboard', [DashboardController::class , 'index'])->name('dashboard');
+    Route::get('/home', [DashboardController::class , 'index']); // Alias for home
 
     /* Profile */
-    Route::get('/profile/{user}', [ProfileController::class, 'show'])->name('profile');
+    Route::get('/profile/{user}', [ProfileController::class , 'show'])->name('profile');
 
     /* API Routes */
     Route::prefix('api')->group(
         function () {
-            Route::get('/guard-details/{guardId}', [GuardDetailController::class, 'getGuardDetails']);
-            Route::get('/patrol-session/{sessionId}', [PatrolController::class, 'getSessionDetails']);
+            Route::get('/guard-details/{guardId}', [GuardDetailController::class , 'getGuardDetails']);
+            Route::get('/patrol-session/{sessionId}', [PatrolController::class , 'getSessionDetails']);
         }
-    );
+        );
 
-    /* Executive Analytics */
-    Route::get('/analytics/executive', [ExecutiveAnalyticsController::class, 'executiveDashboard'])->name('analytics.executive');
-    Route::get('/analytics/executive/api/kpis', [ExecutiveAnalyticsController::class, 'getKPIsApi'])->name('analytics.executive.api.kpis');
+        /* Executive Analytics */
+        Route::get('/analytics/executive', [ExecutiveAnalyticsController::class , 'executiveDashboard'])->name('analytics.executive');
+        Route::get('/analytics/executive/api/kpis', [ExecutiveAnalyticsController::class , 'getKPIsApi'])->name('analytics.executive.api.kpis');
 
-    /* Debug Route - Remove in production */
-    Route::get(
-        '/debug/db-test',
-        function () {
+        /* Debug Route - Remove in production */
+        Route::get(
+            '/debug/db-test',
+            function () {
             try {
                 $pdo = DB::connection()->getPdo();
                 $user = session('user');
@@ -75,125 +80,126 @@ Route::middleware(['auth'])->group(function () {
                 $patrolsCount = DB::table('patrol_sessions')->where('company_id', $companyId)->count();
 
                 return response()->json([
-                    'status' => 'success',
-                    'database' => 'connected',
-                    'company_id' => $companyId,
-                    'counts' => [
-                        'users' => $usersCount,
-                        'sites' => $sitesCount,
-                        'patrols' => $patrolsCount,
-                    ]
+                'status' => 'success',
+                'database' => 'connected',
+                'company_id' => $companyId,
+                'counts' => [
+                'users' => $usersCount,
+                'sites' => $sitesCount,
+                'patrols' => $patrolsCount,
+                ]
                 ]);
-            } catch (\Exception $e) {
+            }
+            catch (\Exception $e) {
                 return response()->json([
-                    'status' => 'error',
-                    'message' => $e->getMessage(),
-                    'trace' => $e->getTraceAsString()
+                'status' => 'error',
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
                 ], 500);
             }
         }
-    );
+        );
 
 
 
-    /* Patrol */
-    Route::prefix('patrol')->group(
-        function () {
-            Route::get('/foot-summary', [PatrolController::class, 'footSummary'])->name('patrol.foot.summary');
-            Route::get('/night-summary', [PatrolController::class, 'nightSummary'])->name('patrol.night.summary');
-            Route::get('/night-explorer', [PatrolController::class, 'nightExplorer'])->name('patrol.night.explorer');
-            Route::get('/analytics', [PatrolAnalyticsController::class, 'patrolAnalytics'])->name('patrol.analytics');
-            Route::get('/foot-explorer', [PatrolController::class, 'footExplorer'])->name('patrol.foot.explorer');
-            Route::get('/foot/guard-distance', [PatrolController::class, 'footDistanceByGuard'])->name('patrol.foot.guard.distance');
-            Route::get('/maps', [PatrolController::class, 'kmlView'])->name('patrol.kml.view');
-            Route::get('/guard-details/{id}', [PatrolController::class, 'guardDetailsApi'])->name('patrol.guard.details.api');
-            Route::get('/api/filtered-data', [PatrolController::class, 'getFilteredData'])->name('patrol.api.filtered.data');
-            Route::get('/type/{type}', [ExecutiveAnalyticsController::class, 'getPatrolsByType'])->name('patrol.by-type');
+        /* Patrol */
+        Route::prefix('patrol')->group(
+            function () {
+            Route::get('/foot-summary', [PatrolController::class , 'footSummary'])->name('patrol.foot.summary');
+            Route::get('/night-summary', [PatrolController::class , 'nightSummary'])->name('patrol.night.summary');
+            Route::get('/night-explorer', [PatrolController::class , 'nightExplorer'])->name('patrol.night.explorer');
+            Route::get('/analytics', [PatrolAnalyticsController::class , 'patrolAnalytics'])->name('patrol.analytics');
+            Route::get('/foot-explorer', [PatrolController::class , 'footExplorer'])->name('patrol.foot.explorer');
+            Route::get('/foot/guard-distance', [PatrolController::class , 'footDistanceByGuard'])->name('patrol.foot.guard.distance');
+            Route::get('/maps', [PatrolController::class , 'kmlView'])->name('patrol.kml.view');
+            Route::get('/guard-details/{id}', [PatrolController::class , 'guardDetailsApi'])->name('patrol.guard.details.api');
+            Route::get('/api/filtered-data', [PatrolController::class , 'getFilteredData'])->name('patrol.api.filtered.data');
+            Route::get('/type/{type}', [ExecutiveAnalyticsController::class , 'getPatrolsByType'])->name('patrol.by-type');
         }
-    );
+        );
 
-    /* Analytical Reports Hub */
-    Route::prefix('reports')->group(
-        function () {
-            Route::get('/monthly', [ReportController::class, 'monthly'])->name('reports.monthly');
-            Route::get('/camera-tracking', [ReportController::class, 'cameraTracking']);
+        /* Analytical Reports Hub */
+        Route::prefix('reports')->group(
+            function () {
+            Route::get('/monthly', [ReportController::class , 'monthly'])->name('reports.monthly');
+            Route::get('/camera-tracking', [ReportController::class , 'cameraTracking']);
         }
-    );
+        );
 
 
 
-    /* Filter API Routes */
-    Route::get('/filters/beats/{rangeId?}', [FilterController::class, 'beats']);
-    Route::get('/filters/users', [FilterController::class, 'users']);
-    Route::get('/filters/guards/autocomplete', [FilterController::class, 'guardAutocomplete']);
-    Route::get('/filters/compartments/{beat}', [FilterController::class, 'compartments']);
+        /* Filter API Routes */
+        Route::get('/filters/beats/{rangeId?}', [FilterController::class , 'beats']);
+        Route::get('/filters/users', [FilterController::class , 'users']);
+        Route::get('/filters/guards/autocomplete', [FilterController::class , 'guardAutocomplete']);
+        Route::get('/filters/compartments/{beat}', [FilterController::class , 'compartments']);
 
-    /* KPI Modal API Routes */
-    Route::get('/api/active-guards', [ExecutiveAnalyticsController::class, 'getActiveGuards']);
-    Route::get('/api/beats-details', [ExecutiveAnalyticsController::class, 'getBeatsDetails']);
-    Route::get('/api/coverage-analysis', [ExecutiveAnalyticsController::class, 'getCoverageAnalysisApi']);
-    Route::get('/api/patrol-analytics', [ExecutiveAnalyticsController::class, 'getPatrolAnalyticsApi']);
-    Route::get('/api/patrols-by-type', [ExecutiveAnalyticsController::class, 'getPatrolDetailsByTypeApi']);
-    Route::get('/api/incidents-details', [ExecutiveAnalyticsController::class, 'getIncidentsDetailsApi']);
-    Route::get('/api/distance-details', [ExecutiveAnalyticsController::class, 'getDistanceDetailsApi']);
-    Route::get('/api/attendance-details', [ExecutiveAnalyticsController::class, 'getAttendanceDetailsApi']);
+        /* KPI Modal API Routes */
+        Route::get('/api/active-guards', [ExecutiveAnalyticsController::class , 'getActiveGuards']);
+        Route::get('/api/beats-details', [ExecutiveAnalyticsController::class , 'getBeatsDetails']);
+        Route::get('/api/coverage-analysis', [ExecutiveAnalyticsController::class , 'getCoverageAnalysisApi']);
+        Route::get('/api/patrol-analytics', [ExecutiveAnalyticsController::class , 'getPatrolAnalyticsApi']);
+        Route::get('/api/patrols-by-type', [ExecutiveAnalyticsController::class , 'getPatrolDetailsByTypeApi']);
+        Route::get('/api/incidents-details', [ExecutiveAnalyticsController::class , 'getIncidentsDetailsApi']);
+        Route::get('/api/distance-details', [ExecutiveAnalyticsController::class , 'getDistanceDetailsApi']);
+        Route::get('/api/attendance-details', [ExecutiveAnalyticsController::class , 'getAttendanceDetailsApi']);
 
 
-    /* Incidents */
-    Route::prefix('incidents')->group(
-        function () {
-            Route::get('/summary', [IncidentController::class, 'summary'])->name('incidents.summary');
+        /* Incidents */
+        Route::prefix('incidents')->group(
+            function () {
+            Route::get('/summary', [IncidentController::class , 'summary'])->name('incidents.summary');
             // Route::get('/nearby', [IncidentController::class, 'nearby'])->name('incidents.nearby');
-            Route::get('/{id}/details', [IncidentController::class, 'getIncidentDetails'])->name('incidents.details');
-            Route::get('/type/{type?}', [IncidentController::class, 'getIncidentsByType'])->name('incidents.by-type');
+            Route::get('/{id}/details', [IncidentController::class , 'getIncidentDetails'])->name('incidents.details');
+            Route::get('/type/{type?}', [IncidentController::class , 'getIncidentsByType'])->name('incidents.by-type');
         }
-    );
+        );
 
 
-    /* Guard Details (Web View) */
-    Route::get('/guard-details/{id}', [PatrolController::class, 'guardDetails'])->name('guard.details');
-});
+        /* Guard Details (Web View) */
+        Route::get('/guard-details/{id}', [PatrolController::class , 'guardDetails'])->name('guard.details');
+    });
 
 
 Route::prefix('dynamic-labels')->group(function () {
 
-    Route::get('/', [DynamicLabelsController::class, 'index']);
+    Route::get('/', [DynamicLabelsController::class , 'index']);
 
-    Route::post('/master', [DynamicLabelsController::class, 'storeMaster']);
+    Route::post('/master', [DynamicLabelsController::class , 'storeMaster']);
 
-    Route::post('/master/update/{id}', [DynamicLabelsController::class, 'updateMaster']);
+    Route::post('/master/update/{id}', [DynamicLabelsController::class , 'updateMaster']);
 
     Route::get(
         '/company/{companyId}',
-        [DynamicLabelsController::class, 'editCompany']
+    [DynamicLabelsController::class , 'editCompany']
     );
 
     Route::post(
         '/company/{companyId}',
-        [DynamicLabelsController::class, 'saveCompany']
+    [DynamicLabelsController::class , 'saveCompany']
     );
 
-    Route::post('/master/delete/{id}', [DynamicLabelsController::class, 'deleteMaster']);
+    Route::post('/master/delete/{id}', [DynamicLabelsController::class , 'deleteMaster']);
 });
 
 
 Route::prefix('anukampa')->group(function () {
-    Route::get('/dashboard', [AnukampaController::class, 'dashboard'])->name('anukampa.dashboard');
-    Route::get('/claims', [AnukampaController::class, 'index'])->name('anukampa.claims');
-    Route::post('/claims', [AnukampaController::class, 'store'])->name('anukampa.store');
+    Route::get('/dashboard', [AnukampaController::class , 'dashboard'])->name('anukampa.dashboard');
+    Route::get('/claims', [AnukampaController::class , 'index'])->name('anukampa.claims');
+    Route::post('/claims', [AnukampaController::class , 'store'])->name('anukampa.store');
 
-    Route::get('/claims/{id}', [AnukampaController::class, 'show'])->name('anukampa.show');
-    Route::get('/claims/{id}/edit', [AnukampaController::class, 'edit'])->name('anukampa.edit');
-    Route::put('/claims/{id}', [AnukampaController::class, 'update'])->name('anukampa.update');
-    Route::patch('/claims/{id}/status', [AnukampaController::class, 'updateStatus'])->name('anukampa.updateStatus');
+    Route::get('/claims/{id}', [AnukampaController::class , 'show'])->name('anukampa.show');
+    Route::get('/claims/{id}/edit', [AnukampaController::class , 'edit'])->name('anukampa.edit');
+    Route::put('/claims/{id}', [AnukampaController::class , 'update'])->name('anukampa.update');
+    Route::patch('/claims/{id}/status', [AnukampaController::class , 'updateStatus'])->name('anukampa.updateStatus');
 });
 
 Route::prefix('forest')->group(function () {
     // Dashboard view
-    Route::get('/beat-features', [BeatFeatureController::class, 'dashboard'])->name('beat_features.dashboard');
+    Route::get('/beat-features', [BeatFeatureController::class , 'dashboard'])->name('beat_features.dashboard');
 
     // Form submission for adding a new feature
-    Route::post('/beat-features', [BeatFeatureController::class, 'store'])->name('beat_features.store');
+    Route::post('/beat-features', [BeatFeatureController::class , 'store'])->name('beat_features.store');
 });
 
 
@@ -321,33 +327,33 @@ Route::controller(GuardsController::class)->group(function () {
 
 Route::prefix('attendance')->group(function () {
 
-    Route::get('/explorer', [AttendanceController::class, 'explorer'])
+    Route::get('/explorer', [AttendanceController::class , 'explorer'])
         ->name('attendance.explorer');
 
-    Route::get('/logs', [AttendanceController::class, 'logs'])
+    Route::get('/logs', [AttendanceController::class , 'logs'])
         ->name('attendance.logs');
 
-    Route::get('/requests', [AttendanceController::class, 'requests'])
+    Route::get('/requests', [AttendanceController::class , 'requests'])
         ->name('attendance.requests');
-    Route::post('/requests/{id}/approve', [AttendanceController::class, 'approveRequest']);
-    Route::post('/requests/{id}/reject', [AttendanceController::class, 'rejectRequest']);
+    Route::post('/requests/{id}/approve', [AttendanceController::class , 'approveRequest']);
+    Route::post('/requests/{id}/reject', [AttendanceController::class , 'rejectRequest']);
 
 
-    Route::get('/map', [AttendanceController::class, 'mapView'])
+    Route::get('/map', [AttendanceController::class , 'mapView'])
         ->name('attendance.map');
 
-    Route::get('/export', [AttendanceController::class, 'export'])
+    Route::get('/export', [AttendanceController::class , 'export'])
         ->name('attendance.export');
 });
 
 
 Route::prefix('plantation')->group(function () {
 
-    Route::get('/dashboard', [PlantationController::class, 'dashboard'])->name('plantation.dashboard');
-    Route::get('/analytics', [PlantationController::class, 'analytics'])->name('plantation.analytics');
+    Route::get('/dashboard', [PlantationController::class , 'dashboard'])->name('plantation.dashboard');
+    Route::get('/analytics', [PlantationController::class , 'analytics'])->name('plantation.analytics');
 
-    Route::get('/create', [PlantationController::class, 'create'])->name('plantation.create');
-    Route::post('/store', [PlantationController::class, 'store'])->name('plantation.store');
+    Route::get('/create', [PlantationController::class , 'create'])->name('plantation.create');
+    Route::post('/store', [PlantationController::class , 'store'])->name('plantation.store');
 
     Route::get('/view/{id}', [PlantationController::class , 'show'])->name('plantation.show');
     Route::get('/workflow/{id}', [PlantationController::class , 'workflow'])->name('plantation.workflow');
@@ -418,3 +424,193 @@ Route::get('/users/edit/{id}', [UsersController::class , 'edit'])
 
 Route::post('/users/update/{id}', [UsersController::class , 'update'])
     ->name('users.update');
+
+
+Route::prefix('events')->group(function () {
+
+    /* --------------------------
+     REPORT CONFIGURATION CRUD
+     ---------------------------*/
+
+    Route::get('/report-configs', [ForestReportConfigController::class , 'index'])
+        ->name('report-configs.index');
+
+    Route::get('/report-configs/create', [ForestReportConfigController::class , 'create'])
+        ->name('report-configs.create');
+
+    Route::post('/report-configs/store', [ForestReportConfigController::class , 'store'])
+        ->name('report-configs.store');
+
+    Route::get('/report-configs/edit/{id}', [ForestReportConfigController::class , 'edit'])
+        ->name('report-configs.edit');
+
+    Route::post('/report-configs/update/{id}', [ForestReportConfigController::class , 'update'])
+        ->name('report-configs.update');
+
+    Route::delete('/report-configs/delete/{id}', [ForestReportConfigController::class , 'destroy'])
+        ->name('report-configs.destroy');
+
+
+    /* --------------------------
+     REPORTS DASHBOARD
+     ---------------------------*/
+
+    Route::get('/reports-dashboard', [ForestReportConfigController::class , 'reportsDashboard'])
+        ->name('events.reports.dashboard');
+
+
+    /* --------------------------
+     REPORT TABLE
+     ---------------------------*/
+
+    Route::get('/reports-table', [ForestReportConfigController::class , 'reportsTable'])
+        ->name('events.reports.table');
+
+
+    /* --------------------------
+     VIEW SINGLE REPORT
+     ---------------------------*/
+
+    Route::get('/reports/{id}', [ForestReportConfigController::class , 'show'])
+        ->name('events.reports.show');
+
+
+    /* --------------------------
+     UPDATE REPORT STATUS
+     ---------------------------*/
+
+    Route::post('/reports/update-status/{id}', [ForestReportConfigController::class , 'updateStatus'])
+        ->name('events.reports.updateStatus');
+
+});
+
+Route::prefix('registrations')->group(function () {
+
+    Route::get('/', [RegistrationController::class , 'index'])
+        ->name('registrations.index');
+
+    Route::get('/create', [RegistrationController::class , 'create'])
+        ->name('registrations.create');
+
+    Route::post('/store', [RegistrationController::class , 'store'])
+        ->name('registrations.store');
+
+    Route::get('/{id}/edit', [RegistrationController::class , 'edit'])
+        ->name('registrations.edit');
+
+    Route::post('/{id}/update', [RegistrationController::class , 'update'])
+        ->name('registrations.update');
+
+    Route::get('/{id}/destroy', [RegistrationController::class , 'destroy'])
+        ->name('registrations.destroy');
+
+    Route::get('/export', [RegistrationController::class , 'export'])
+        ->name('registrations.export');
+
+});
+
+
+
+/* -------------------------
+ PATROLLING -------------------------*/
+
+Route::prefix('patrolling')->group(function () {
+
+    Route::get('/', [PatrollingController::class , 'index'])->name('patrolling');
+
+    Route::get('/analysis', [PatrollingController::class , 'analysis'])
+        ->name('patrolling.analysis');
+
+    Route::get('/details/{patrol}', [PatrollingController::class , 'show'])
+        ->name('patrolling.details');
+
+    Route::get('/create', [PatrollingController::class , 'create'])
+        ->name('patrolling.create');
+
+    Route::post('/', [PatrollingController::class , 'store'])
+        ->name('patrolling.store');
+});
+
+
+/* -------------------------
+ PATROL LOGS -------------------------*/
+
+Route::get('/patrol-log/{flag}', [PatrollingController::class , 'logs'])
+    ->name('patrolling.log');
+
+Route::get('/patrol-log/{id}/details', [PatrollingController::class , 'logDetails'])
+    ->name('patrolling.log.details');
+
+
+/* -------------------------
+ PATROLLING REPORTS -------------------------*/
+
+Route::post('/downloadPatrollingStatusReport', [ReportController::class , 'downloadPatrollingStatusReport'])
+    ->name('downloadPatrollingStatusReport');
+
+Route::post('/patrollingSummaryDownload', [ReportController::class , 'patrollingSummaryDownload'])
+    ->name('patrollingSummaryDownload');
+
+Route::post('/patrollingLogsReportDownload', [ReportController::class , 'patrollingLogsReportDownload'])
+    ->name('patrollingLogsReportDownload');
+
+
+/* -------------------------
+ PATROL ANALYSIS -------------------------*/
+
+Route::prefix('patrol-analysis')->group(function () {
+
+    Route::get('/dashboard', [PatrolAnalysisController::class , 'dashboard'])
+        ->name('patrolling.dashboard');
+
+    Route::get('/analytics-dashboard', [PatrolAnalysisController::class , 'analyticsDashboard'])
+        ->name('patrolling.analytics.dashboard');
+
+    Route::get('/analytics-pro', [PatrolAnalysisController::class , 'analyticsPro'])
+        ->name('patrolling.analytics.pro');
+
+    Route::get('/analytics/pdf', [PatrolAnalysisController::class , 'analyticsPdf'])
+        ->name('patrolling.analytics.pdf');
+
+    Route::get('/analytics-pro-advanced', [PatrolAnalysisController::class , 'analyticsProAdvanced'])
+        ->name('patrolling.analytics.pro.advanced');
+
+    Route::get('/analytics/user/{id}/drilldown', [PatrolAnalysisController::class , 'userDrilldown'])
+        ->name('patrolling.analytics.user.drilldown');
+
+    Route::get('/analytics/site/{id}/drilldown', [PatrolAnalysisController::class , 'siteDrilldown'])
+        ->name('patrolling.analytics.site.drilldown');
+
+
+    /* -------- EXPORTS -------- */
+
+    Route::get('/analytics/export/csv', [PatrolAnalysisController::class , 'exportCsv'])
+        ->name('patrolling.analytics.export.csv');
+
+    Route::get('/analytics/export/excel', [PatrolAnalysisController::class , 'exportExcel'])
+        ->name('patrolling.analytics.export.excel');
+
+    Route::get('/analytics/export/pdf', [PatrolAnalysisController::class , 'exportPdf'])
+        ->name('patrolling.analytics.export.pdf');
+
+
+    /* -------- LIVE DATA -------- */
+
+    Route::get('/analytics/live', [PatrolAnalysisController::class , 'liveData'])
+        ->name('patrolling.analytics.live');
+
+});
+
+
+Route::controller(WebBoundaryController::class)->group(function () {
+
+    Route::get('/forest/boundaries', 'index')->name('forest.boundaries');
+    Route::get('/forest/boundaries/data', 'getMapData')->name('forest.boundaries.data');
+
+    Route::get('/normal/boundaries', 'normalIndex')->name('normal.boundaries');
+    Route::get('/normal/boundaries/data', 'getMapData')->name('normal.boundaries.data');
+
+    Route::get('/boundary/sections/{rangeId}', 'getSections')->name('boundary.sections');
+    Route::get('/boundary/beats/{sectionId}', 'getBeats')->name('boundary.beats');
+
+});

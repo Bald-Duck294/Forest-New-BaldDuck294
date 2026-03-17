@@ -5,7 +5,7 @@
 @endphp
 @extends('layouts.app')
 
-@section('title', 'Know Your Area')
+@section('title', 'Boundary Hierarchy')
 
 @section('content')
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
@@ -13,9 +13,9 @@
 
     <style>
         /* =========================================
-                   LOCAL COMPONENT STYLES
-                   (Hooked to Global Sapphire Variables)
-                ========================================= */
+           LOCAL COMPONENT STYLES
+           (Hooked to Global Sapphire Variables)
+        ========================================= */
 
         /* Inner Wrapper to handle Flexbox stacking without breaking the global layout */
         .map-view-wrapper {
@@ -271,15 +271,76 @@
             color: white;
         }
 
-        /* Popup Overrides */
+        /* Custom Frosted InfoWindow Styling */
+        .custom-iw {
+            background: var(--bg-card);
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            border: 1px solid var(--border-color);
+            padding: 16px;
+            min-width: 250px;
+            font-family: inherit;
+        }
+
+        .custom-iw-header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 12px;
+            margin-bottom: 12px;
+        }
+
+        .custom-iw-header h3 {
+            margin: 0;
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        .custom-iw-header p {
+            margin: 4px 0 0 0;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .custom-iw-body {
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .custom-iw-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px 0;
+            border-bottom: 1px dashed var(--border-color);
+        }
+
+        .custom-iw-row:last-child {
+            border-bottom: none;
+        }
+
+        .custom-iw-label {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            text-transform: uppercase;
+        }
+
+        .custom-iw-value {
+            font-weight: 600;
+            color: var(--text-main);
+            font-size: 0.85rem;
+            text-align: right;
+            max-width: 60%;
+            word-wrap: break-word;
+        }
+
+        /* Fix Google Maps wrapper styling to blend */
         .leaflet-popup-content-wrapper,
         .gm-style-iw {
-            background-color: var(--bg-card) !important;
-            color: var(--text-main) !important;
-            border-radius: 12px !important;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1) !important;
+            background-color: transparent !important;
+            box-shadow: none !important;
             padding: 0 !important;
-            overflow: hidden;
         }
 
         .gm-style-iw-d {
@@ -290,62 +351,6 @@
             filter: var(--bs-theme)=='dark' ? 'invert(1)': 'none';
             top: 10px !important;
             right: 10px !important;
-        }
-
-        .popup-header {
-            padding: 16px;
-            color: #ffffff;
-        }
-
-        .popup-layer-badge {
-            font-size: 0.65rem;
-            background: rgba(255, 255, 255, 0.2);
-            padding: 4px 8px;
-            border-radius: 6px;
-            text-transform: uppercase;
-            font-weight: 700;
-            margin-bottom: 6px;
-            display: inline-block;
-        }
-
-        .popup-title {
-            font-size: 1.1rem;
-            font-weight: 700;
-            margin: 0;
-        }
-
-        .popup-body {
-            padding: 12px 16px;
-            max-height: 250px;
-            overflow-y: auto;
-            background-color: var(--bg-card);
-            color: var(--text-main);
-        }
-
-        .popup-table {
-            width: 100%;
-            font-size: 0.85rem;
-        }
-
-        .popup-table tr {
-            border-bottom: 1px dashed var(--border-color);
-        }
-
-        .popup-table tr:last-child {
-            border-bottom: none;
-        }
-
-        .popup-table td {
-            padding: 8px 0;
-            color: var(--text-main);
-        }
-
-        .popup-table .popup-label {
-            color: var(--text-muted);
-            font-weight: 600;
-            width: 40%;
-            font-size: 0.75rem;
-            text-transform: uppercase;
         }
 
         /* Button inside Header */
@@ -366,185 +371,201 @@
         }
     </style>
 
-    {{-- FIXED: Removed the extra .content div that was causing double margins --}}
-    <div class="map-view-wrapper">
+    {{-- The global .content class provided by your layout --}}
+    <div class="content">
 
-        {{-- THE NEW SAPPHIRE HEADER SECTION --}}
-        <div class="px-4 py-3 d-flex justify-content-between align-items-center shadow-sm"
-            style="background: var(--bg-card); border-bottom: 1px solid var(--border-color); z-index: 10;">
-            <div>
-                <h4 class="fw-bold mb-1" style="color: var(--text-main);">Know Your Area</h4>
-                <p class="mb-0" style="color: var(--text-muted); font-size: 0.85rem;">
-                    Interactive map layers, geospatial data, and beat boundaries.
-                </p>
-            </div>
-            <div>
-                <button class="btn-sapphire shadow-sm" onclick="resetMap()">
-                    <i class="bi bi-arrow-clockwise me-1"></i> Reset Map
-                </button>
-            </div>
-        </div>
+        {{-- The local wrapper to manage internal Flexbox spacing --}}
+        <div class="map-view-wrapper">
 
-        {{-- MAP CONTAINER (Takes remaining height automatically) --}}
-        <div class="map-container-wrapper">
-            <div id="map"></div>
-
-            {{-- Drawer Toggle --}}
-            <button class="drawer-toggle" id="drawerToggle">
-                <i class="bi bi-layers-half"></i>
-                <span>Layers</span>
-            </button>
-
-            {{-- Sidebar Layers Panel --}}
-            <div class="filter-sidebar glass-panel">
-                <div class="sidebar-header">
-                    <h5 class="mb-0">Map Layers</h5>
-                    <div class="sub-title">Select to show/hide</div>
+            {{-- THE NEW SAPPHIRE HEADER SECTION --}}
+            <div class="px-4 py-3 d-flex justify-content-between align-items-center shadow-sm"
+                style="background: var(--bg-card); border-bottom: 1px solid var(--border-color); z-index: 10;">
+                <div>
+                    <h4 class="fw-bold mb-1" style="color: var(--text-main);">Boundary Hierarchy</h4>
+                    <p class="mb-0" style="color: var(--text-muted); font-size: 0.85rem;">
+                        Analyze administrative divisions, sections, and map layers.
+                    </p>
                 </div>
+                <div>
+                    <button class="btn-sapphire shadow-sm" onclick="resetMap()">
+                        <i class="bi bi-arrow-clockwise me-1"></i> Reset Map
+                    </button>
+                </div>
+            </div>
 
-                <div class="sidebar-content">
-                    <form id="filterForm" class="mb-4">
-                        <div class="row g-2 mb-3">
+            {{-- MAP CONTAINER (Takes remaining height automatically) --}}
+            <div class="map-container-wrapper">
+                <div id="map"></div>
 
-                            @if ($userRole == 1 || $userRole == 7)
+                {{-- Drawer Toggle --}}
+                <button class="drawer-toggle" id="drawerToggle">
+                    <i class="bi bi-layers-half"></i>
+                    <span>Layers</span>
+                </button>
+
+                {{-- Sidebar Layers Panel --}}
+                <div class="filter-sidebar glass-panel">
+                    <div class="sidebar-header">
+                        <h5 class="mb-0">Map Views</h5>
+                        <div class="sub-title">Select boundaries & layers</div>
+                    </div>
+
+                    <div class="sidebar-content">
+                        <form id="filterForm" class="mb-4">
+                            <div class="row g-2 mb-3">
+                                @if ($userRole == 1 || $userRole == 7)
+                                    <div class="col-6">
+                                        <label class="form-label small fw-bold mb-1"
+                                            style="color: var(--text-muted);">Range</label>
+                                        <select id="rangeSelect" name="range_id" class="custom-input">
+                                            <option value="">All Ranges</option>
+                                            @foreach ($availableRanges as $range)
+                                                <option value="{{ $range->id }}"
+                                                    {{ $selectedRange == $range->id ? 'selected' : '' }}>
+                                                    {{ $range->name }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                @else
+                                    <input type="hidden" id="rangeSelect" name="range_id" value="{{ $selectedRange }}">
+                                @endif
+
                                 <div class="col-6">
                                     <label class="form-label small fw-bold mb-1"
-                                        style="color: var(--text-muted);">Range</label>
-                                    <select id="rangeSelect" name="range_id" class="custom-input">
-                                        <option value="">Range</option>
-                                        @foreach ($availableRanges as $range)
-                                            <option value="{{ $range->id }}"
-                                                {{ $selectedRange == $range->id ? 'selected' : '' }}>
-                                                {{ $range->name }}
+                                        style="color: var(--text-muted);">Section</label>
+                                    <select id="sectionSelect" name="section_id" class="custom-input">
+                                        <option value="">All Sections</option>
+                                        @foreach ($availableSections as $section)
+                                            <option value="{{ $section->id }}"
+                                                {{ $selectedSection == $section->id ? 'selected' : '' }}>
+                                                {{ $section->name }}
                                             </option>
                                         @endforeach
                                     </select>
                                 </div>
-                            @else
-                                <input type="hidden" name="range_id" value="{{ $selectedRange }}">
-                            @endif
 
-                            @if ($userRole == 1 || $userRole == 7 || $userRole == 2)
+                                @if ($userRole == 1 || $userRole == 7 || $userRole == 2)
+                                    <div class="col-6">
+                                        <label class="form-label small fw-bold mb-1"
+                                            style="color: var(--text-muted);">Beat</label>
+                                        <select id="beatSelect" name="site_id" class="custom-input">
+                                            <option value="">All Beats</option>
+                                            @foreach ($availableBeats as $beat)
+                                                <option value="{{ $beat->id }}"
+                                                    {{ $selectedBeat == $beat->id ? 'selected' : '' }}>
+                                                    {{ $beat->name }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                @else
+                                    <input type="hidden" name="site_id" id="beatSelect" value="{{ $selectedBeat }}">
+                                @endif
+
                                 <div class="col-6">
                                     <label class="form-label small fw-bold mb-1"
-                                        style="color: var(--text-muted);">Beat</label>
-                                    <select id="beatSelect" name="site_id" class="custom-input">
-                                        <option value="">Beat</option>
-                                        @foreach ($availableBeats as $beat)
-                                            <option value="{{ $beat->id }}"
-                                                {{ $selectedBeat == $beat->id ? 'selected' : '' }}>
-                                                {{ $beat->name }}
+                                        style="color: var(--text-muted);">Year</label>
+                                    <select id="yearSelect" name="year" class="custom-input">
+                                        <option value="">All</option>
+                                        @foreach ($availableYears as $year)
+                                            <option value="{{ $year }}"
+                                                {{ $selectedYear == $year ? 'selected' : '' }}>
+                                                {{ $year }}
                                             </option>
                                         @endforeach
                                     </select>
                                 </div>
-                            @else
-                                <input type="hidden" name="site_id" id="beatSelect" value="{{ $selectedBeat }}">
-                            @endif
-
-                            <div class="col-12 mt-2">
-                                <label class="form-label small fw-bold mb-1" style="color: var(--text-muted);">Year</label>
-                                <select id="yearSelect" name="year" class="custom-input">
-                                    <option value="">All</option>
-                                    @foreach ($availableYears as $year)
-                                        <option value="{{ $year }}" {{ $selectedYear == $year ? 'selected' : '' }}>
-                                            {{ $year }}
-                                        </option>
-                                    @endforeach
-                                </select>
                             </div>
-                        </div>
+                            <button type="submit" class="btn-sapphire w-100 justify-content-center shadow-sm py-2">
+                                <i class="bi bi-search me-2"></i> Apply Filters
+                            </button>
+                        </form>
 
-                        <button type="submit" class="btn-sapphire w-100 justify-content-center shadow-sm py-2">
-                            <i class="bi bi-search me-2"></i> Apply Filters
-                        </button>
-                    </form>
-
-                    <div id="layerControls">
-                        <div class="layer-item" id="item_geofences" onclick="toggleLayerUI('geofences')">
-                            <div class="status-dot" style="background-color: var(--sapphire-primary);"></div>
-                            <div class="layer-icon-box" style="color: var(--sapphire-primary);"><i
-                                    class="bi bi-shield-check"></i></div>
-                            <div class="layer-label">Beat Boundary</div>
-                            <div id="count_geofences" class="count-pill">0</div>
-                            <div class="eye-toggle" id="eye_geofences"><i class="bi bi-eye-fill"></i></div>
-                            <input type="checkbox" class="layer-toggle d-none" value="geofences" id="check_geofences">
-                        </div>
-
-                        @php
-                            // Mapping logical names to Sapphire hex values for consistency
-                            $layers = [
-                                [
-                                    'id' => 'drainage',
-                                    'label' => 'Drainage',
-                                    'color' => '#3B82F6',
-                                    'icon' => 'bi-droplet-half',
-                                ],
-                                [
-                                    'id' => 'elephant_movement',
-                                    'label' => 'Elephant Movements',
-                                    'color' => '#F59E0B',
-                                    'icon' => 'bi-paw',
-                                ],
-                                [
-                                    'id' => 'fire_point',
-                                    'label' => 'Fire Points',
-                                    'color' => '#EF4444',
-                                    'icon' => 'bi-fire',
-                                ],
-                                [
-                                    'id' => 'forest_boundary',
-                                    'label' => 'Forest Boundary',
-                                    'color' => '#10B981',
-                                    'icon' => 'bi-leaf-fill',
-                                ],
-                                [
-                                    'id' => 'plantation_site',
-                                    'label' => 'Plantation Sites',
-                                    'color' => '#06B6D4',
-                                    'icon' => 'bi-flower1',
-                                ],
-                                [
-                                    'id' => 'revenue_forest_land',
-                                    'label' => 'Revenue Forest Land',
-                                    'color' => '#8B5CF6',
-                                    'icon' => 'bi-globe',
-                                ],
-                                [
-                                    'id' => 'water_body',
-                                    'label' => 'Water Bodies',
-                                    'color' => '#3B82F6',
-                                    'icon' => 'bi-cloud-rain-fill',
-                                ],
-                            ];
-                        @endphp
-                        @foreach ($layers as $layer)
-                            <div class="layer-item" id="item_{{ $layer['id'] }}"
-                                onclick="toggleLayerUI('{{ $layer['id'] }}')">
-                                <div class="status-dot" style="background-color: {{ $layer['color'] }}"></div>
-                                <div class="layer-icon-box" style="color: {{ $layer['color'] }}">
-                                    <i class="bi {{ $layer['icon'] }}"></i>
+                        <div id="layerControls">
+                            @php
+                                $layers = [
+                                    [
+                                        'id' => 'administrative_boundaries',
+                                        'label' => 'Administrative Boundaries',
+                                        'color' => '#8b5cf6',
+                                        'icon' => 'bi-bounding-box-circles',
+                                    ],
+                                    [
+                                        'id' => 'Drainage',
+                                        'label' => 'Drainage',
+                                        'color' => '#3b82f6',
+                                        'icon' => 'bi-droplet-half',
+                                    ],
+                                    [
+                                        'id' => 'Elephant Movement',
+                                        'label' => 'Elephant Movements',
+                                        'color' => '#f59e0b',
+                                        'icon' => 'bi-paw',
+                                    ],
+                                    [
+                                        'id' => 'Fire Point',
+                                        'label' => 'Fire Points',
+                                        'color' => '#ef4444',
+                                        'icon' => 'bi-fire',
+                                    ],
+                                    [
+                                        'id' => 'Forest Boundary',
+                                        'label' => 'Forest Boundary',
+                                        'color' => '#10b981',
+                                        'icon' => 'bi-leaf-fill',
+                                    ],
+                                    [
+                                        'id' => 'Plantation Site',
+                                        'label' => 'Plantation Sites',
+                                        'color' => '#0ea5e9',
+                                        'icon' => 'bi-flower1',
+                                    ],
+                                    [
+                                        'id' => 'Revenue Forest Land',
+                                        'label' => 'Revenue Forest Land',
+                                        'color' => '#a855f7',
+                                        'icon' => 'bi-globe',
+                                    ],
+                                    [
+                                        'id' => 'Water Body',
+                                        'label' => 'Water Bodies',
+                                        'color' => '#6366f1',
+                                        'icon' => 'bi-cloud-rain-fill',
+                                    ],
+                                ];
+                            @endphp
+                            @foreach ($layers as $layer)
+                                <div class="layer-item {{ $layer['id'] === 'administrative_boundaries' ? 'active' : '' }}"
+                                    id="item_{{ $layer['id'] }}" onclick="toggleLayerUI('{{ $layer['id'] }}')">
+                                    <div class="status-dot" style="background-color: {{ $layer['color'] }}"></div>
+                                    <div class="layer-icon-box" style="color: {{ $layer['color'] }}">
+                                        <i class="bi {{ $layer['icon'] }}"></i>
+                                    </div>
+                                    <div class="layer-label">{{ $layer['label'] }}</div>
+                                    <div id="count_{{ $layer['id'] }}" class="count-pill">0</div>
+                                    <div class="eye-toggle {{ $layer['id'] === 'administrative_boundaries' ? 'active' : '' }}"
+                                        id="eye_{{ $layer['id'] }}">
+                                        <i class="bi bi-eye-fill"></i>
+                                    </div>
+                                    <div id="spinner_{{ $layer['id'] }}"
+                                        class="spinner-border spinner-border-sm text-primary ms-2" role="status"
+                                        style="display: none; width: 0.8rem; height: 0.8rem;"></div>
+                                    <input type="checkbox" class="layer-toggle d-none" value="{{ $layer['id'] }}"
+                                        id="check_{{ $layer['id'] }}"
+                                        {{ $layer['id'] === 'administrative_boundaries' ? 'checked' : '' }}>
                                 </div>
-                                <div class="layer-label">{{ $layer['label'] }}</div>
-                                <div id="count_{{ $layer['id'] }}" class="count-pill">0</div>
-                                <div class="eye-toggle" id="eye_{{ $layer['id'] }}"><i class="bi bi-eye-fill"></i></div>
-                                <div id="spinner_{{ $layer['id'] }}"
-                                    class="spinner-border spinner-border-sm text-primary ms-2" role="status"
-                                    style="display: none; width: 0.8rem; height: 0.8rem;"></div>
-                                <input type="checkbox" class="layer-toggle d-none" value="{{ $layer['id'] }}"
-                                    id="check_{{ $layer['id'] }}">
-                            </div>
-                        @endforeach
+                            @endforeach
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            {{-- Custom Loader --}}
-            <div id="customLoader" class="custom-loader">
-                <div class="spinner-border mb-2" style="color: var(--sapphire-primary);" role="status"></div>
-                <span class="small fw-bold" style="color: var(--text-main);">Loading Data...</span>
+                {{-- Custom Loader --}}
+                <div id="customLoader" class="custom-loader">
+                    <div class="spinner-border mb-2" style="color: var(--sapphire-primary);" role="status"></div>
+                    <span class="small fw-bold" style="color: var(--text-main);">Loading Counts...</span>
+                </div>
             </div>
-
         </div>
     </div>
 
@@ -560,59 +581,58 @@
             let clusterer;
             let layerDataCollections = {};
             let layerMarkers = {};
-            let layerShapes = {};
             let loadedLayers = {};
 
-            // Hardcoded hex values matching the Sapphire Theme for Google Maps JS API
             const LAYER_STYLES = {
-                'drainage': {
-                    strokeColor: '#3B82F6',
-                    strokeWeight: 3,
-                    fillOpacity: 0
-                },
-                'elephant_movement': {
-                    strokeColor: '#F59E0B',
+                'Drainage': {
+                    strokeColor: '#3b82f6',
                     strokeWeight: 4,
                     fillOpacity: 0
                 },
-                'fire_point': {
+                'Elephant Movement': {
+                    strokeColor: '#E67E22',
+                    strokeWeight: 5,
+                    fillOpacity: 0
+                },
+                'Fire Point': {
                     icon: '🔥'
                 },
-                'forest_boundary': {
-                    strokeColor: '#10B981',
-                    strokeWeight: 3,
+                'Forest Boundary': {
+                    strokeColor: '#10b981',
+                    strokeWeight: 4,
                     fillOpacity: 0.1
                 },
-                'plantation_site': {
-                    strokeColor: '#06B6D4',
-                    strokeWeight: 2,
-                    fillOpacity: 0.3
-                },
-                'revenue_forest_land': {
-                    strokeColor: '#8B5CF6',
-                    strokeWeight: 2,
-                    fillOpacity: 0.3
-                },
-                'water_body': {
-                    strokeColor: '#3B82F6',
+                'Plantation Site': {
+                    strokeColor: '#0ea5e9',
                     strokeWeight: 3,
                     fillOpacity: 0.4
                 },
-                'geofences': {
-                    strokeColor: '#3B82F6',
-                    strokeWeight: 2,
-                    fillOpacity: 0.1
+                'Revenue Forest Land': {
+                    strokeColor: '#a855f7',
+                    strokeWeight: 3,
+                    fillOpacity: 0.4
+                },
+                'Water Body': {
+                    strokeColor: '#6366f1',
+                    strokeWeight: 4,
+                    fillOpacity: 0.5
+                },
+                'administrative_boundaries': {
+                    strokeColor: '#facc15',
+                    strokeWeight: 4,
+                    fillOpacity: 0.05
                 }
             };
 
             const LAYER_ICONS = {
-                'elephant_movement': '🐘',
-                'fire_point': '🔥',
-                'plantation_site': '🌱',
-                'drainage': '🌊',
-                'water_body': '💧',
-                'forest_boundary': '🌳',
-                'revenue_forest_land': '📜'
+                'Elephant Movement': '🐘',
+                'Fire Point': '🔥',
+                'Plantation Site': '🌱',
+                'Drainage': '🌊',
+                'Water Body': '💧',
+                'Forest Boundary': '🌳',
+                'Revenue Forest Land': '📜',
+                'administrative_boundaries': '🟡'
             };
 
             function toggleLayerUI(layerType) {
@@ -633,9 +653,10 @@
                 if (eye) eye.classList.toggle('active', active);
             }
 
-            document.addEventListener('DOMContentLoaded', function() {
+            $(document).ready(function() {
                 initMap();
                 loadLayerCounts();
+                fetchLayerData('administrative_boundaries'); // Default layer
 
                 const sidebar = document.querySelector('.filter-sidebar');
                 const toggleBtn = document.getElementById('drawerToggle');
@@ -655,6 +676,9 @@
                     e.preventDefault();
                     resetMap();
                     loadLayerCounts();
+                    document.querySelectorAll('.layer-toggle:checked').forEach(cb => {
+                        fetchLayerData(cb.value);
+                    });
                 });
 
                 document.body.addEventListener('change', function(e) {
@@ -663,26 +687,53 @@
                     }
                 });
 
-                // Range/Beat AJAX
+                // AJAX Chains
                 const rangeSelect = document.getElementById('rangeSelect');
-                if (rangeSelect) {
+                const sectionSelect = document.getElementById('sectionSelect');
+                const beatSelect = document.getElementById('beatSelect');
+
+                if (rangeSelect && rangeSelect.tagName === 'SELECT') {
                     rangeSelect.addEventListener('change', function() {
                         const rangeId = this.value;
-                        const beatSelect = document.getElementById('beatSelect');
-                        if (beatSelect && beatSelect.tagName === 'SELECT') {
-                            beatSelect.innerHTML = '<option value="">Loading...</option>';
+                        if (sectionSelect && sectionSelect.tagName === 'SELECT') {
+                            sectionSelect.innerHTML = '<option value="">Loading...</option>';
                             if (rangeId) {
-                                fetch(`{{ url('/filters/beats') }}/${rangeId}`)
+                                fetch(`{{ url('/boundary/sections') }}/${rangeId}`)
                                     .then(res => res.json())
                                     .then(data => {
-                                        beatSelect.innerHTML = '<option value="">Select Beat</option>';
-                                        data.forEach(beat => {
-                                            beatSelect.innerHTML +=
-                                                `<option value="${beat.id}">${beat.name}</option>`;
+                                        sectionSelect.innerHTML = '<option value="">All Sections</option>';
+                                        data.forEach(s => {
+                                            sectionSelect.innerHTML +=
+                                                `<option value="${s.id}">${s.name}</option>`;
                                         });
                                     });
                             } else {
-                                beatSelect.innerHTML = '<option value="">Select Beat</option>';
+                                sectionSelect.innerHTML = '<option value="">All Sections</option>';
+                            }
+                        }
+                        if (beatSelect && beatSelect.tagName === 'SELECT') {
+                            beatSelect.innerHTML = '<option value="">All Beats</option>';
+                        }
+                    });
+                }
+
+                if (sectionSelect && sectionSelect.tagName === 'SELECT') {
+                    sectionSelect.addEventListener('change', function() {
+                        const secId = this.value;
+                        if (beatSelect && beatSelect.tagName === 'SELECT') {
+                            beatSelect.innerHTML = '<option value="">Loading...</option>';
+                            if (secId) {
+                                fetch(`{{ url('/boundary/beats') }}/${secId}`)
+                                    .then(res => res.json())
+                                    .then(data => {
+                                        beatSelect.innerHTML = '<option value="">All Beats</option>';
+                                        data.forEach(b => {
+                                            beatSelect.innerHTML +=
+                                                `<option value="${b.id}">${b.name}</option>`;
+                                        });
+                                    });
+                            } else {
+                                beatSelect.innerHTML = '<option value="">All Beats</option>';
                             }
                         }
                     });
@@ -755,13 +806,13 @@
                 ];
 
                 const center = {
-                    lat: 20.5937,
-                    lng: 78.9629
+                    lat: 21.9564,
+                    lng: 84.0326
                 };
                 map = new google.maps.Map(document.getElementById("map"), {
-                    zoom: 6,
+                    zoom: 10,
                     center: center,
-                    mapTypeId: 'roadmap',
+                    mapTypeId: 'satellite',
                     styles: isDark ? darkStyle : [],
                     mapTypeControl: true,
                     mapTypeControlOptions: {
@@ -769,12 +820,14 @@
                     },
                     zoomControl: true,
                     zoomControlOptions: {
-                        position: google.maps.ControlPosition.RIGHT_CENTER
+                        position: google.maps.ControlPosition.LEFT_BOTTOM
                     },
                     streetViewControl: false,
                     fullscreenControl: true,
+                    fullscreenControlOptions: {
+                        position: google.maps.ControlPosition.LEFT_TOP
+                    },
                 });
-
                 infoWindow = new google.maps.InfoWindow();
                 clusterer = new markerClusterer.MarkerClusterer({
                     map
@@ -782,26 +835,15 @@
             }
 
             window.resetMap = function() {
-                Object.values(layerMarkers).forEach(markers => {
-                    markers.forEach(m => m.setMap(null));
-                });
+                Object.values(layerMarkers).forEach(markers => markers.forEach(m => m.setMap(null)));
                 clusterer.clearMarkers();
                 layerMarkers = {};
 
                 Object.values(layerDataCollections).forEach(data => data.setMap(null));
                 layerDataCollections = {};
-
-                Object.values(layerShapes).forEach(shapes => {
-                    shapes.forEach(s => s.setMap(null));
-                });
-                layerShapes = {};
                 loadedLayers = {};
 
                 document.querySelectorAll('[id^="count_"]').forEach(el => el.textContent = '0');
-                document.querySelectorAll('.layer-toggle').forEach(cb => {
-                    cb.checked = false;
-                    updateLayerUIState(cb.value, false);
-                });
             }
 
             function loadLayerCounts() {
@@ -810,7 +852,7 @@
                 const params = new URLSearchParams(formData);
                 params.append('only_counts', '1');
 
-                fetch(`{{ route('know-your-area.data') }}?${params.toString()}`)
+                fetch(`{{ route('normal.boundaries.data') }}?${params.toString()}`)
                     .then(res => res.json())
                     .then(response => {
                         document.getElementById('customLoader').style.display = 'none';
@@ -820,12 +862,6 @@
                                 const countEl = document.getElementById('count_' + layerType);
                                 if (countEl) countEl.textContent = counts[layerType];
                             });
-
-                            if (response.geofences) {
-                                const countGeo = document.getElementById('count_geofences');
-                                if (countGeo) countGeo.textContent = response.geofences.length;
-                                processGeofences(response.geofences);
-                            }
                         }
                     })
                     .catch(err => {
@@ -836,13 +872,6 @@
 
             function handleLayerToggle(layerType, show) {
                 updateLayerUIState(layerType, show);
-                if (layerType === 'geofences') {
-                    if (layerShapes.geofences) {
-                        layerShapes.geofences.forEach(s => s.setMap(show ? map : null));
-                    }
-                    return;
-                }
-
                 if (show) {
                     if (loadedLayers[layerType]) {
                         showLayer(layerType);
@@ -862,7 +891,7 @@
                 const params = new URLSearchParams(formData);
                 params.append('layer_types[]', layerType);
 
-                fetch(`{{ route('know-your-area.data') }}?${params.toString()}`)
+                fetch(`{{ route('normal.boundaries.data') }}?${params.toString()}`)
                     .then(res => res.json())
                     .then(response => {
                         if (spinner) spinner.style.display = 'none';
@@ -881,7 +910,9 @@
 
             function processLayerFeatures(layerType, features) {
                 const style = LAYER_STYLES[layerType] || {
-                    strokeColor: '#3b82f6'
+                    strokeColor: '#3b82f6',
+                    strokeWeight: 3,
+                    fillOpacity: 0.1
                 };
                 const iconEmoji = LAYER_ICONS[layerType] || '📍';
                 const markers = [];
@@ -897,6 +928,31 @@
                     if (isPoint) return {
                         visible: false
                     };
+
+                    if (layerType === 'administrative_boundaries') {
+                        const lvl = feature.getProperty('level');
+                        if (lvl === 'division') return {
+                            strokeColor: '#e11d48',
+                            strokeWeight: 5,
+                            fillOpacity: 0.05
+                        };
+                        if (lvl === 'range') return {
+                            strokeColor: '#f97316',
+                            strokeWeight: 4,
+                            fillOpacity: 0.1
+                        };
+                        if (lvl === 'section') return {
+                            strokeColor: '#22c55e',
+                            strokeWeight: 3,
+                            fillOpacity: 0.1
+                        };
+                        if (lvl === 'beat') return {
+                            strokeColor: '#8b5cf6',
+                            strokeWeight: 2,
+                            fillOpacity: 0.1
+                        };
+                    }
+
                     return style;
                 });
 
@@ -905,8 +961,7 @@
 
                 features.forEach(feature => {
                     if (feature.geometry.type === 'Point') {
-                        if (layerType === 'elephant_movement') return;
-
+                        if (layerType === 'Elephant Movement') return;
                         const marker = new google.maps.Marker({
                             position: {
                                 lat: feature.geometry.coordinates[1],
@@ -918,7 +973,6 @@
                                 scaledSize: new google.maps.Size(30, 30)
                             }
                         });
-
                         marker.addListener('click', () => bindPopup(feature, marker.getPosition(), true));
                         markers.push(marker);
                     }
@@ -926,78 +980,6 @@
 
                 layerMarkers[layerType] = markers;
                 clusterer.addMarkers(markers);
-            }
-
-            function processGeofences(geofences) {
-                const shapes = [];
-                geofences.forEach(geo => {
-                    let shape;
-                    const lat = parseFloat(geo.latitude || geo.lat);
-                    const lng = parseFloat(geo.longitude || geo.lng);
-
-                    const popupContent = `
-                <div class="premium-popup">
-                    <div class="popup-header" style="background: #3B82F6">
-                        <div class="popup-layer-badge">Beat Boundary</div>
-                        <h3 class="popup-title" style="color: white; margin: 0;">${geo.name || 'Beat Boundary'}</h3>
-                    </div>
-                    <div class="popup-body" style="padding: 15px; font-size: 0.9rem;">
-                        <table class="popup-table">
-                            <tr><td class="popup-label">Address</td><td class="popup-value">${geo.address || 'N/A'}</td></tr>
-                            <tr><td class="popup-label">Type</td><td class="popup-value">${geo.type || 'Polygon'}</td></tr>
-                            ${geo.radius ? `<tr><td class="popup-label">Radius</td><td class="popup-value">${geo.radius}m</td></tr>` : ''}
-                        </table>
-                    </div>
-                </div>
-                `;
-
-                    if (geo.type === 'Circle' && lat && lng) {
-                        shape = new google.maps.Circle({
-                            strokeColor: '#3B82F6',
-                            strokeOpacity: 0.8,
-                            strokeWeight: 2,
-                            fillColor: '#3B82F6',
-                            fillOpacity: 0.15,
-                            center: {
-                                lat: lat,
-                                lng: lng
-                            },
-                            radius: parseFloat(geo.radius),
-                            map: null
-                        });
-                    } else if (geo.poly_lat_lng) {
-                        const coords = typeof geo.poly_lat_lng === 'string' ? JSON.parse(geo.poly_lat_lng) : geo
-                            .poly_lat_lng;
-                        const polygonPath = coords.map(p => ({
-                            lat: parseFloat(p.lat),
-                            lng: parseFloat(p.lng)
-                        }));
-                        shape = new google.maps.Polygon({
-                            paths: polygonPath,
-                            strokeColor: '#3B82F6',
-                            strokeOpacity: 0.8,
-                            strokeWeight: 2,
-                            fillColor: '#3B82F6',
-                            fillOpacity: 0.15,
-                            map: null
-                        });
-                    }
-
-                    if (shape) {
-                        shape.addListener('click', (event) => {
-                            infoWindow.setContent(popupContent);
-                            infoWindow.setPosition(event.latLng);
-                            infoWindow.open(map);
-                        });
-                        shapes.push(shape);
-                    }
-                });
-                layerShapes.geofences = shapes;
-
-                const cb = document.getElementById('check_geofences');
-                if (cb && cb.checked) {
-                    layerShapes.geofences.forEach(s => s.setMap(map));
-                }
             }
 
             function showLayer(layerType) {
@@ -1041,55 +1023,43 @@
                     });
                 });
 
-                Object.keys(layerShapes).forEach(lt => {
-                    layerShapes[lt].forEach(s => {
-                        if (s.getMap()) {
-                            if (s.getBounds) {
-                                bounds.union(s.getBounds());
-                            } else if (s.getPath) {
-                                s.getPath().forEach(p => bounds.extend(p));
-                            }
-                            hasPoints = true;
-                        }
-                    });
-                });
-
-                if (hasPoints) {
-                    map.fitBounds(bounds);
-                }
+                if (hasPoints) map.fitBounds(bounds);
             }
 
             function bindPopup(feature, position, isRawFeature = false) {
                 const props = isRawFeature ? feature.properties : {};
-                if (!isRawFeature) {
-                    feature.forEachProperty((v, k) => props[k] = v);
+                if (!isRawFeature) feature.forEachProperty((v, k) => props[k] = v);
+
+                const layerType = props.layer_type || 'Unknown';
+                let label = layerType.replace(/_/g, ' ').toUpperCase();
+
+                if (layerType === 'administrative_boundaries' && props.level) {
+                    label = props.level.toUpperCase() + ' BOUNDARY';
                 }
 
-                const layerType = props.layer_type || 'Feature';
-                const style = LAYER_STYLES[layerType] || {};
-                const color = style.strokeColor || '#3B82F6';
-                const label = layerType.replace(/_/g, ' ').toUpperCase();
-
-                let popup = `
-            <div class="premium-popup">
-                <div class="popup-header" style="background: ${color}">
-                    <div class="popup-layer-badge">${label}</div>
-                    <h3 class="popup-title" style="color: white; margin: 0;">${props.name || 'Details'}</h3>
-                </div>
-                <div class="popup-body">
-                    <table class="popup-table">
+                let popupHtml = `
+                <div class="custom-iw">
+                    <div class="custom-iw-header">
+                        <h3>${props.name || 'Details'}</h3>
+                        <p>${label}</p>
+                    </div>
+                    <div class="custom-iw-body">
             `;
 
-                const skipKeys = ['id', 'name', 'layer_type', 'geometry'];
+                const skipKeys = ['id', 'name', 'layer_type', 'geometry', 'level', 'created_at', 'updated_at'];
                 Object.keys(props).forEach(key => {
                     if (skipKeys.includes(key) || !props[key] || props[key] === 'null') return;
                     const displayKey = key.replace(/_/g, ' ').toUpperCase();
-                    popup +=
-                        `<tr><td class="popup-label">${displayKey}</td><td class="popup-value">${props[key]}</td></tr>`;
+                    popupHtml += `
+                    <div class="custom-iw-row">
+                        <span class="custom-iw-label">${displayKey}</span>
+                        <span class="custom-iw-value">${props[key]}</span>
+                    </div>
+                `;
                 });
 
-                popup += `</table></div></div>`;
-                infoWindow.setContent(popup);
+                popupHtml += `</div></div>`;
+                infoWindow.setContent(popupHtml);
                 infoWindow.setPosition(position);
                 infoWindow.open(map);
             }
