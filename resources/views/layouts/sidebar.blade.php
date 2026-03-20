@@ -1,5 +1,6 @@
 @php
-$user = Auth::user();
+$user = Auth::user() ?? session('user');
+
 $isGlobalAdmin = ($user && $user->role_id == 8);
 $isSimulating = session()->has('simulated_company_id');
 
@@ -176,7 +177,8 @@ $features = $company->features ?? [];
     <div class="sidebar-footer">
         <div class="sidebar-user">
             <div class="sidebar-user-avatar">
-                @if($user && $user->profile_photo)
+                {{-- isset() checks if the property exists AND isn't null --}}
+                @if(isset($user->profile_photo) && $user->profile_photo)
                 <img src="{{ asset('storage/' . $user->profile_photo) }}" class="rounded-circle" style="width: 32px; height: 32px; object-fit: cover;">
                 @else
                 <i class="bi bi-person-circle fs-4"></i>
@@ -184,9 +186,11 @@ $features = $company->features ?? [];
             </div>
 
             <div class="sidebar-user-info">
-                <strong class="text-truncate d-block" style="max-width: 120px;">{{ $user->name }}</strong>
+                <strong class="text-truncate d-block" style="max-width: 120px;">
+                    {{ auth()->user()->name ?? 'Guest' }}
+                </strong>
                 <small class="text-truncate d-block" style="max-width: 120px;">
-                    {{ $isSimulating ? 'Simulating' : $user->email }}
+                    {{ $isSimulating ? 'Simulating' : (auth()->user()->email ?? '') }}
                 </small>
             </div>
 

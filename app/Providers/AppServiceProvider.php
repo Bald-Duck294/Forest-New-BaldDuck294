@@ -21,41 +21,50 @@ class AppServiceProvider extends ServiceProvider
      * Bootstrap any application services.
      */
     public function boot()
-{
-    View::composer('*', function ($view) {
-        try {
-            // [DEV MODE] Ensure a default user with company_id 56 exists in session if not present
-            if (!session()->has('user')) {
-                 session()->put('user', (object)[
-                    "company_id" => 56,
-                    "id" => 1,
-                    "isActive" => 1,
-                    "role_id" => 1,
-                    "name" => "Dev Admin"
+    {
+        View::composer('*', function ($view) {
+            try {
+                // 1. Ensure the dev user exists in session
+                if (!session()->has('user')) {
+                    session()->put('user', (object)[
+                        "company_id" => 56,
+                        "id" => 1,
+                        "isActive" => 1,
+                        "role_id" => 1,
+                        "name" => "Dev Admin",
+                        "email" => "dev@forestfix.com", // Added email to prevent next error
+                        "profile_photo" => null,
+                        "profile_pic"   => null
+                    ]);
+                }
+
+                // 2. FETCH THE USER FROM SESSION
+                $user = session('user');
+
+                $provider = new class {
+                    use FilterDataTrait;
+                };
+
+                $filterData = $provider->filterData();
+
+                // 3. SHARE BOTH THE FILTERS AND THE USER OBJECT
+                $view->with($filterData);
+                $view->with('user', $user); // This line fixes the "Attempt to read property name on null"
+                $view->with('isSimulating', true); // Added this since your sidebar checks for it
+
+            } catch (\Exception $e) {
+                \Log::error('View Composer Error: ' . $e->getMessage());
+                $view->with([
+                    'ranges' => collect(),
+                    'beats' => collect(),
+                    'users' => collect(),
+                    'user' => session('user'), // Still try to pass the user even on error
                 ]);
             }
+        });
 
-            $provider = new class {
-                use FilterDataTrait;
-            };
-
-            $filterData = $provider->filterData();
-            $view->with($filterData);
-        } catch (\Exception $e) {
-            // If filterData fails (e.g., database connection error), provide empty data
-            // This prevents redirect loops and allows the page to render with empty filters
-            \Log::error('View Composer Error: ' . $e->getMessage());
-            $view->with([
-                'ranges' => collect(),
-                'beats' => collect(),
-                'users' => collect(),
-            ]);
-        }
-    });
-
-    // Register Blade directive for formatting names
-    Blade::directive('formatName', function ($expression) {
-        return "<?php echo App\Helpers\FormatHelper::formatName($expression); ?>";
-    });
-}
+        Blade::directive('formatName', function ($expression) {
+            return "<?php echo App\Helpers\FormatHelper::formatName($expression); ?>";
+        });
+    }
 }
