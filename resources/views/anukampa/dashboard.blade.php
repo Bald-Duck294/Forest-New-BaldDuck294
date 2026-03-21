@@ -10,9 +10,9 @@
 @section('content')
     <style>
         /* =========================================
-           LOCAL COMPONENT STYLES 
-           (Hooked to Global Sapphire Variables)
-        ========================================= */
+                           LOCAL COMPONENT STYLES
+                           (Hooked to Global Sapphire Variables)
+                        ========================================= */
 
         /* Premium Card Styling */
         .dash-card {
@@ -23,7 +23,10 @@
             transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
         }
 
-        .hover-lift { cursor: pointer; }
+        .hover-lift {
+            cursor: pointer;
+        }
+
         .hover-lift:hover {
             transform: translateY(-3px);
             box-shadow: 0 8px 15px rgba(0, 0, 0, 0.05);
@@ -65,12 +68,36 @@
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
-        .badge-soft-success { background: rgba(16, 185, 129, 0.15); color: var(--sapphire-success); }
-        .badge-soft-primary { background: rgba(59, 130, 246, 0.15); color: var(--sapphire-primary); }
-        .badge-soft-info    { background: rgba(6, 182, 212, 0.15); color: #06b6d4; }
-        .badge-soft-warning { background: rgba(245, 158, 11, 0.15); color: var(--sapphire-warning); }
-        .badge-soft-danger  { background: rgba(239, 68, 68, 0.15); color: var(--sapphire-danger); }
-        .badge-soft-muted   { background: rgba(100, 116, 139, 0.15); color: var(--text-muted); }
+
+        .badge-soft-success {
+            background: rgba(16, 185, 129, 0.15);
+            color: var(--sapphire-success);
+        }
+
+        .badge-soft-primary {
+            background: rgba(59, 130, 246, 0.15);
+            color: var(--sapphire-primary);
+        }
+
+        .badge-soft-info {
+            background: rgba(6, 182, 212, 0.15);
+            color: #06b6d4;
+        }
+
+        .badge-soft-warning {
+            background: rgba(245, 158, 11, 0.15);
+            color: var(--sapphire-warning);
+        }
+
+        .badge-soft-danger {
+            background: rgba(239, 68, 68, 0.15);
+            color: var(--sapphire-danger);
+        }
+
+        .badge-soft-muted {
+            background: rgba(100, 116, 139, 0.15);
+            color: var(--text-muted);
+        }
 
         /* Action Buttons */
         .btn-sapphire {
@@ -86,7 +113,12 @@
             gap: 6px;
             font-size: 0.85rem;
         }
-        .btn-sapphire:hover { opacity: 0.9; transform: translateY(-1px); color: #ffffff; }
+
+        .btn-sapphire:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+            color: #ffffff;
+        }
 
         .btn-sapphire-outline {
             background-color: transparent;
@@ -101,10 +133,12 @@
             gap: 6px;
             font-size: 0.8rem;
         }
-        .btn-sapphire-outline:hover, .btn-sapphire-outline.active { 
-            background-color: var(--table-hover); 
-            color: var(--sapphire-primary); 
-            border-color: var(--sapphire-primary); 
+
+        .btn-sapphire-outline:hover,
+        .btn-sapphire-outline.active {
+            background-color: var(--table-hover);
+            color: var(--sapphire-primary);
+            border-color: var(--sapphire-primary);
         }
 
         /* Map & Chart Containers */
@@ -123,19 +157,40 @@
         }
 
         /* Dash Tables */
-        .dash-table { width: 100%; border-collapse: collapse; margin-bottom: 0; }
-        .dash-table th { 
-            color: var(--text-muted); font-weight: 600; font-size: 0.75rem; 
-            border-bottom: 1px solid var(--border-color); padding: 1rem; 
-            background-color: transparent !important; text-transform: uppercase; letter-spacing: 0.5px;
+        .dash-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 0;
         }
-        .dash-table td { 
-            color: var(--text-main); font-weight: 500; font-size: 0.85rem; 
-            border-bottom: 1px dashed var(--border-color); padding: 1rem; 
-            vertical-align: middle; background-color: transparent !important; 
+
+        .dash-table th {
+            color: var(--text-muted);
+            font-weight: 600;
+            font-size: 0.75rem;
+            border-bottom: 1px solid var(--border-color);
+            padding: 1rem;
+            background-color: transparent !important;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
-        .dash-table tr:hover td { background-color: var(--table-hover) !important; }
-        .dash-table tr:last-child td { border-bottom: none; }
+
+        .dash-table td {
+            color: var(--text-main);
+            font-weight: 500;
+            font-size: 0.85rem;
+            border-bottom: 1px dashed var(--border-color);
+            padding: 1rem;
+            vertical-align: middle;
+            background-color: transparent !important;
+        }
+
+        .dash-table tr:hover td {
+            background-color: var(--table-hover) !important;
+        }
+
+        .dash-table tr:last-child td {
+            border-bottom: none;
+        }
 
         /* Map Toggle Switches */
         .map-switch-group {
@@ -145,6 +200,7 @@
             border-radius: 8px;
             overflow: hidden;
         }
+
         .map-switch-btn {
             background: transparent;
             color: var(--text-muted);
@@ -155,39 +211,50 @@
             cursor: pointer;
             transition: all 0.2s ease;
         }
+
         .map-switch-btn.active {
             background: var(--table-hover);
             color: var(--sapphire-primary);
         }
+
         .map-switch-btn:not(:last-child) {
             border-right: 1px solid var(--border-color);
         }
-        
-        /* Checkbox overrides for map layers */
-        .layer-btn-check { display: none; }
-        .layer-btn-label {
-            padding: 4px 12px; font-size: 0.8rem; font-weight: 600; border-radius: 6px; cursor: pointer;
-            border: 1px solid var(--border-color); color: var(--text-muted); background: transparent; transition: all 0.2s ease;
-        }
-        .layer-btn-check:checked + .layer-btn-label.heat { background: rgba(239, 68, 68, 0.1); color: var(--sapphire-danger); border-color: var(--sapphire-danger); }
-        .layer-btn-check:checked + .layer-btn-label.pin { background: rgba(59, 130, 246, 0.1); color: var(--sapphire-primary); border-color: var(--sapphire-primary); }
 
+        /* Checkbox overrides for map layers */
+        .layer-btn-check {
+            display: none;
+        }
+
+        .layer-btn-label {
+            padding: 4px 12px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            border-radius: 6px;
+            cursor: pointer;
+            border: 1px solid var(--border-color);
+            color: var(--text-muted);
+            background: transparent;
+            transition: all 0.2s ease;
+        }
+
+        .layer-btn-check:checked+.layer-btn-label.heat {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--sapphire-danger);
+            border-color: var(--sapphire-danger);
+        }
+
+        .layer-btn-check:checked+.layer-btn-label.pin {
+            background: rgba(59, 130, 246, 0.1);
+            color: var(--sapphire-primary);
+            border-color: var(--sapphire-primary);
+        }
     </style>
 
     <div class="container-fluid py-4 px-4">
-        
+
         {{-- HEADER --}}
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <div>
-                <h3 class="fw-bold mb-1" style="color: var(--text-main);">Compensation Tracking</h3>
-                <p class="text-muted small mb-0">Manage wildlife conflict & damage claims</p>
-            </div>
-            <div>
-                <button class="btn-sapphire shadow-sm" data-bs-toggle="offcanvas" data-bs-target="#newIncidentOffcanvas">
-                    <i data-lucide="plus" style="width: 16px; height: 16px;"></i> New Incident
-                </button>
-            </div>
-        </div>
+
 
         {{-- KPI CARDS --}}
         <div class="row g-4 mb-4">
@@ -267,24 +334,30 @@
                 <div class="dash-card h-100 p-4">
                     <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-3 gap-2">
                         <h5 class="fw-bold mb-0 d-flex align-items-center" style="color: var(--text-main);">
-                            <i data-lucide="map" style="color: var(--sapphire-success); width: 20px; height: 20px;" class="me-2"></i> Geospatial Hotspots
+                            <i data-lucide="map" style="color: var(--sapphire-success); width: 20px; height: 20px;"
+                                class="me-2"></i> Geospatial Hotspots
                         </h5>
 
                         <div class="d-flex gap-2 flex-wrap">
                             {{-- Layer Toggles --}}
                             <div class="d-flex gap-1">
-                                <input type="checkbox" class="layer-btn-check" id="toggleHeatmap" checked onchange="toggleMapLayer('heatmap', this.checked)">
+                                <input type="checkbox" class="layer-btn-check" id="toggleHeatmap" checked
+                                    onchange="toggleMapLayer('heatmap', this.checked)">
                                 <label class="layer-btn-label heat shadow-sm" for="toggleHeatmap">Heatmap</label>
 
-                                <input type="checkbox" class="layer-btn-check" id="togglePins" checked onchange="toggleMapLayer('pins', this.checked)">
+                                <input type="checkbox" class="layer-btn-check" id="togglePins" checked
+                                    onchange="toggleMapLayer('pins', this.checked)">
                                 <label class="layer-btn-label pin shadow-sm" for="togglePins">Pins</label>
                             </div>
 
                             {{-- Filter Group --}}
                             <div class="map-switch-group shadow-sm">
-                                <button onclick="filterMapData('all', this)" class="map-switch-btn map-filter-btn active">All</button>
-                                <button onclick="filterMapData('Crop Damage', this)" class="map-switch-btn map-filter-btn">Crop</button>
-                                <button onclick="filterMapData('House Damage', this)" class="map-switch-btn map-filter-btn">House</button>
+                                <button onclick="filterMapData('all', this)"
+                                    class="map-switch-btn map-filter-btn active">All</button>
+                                <button onclick="filterMapData('Crop Damage', this)"
+                                    class="map-switch-btn map-filter-btn">Crop</button>
+                                <button onclick="filterMapData('House Damage', this)"
+                                    class="map-switch-btn map-filter-btn">House</button>
                             </div>
                         </div>
                     </div>
@@ -296,7 +369,8 @@
             <div class="col-lg-4">
                 <div class="dash-card h-100 p-4 d-flex flex-column">
                     <h5 class="fw-bold mb-4 d-flex align-items-center" style="color: var(--text-main);">
-                        <i data-lucide="bar-chart-2" style="color: var(--sapphire-warning); width: 20px; height: 20px;" class="me-2"></i> Incidents by Range
+                        <i data-lucide="bar-chart-2" style="color: var(--sapphire-warning); width: 20px; height: 20px;"
+                            class="me-2"></i> Incidents by Range
                     </h5>
                     <div class="chart-container flex-grow-1">
                         <canvas id="rangeChart"></canvas>
@@ -307,7 +381,8 @@
 
         {{-- TABLE: RECENT CLAIMS --}}
         <div class="dash-card p-0 overflow-hidden mb-4">
-            <div class="d-flex justify-content-between align-items-center p-4" style="border-bottom: 1px solid var(--border-color);">
+            <div class="d-flex justify-content-between align-items-center p-4"
+                style="border-bottom: 1px solid var(--border-color);">
                 <h5 class="fw-bold mb-0" style="color: var(--text-main);">Recent Claims Database</h5>
                 <a href="{{ route('anukampa.claims') }}" class="btn-sapphire-outline px-3 shadow-sm">View All</a>
             </div>
@@ -329,14 +404,17 @@
                             <tr>
                                 <td class="ps-4">
                                     <div class="fw-bold" style="color: var(--text-main);">{{ $claim->victim_name }}</div>
-                                    <div class="font-monospace" style="color: var(--text-muted); font-size: 0.75rem;">{{ $claim->contact_number }}</div>
+                                    <div class="font-monospace" style="color: var(--text-muted); font-size: 0.75rem;">
+                                        {{ $claim->contact_number }}</div>
                                 </td>
                                 <td>
                                     <div style="color: var(--text-main);">{{ $claim->range }}</div>
-                                    <div style="color: var(--text-muted); font-size: 0.8rem;">{{ $claim->village_name }}</div>
+                                    <div style="color: var(--text-muted); font-size: 0.8rem;">{{ $claim->village_name }}
+                                    </div>
                                 </td>
                                 <td>
-                                    <span class="badge-soft {{ $claim->incident_type == 'Crop Damage' ? 'badge-soft-success' : 'badge-soft-info' }}">
+                                    <span
+                                        class="badge-soft {{ $claim->incident_type == 'Crop Damage' ? 'badge-soft-success' : 'badge-soft-info' }}">
                                         {{ $claim->incident_type }}
                                     </span>
                                 </td>
@@ -347,7 +425,8 @@
                                     {{ \Carbon\Carbon::parse($claim->incident_date)->format('M d, Y') }}
                                 </td>
                                 <td class="pe-4">
-                                    <span class="badge-soft 
+                                    <span
+                                        class="badge-soft 
                                         {{ $claim->status == 'Pending' ? 'badge-soft-warning' : '' }}
                                         {{ $claim->status == 'Verified' ? 'badge-soft-info' : '' }}
                                         {{ $claim->status == 'Compensated' ? 'badge-soft-success' : '' }}
@@ -360,7 +439,8 @@
                             <tr>
                                 <td colspan="6" class="text-center py-5">
                                     <div class="py-3">
-                                        <i data-lucide="database" style="width: 48px; height: 48px; color: var(--text-muted); opacity: 0.3;"></i>
+                                        <i data-lucide="database"
+                                            style="width: 48px; height: 48px; color: var(--text-muted); opacity: 0.3;"></i>
                                         <p class="mt-2 mb-0" style="color: var(--text-muted);">No recent claims found.</p>
                                     </div>
                                 </td>
@@ -375,7 +455,9 @@
     {{-- SCRIPTS --}}
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
-    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBfBFN6L_HROTd-mS8QqUDRIqskkvHvFYk&libraries=visualization"></script>
+    <script
+        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBfBFN6L_HROTd-mS8QqUDRIqskkvHvFYk&libraries=visualization">
+    </script>
 
     <script>
         document.addEventListener("DOMContentLoaded", function() {
@@ -401,14 +483,42 @@
         function updateMapStyle() {
             if (!map) return;
             const isDark = document.documentElement.getAttribute('data-bs-theme') === 'dark';
-            const darkStyle = [
-                { elementType: "geometry", stylers: [{ color: "#1e293b" }] },
-                { elementType: "labels.text.stroke", stylers: [{ color: "#1e293b" }] },
-                { elementType: "labels.text.fill", stylers: [{ color: "#94a3b8" }] },
-                { featureType: "water", elementType: "geometry", stylers: [{ color: "#0f172a" }] },
-                { featureType: "poi", elementType: "labels", stylers: [{ visibility: "off" }] }
+            const darkStyle = [{
+                    elementType: "geometry",
+                    stylers: [{
+                        color: "#1e293b"
+                    }]
+                },
+                {
+                    elementType: "labels.text.stroke",
+                    stylers: [{
+                        color: "#1e293b"
+                    }]
+                },
+                {
+                    elementType: "labels.text.fill",
+                    stylers: [{
+                        color: "#94a3b8"
+                    }]
+                },
+                {
+                    featureType: "water",
+                    elementType: "geometry",
+                    stylers: [{
+                        color: "#0f172a"
+                    }]
+                },
+                {
+                    featureType: "poi",
+                    elementType: "labels",
+                    stylers: [{
+                        visibility: "off"
+                    }]
+                }
             ];
-            map.setOptions({ styles: isDark ? darkStyle : [] });
+            map.setOptions({
+                styles: isDark ? darkStyle : []
+            });
         }
 
         function initMap() {
@@ -417,10 +527,15 @@
 
             map = new google.maps.Map(document.getElementById('map-anukampa'), {
                 zoom: 10,
-                center: { lat: centerLat, lng: centerLng },
+                center: {
+                    lat: centerLat,
+                    lng: centerLng
+                },
                 mapTypeId: 'roadmap',
                 streetViewControl: false,
-                mapTypeControlOptions: { mapTypeIds: ['roadmap', 'satellite', 'terrain'] }
+                mapTypeControlOptions: {
+                    mapTypeIds: ['roadmap', 'satellite', 'terrain']
+                }
             });
 
             updateMapStyle(); // Apply dark mode if active
@@ -434,7 +549,8 @@
             if (heatmap) heatmap.setMap(null);
 
             const filteredData = filterType === 'all' ? mapData : mapData.filter(loc => loc.incident_type === filterType);
-            const heatPoints = filteredData.map(loc => new google.maps.LatLng(parseFloat(loc.latitude), parseFloat(loc.longitude)));
+            const heatPoints = filteredData.map(loc => new google.maps.LatLng(parseFloat(loc.latitude), parseFloat(loc
+                .longitude)));
 
             // Heatmap Layer
             heatmap = new google.maps.visualization.HeatmapLayer({
@@ -456,10 +572,14 @@
             filteredData.forEach(loc => {
                 const isCrop = loc.incident_type === 'Crop Damage';
                 const marker = new google.maps.Marker({
-                    position: { lat: parseFloat(loc.latitude), lng: parseFloat(loc.longitude) },
+                    position: {
+                        lat: parseFloat(loc.latitude),
+                        lng: parseFloat(loc.longitude)
+                    },
                     map: showPins ? map : null,
                     title: loc.victim_name,
-                    icon: isCrop ? 'http://maps.google.com/mapfiles/ms/icons/green-dot.png' : 'http://maps.google.com/mapfiles/ms/icons/blue-dot.png'
+                    icon: isCrop ? 'http://maps.google.com/mapfiles/ms/icons/green-dot.png' :
+                        'http://maps.google.com/mapfiles/ms/icons/blue-dot.png'
                 });
 
                 const contentString = `
@@ -478,7 +598,10 @@
                     infoWindow.open(map, marker);
                 });
 
-                markers.push({ marker: marker, data: loc });
+                markers.push({
+                    marker: marker,
+                    data: loc
+                });
             });
         }
 
@@ -510,11 +633,13 @@
 
             const ranges = [...new Set(chartDataRaw.map(item => item.range))];
             const cropData = ranges.map(range => {
-                const match = chartDataRaw.find(item => item.range === range && item.incident_type === 'Crop Damage');
+                const match = chartDataRaw.find(item => item.range === range && item.incident_type ===
+                    'Crop Damage');
                 return match ? match.total : 0;
             });
             const houseData = ranges.map(range => {
-                const match = chartDataRaw.find(item => item.range === range && item.incident_type === 'House Damage');
+                const match = chartDataRaw.find(item => item.range === range && item.incident_type ===
+                    'House Damage');
                 return match ? match.total : 0;
             });
 
@@ -528,21 +653,20 @@
                 type: 'bar',
                 data: {
                     labels: ranges.length > 0 ? ranges : ['Central', 'North', 'South', 'East'],
-                    datasets: [
-                        {
+                    datasets: [{
                             label: 'Crop Damage',
                             data: cropData.length > 0 ? cropData : [5, 2, 1, 1],
                             backgroundColor: colorSuccess,
-                            borderRadius: 50,         // Pill style
-                            borderSkipped: false,     // Complete pill shape
-                            borderColor: cardBg,      // Creates a visual gap between stacked bars
+                            borderRadius: 50, // Pill style
+                            borderSkipped: false, // Complete pill shape
+                            borderColor: cardBg, // Creates a visual gap between stacked bars
                             borderWidth: 2
                         },
                         {
                             label: 'House Damage',
                             data: houseData.length > 0 ? houseData : [0, 1, 2, 3],
                             backgroundColor: colorPrimary,
-                            borderRadius: 50,         // Pill style
+                            borderRadius: 50, // Pill style
                             borderSkipped: false,
                             borderColor: cardBg,
                             borderWidth: 2
@@ -555,19 +679,31 @@
                     scales: {
                         x: {
                             stacked: true, // Stacked to utilize the pill border logic
-                            grid: { display: false }
+                            grid: {
+                                display: false
+                            }
                         },
                         y: {
                             stacked: true,
                             beginAtZero: true,
-                            border: { dash: [4, 4], display: false },
-                            grid: { color: gridColor, drawBorder: false }
+                            border: {
+                                dash: [4, 4],
+                                display: false
+                            },
+                            grid: {
+                                color: gridColor,
+                                drawBorder: false
+                            }
                         }
                     },
                     plugins: {
                         legend: {
                             position: 'bottom',
-                            labels: { usePointStyle: true, boxWidth: 10, color: textColor }
+                            labels: {
+                                usePointStyle: true,
+                                boxWidth: 10,
+                                color: textColor
+                            }
                         }
                     }
                 }

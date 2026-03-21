@@ -57,6 +57,18 @@ class RoleBasedFilterService
         }
 
         /**
+         * 🔥 GLOBAL SUPERADMIN (role_id = 8) - Can see EVERYTHING in the simulated company,
+         * or EVERYTHING globally if not simulating.
+         */
+        if ($roleId == 8) {
+            $query = DB::table('users');
+            if (session()->has('simulated_company_id') && !str_starts_with(request()->route()?->getName(), 'global.')) {
+                $query->where('company_id', $companyId);
+            }
+            return $query->pluck('id')->toArray();
+        }
+
+        /**
          * 🔥 ADMIN (role_id = 7) - Can see only assigned role_id 2 (supervisors) and role_id 3 (guards).
          * Must NOT see other admins (other users with role_id 7). Admin does not see themselves in operational lists.
          */
@@ -189,6 +201,18 @@ class RoleBasedFilterService
         }
 
         /**
+         * 🔥 GLOBAL SUPERADMIN (role_id = 8) - Can see all sites in the simulated company,
+         * or ALL sites globally if not simulating.
+         */
+        if ($roleId == 8) {
+            $query = DB::table('site_details');
+            if (session()->has('simulated_company_id') && !str_starts_with(request()->route()?->getName(), 'global.')) {
+                $query->where('company_id', self::getUserProperty($authUser, 'company_id'));
+            }
+            return $query->pluck('id')->toArray();
+        }
+
+        /**
          * 🔥 ADMIN (role_id = 7) - Can see sites under their assigned clients
          */
         if ($roleId == 7) {
@@ -262,6 +286,19 @@ class RoleBasedFilterService
          */
         if ($roleId == 1) {
             return DB::table('client_details')->where('company_id', $companyId)->pluck('id')->toArray();
+        }
+
+        /**
+         * 🔥 GLOBAL SUPERADMIN (role_id = 8) - Can see all clients in the simulated company,
+         * or ALL clients globally if not simulating.
+         */
+        if ($roleId == 8) {
+            $query = DB::table('client_details');
+            if (session()->has('simulated_company_id') && !str_starts_with(request()->route()?->getName(), 'global.')) {
+                // companyId is already simulated by accessor if not on global route
+                $query->where('company_id', self::getUserProperty($authUser, 'company_id'));
+            }
+            return $query->pluck('id')->toArray();
         }
 
         /**

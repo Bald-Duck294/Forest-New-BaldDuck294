@@ -211,7 +211,7 @@ $hideGlobalFilters = true;
 
                 <div class="card-body">
 
-                    <form method="POST" action="{{ route('events.report.updateStatus',$report->id) }}">
+                    <form method="POST" action="{{route('report-configs.updateStatus', $report->id) }}">
                         @csrf
 
                         <textarea name="final_remarks" class="form-control mb-3"></textarea>

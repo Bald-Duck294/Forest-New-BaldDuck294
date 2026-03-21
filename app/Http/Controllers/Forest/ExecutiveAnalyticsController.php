@@ -292,9 +292,15 @@ class ExecutiveAnalyticsController extends Controller
         // Sort 
         $sortedPerformance = $fullPerformance->sortByDesc('performance_score')->values();
 
+        // Limit results for dashboard stability
+        $displayLimit = $userId ? null : 50; 
+        $limitedPerformance = $displayLimit ? $sortedPerformance->take($displayLimit) : $sortedPerformance;
+
         return [
             'topPerformers' => $sortedPerformance->take(5)->values(),
-            'fullPerformance' => $sortedPerformance,
+            'fullPerformance' => $limitedPerformance,
+            'totalCount' => $sortedPerformance->count(),
+            'isLimited' => $displayLimit && $sortedPerformance->count() > $displayLimit,
         ];
     }
 

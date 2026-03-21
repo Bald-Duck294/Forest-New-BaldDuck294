@@ -45,9 +45,10 @@ class GuardReportController extends Controller
 
             $admin = User::where('company_id', $user->company_id)->where('role_id', 7)->orderBy('name', 'asc')->get();
 
-            // dd(DB::getQueryLog());
-            // dd($sites);
-        } else if ($user->role_id == '2') {
+        // dd(DB::getQueryLog());
+        // dd($sites);
+        }
+        else if ($user->role_id == '2') {
             $site = SiteAssign::where('user_id', $user->id)->where('role_id', 2)->first();
             $siteArray = json_decode($site['site_id'], true);
             //  dd($siteArray);
@@ -55,13 +56,15 @@ class GuardReportController extends Controller
             // dd($sites);
             $supervisor = DB::table('users')->where('role_id', '=', 2)->where('company_id', $user->company_id)->orderBy('name')->get();
             $guards = DB::table('users')->where('company_id', $user->company_id)->where('role_id', '=', 3)->orderBy('name')->get();
-            // dd($supervisor , $guards , "data");
-        } else if ($user->role_id == '4') {
+        // dd($supervisor , $guards , "data");
+        }
+        else if ($user->role_id == '4') {
             $siteId = SiteDetails::where('client_id', $user->client_id)->pluck('id')->toArray();
             $sites = DB::table('site_details')->whereIn('id', $siteId)->get();
             $supervisor = DB::table('users')->where('role_id', '=', 2)->where('client_id', $user->client_id)->orderBy('name')->get();
             $guards = DB::table('users')->where('client_id', $user->client_id)->where('role_id', '=', 3)->orderBy('name')->get();
-        } else if ($user->role_id == '7') {
+        }
+        else if ($user->role_id == '7') {
             $siteAssigned = SiteAssign::where('user_id', $user->id)->first();
 
             $client_ids = json_decode($siteAssigned['site_id'], true);
@@ -73,10 +76,10 @@ class GuardReportController extends Controller
             $supervisor = Users::where([['users.company_id', '=', $user->company_id], ['users.role_id', '=', 2]])
                 ->leftJoin('site_assign as site', 'users.id', '=', 'site.user_id')
                 ->where(function ($query) use ($siteArray) {
-                    foreach ($siteArray as $siteId) {
-                        $query->orWhereRaw('JSON_CONTAINS(site.site_id, ?)', [json_encode([$siteId])]);
-                    }
-                })->get();
+                foreach ($siteArray as $siteId) {
+                    $query->orWhereRaw('JSON_CONTAINS(site.site_id, ?)', [json_encode([$siteId])]);
+                }
+            })->get();
 
             // $supervisor = User::where('company_id', $user->company_id)->where()->where('role_id', '=', 2)->orderBy('name')->get();
             $guards = DB::table('users')->where('company_id', $user->company_id)->where('role_id', '=', 3)->orderBy('name')->get();
@@ -90,7 +93,7 @@ class GuardReportController extends Controller
                 ->whereIn('id', json_decode($siteArray[0]))
                 ->get();
 
-            // dd($clients , "cli");
+        // dd($clients , "cli");
 
         }
 

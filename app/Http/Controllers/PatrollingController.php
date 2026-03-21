@@ -287,7 +287,7 @@ class PatrollingController extends Controller
             ->latest('created_at')
             ->paginate($request->per_page ?? 50);
 
-        if ($user->role_id == 1) {
+        if ($user->role_id == 1|| $user->role_id == 8) {
             // Admin: full access to company data
             $clients = ClientDetails::where('company_id', $user->company_id)->get();
 
@@ -567,7 +567,7 @@ class PatrollingController extends Controller
         //     // ->when($beatId, fn($q) => $q->where('site_id', $beatId))
         //     ->get();
 
-        if ($user->role_id == 1) {
+        if ($user->role_id == 1 || $user->role_id == 8) {
             $clients = ClientDetails::where('company_id', $user->company_id)->orderBy('name', 'ASC')->get();
             $sites = SiteDetails::where('company_id', $user->company_id)
                 ->when($clientId, fn($q) => $q->where('client_id', $clientId))

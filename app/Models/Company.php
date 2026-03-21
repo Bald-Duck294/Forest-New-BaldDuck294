@@ -13,14 +13,16 @@ class Company extends Model
     public $timestamps = false;
 
     protected $fillable = [
-        'name', 
+        'name',
         'email',
         'logo',
         'isActive',
+        'features'   // IMPORTANT
     ];
 
     protected $casts = [
         'isActive' => 'boolean',
+        'features' => 'array'   // IMPORTANT
     ];
 
     /**

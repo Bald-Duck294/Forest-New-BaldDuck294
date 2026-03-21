@@ -338,8 +338,9 @@ class AnalyticsDataService
      * SuperAdmins (role_id = 1) are never included.
      *
      * @param array|null $accessibleUserIds From RoleBasedFilterService::getAccessibleUserIds() for role-based scope
+     * @param int|null $limit Limit the number of results returned (e.g. for dashboard)
      */
-    public function getGuardPerformanceData(Carbon $startDate, Carbon $endDate, $companyId, array $siteIds = [], $userId = null, ?array $accessibleUserIds = null)
+    public function getGuardPerformanceData(Carbon $startDate, Carbon $endDate, $companyId, array $siteIds = [], $userId = null, ?array $accessibleUserIds = null, $limit = null)
     {
         // Get all statistics (filtered by site/user as needed)
         $patrolStats = $this->getGuardPatrolStats($startDate, $endDate, $companyId, $siteIds, $userId);
@@ -365,17 +366,18 @@ class AnalyticsDataService
         // Combine data
         $performance = collect();
         foreach ($guards as $guard) {
-            $patrol = $patrolStats->get($guard->id);
-            $attendance = $attendanceStats->get($guard->id);
-            $incidents = $incidentStats->get($guard->id);
-            $footPatrol = $footPatrolStats->get($guard->id);
-            $nightPatrol = $nightPatrolStats->get($guard->id);
+            $guardId = $guard->id; // Local variable for slight speedup
+            $patrol = $patrolStats->get($guardId);
+            $attendance = $attendanceStats->get($guardId);
+            $incidents = $incidentStats->get($guardId);
+            $footPatrol = $footPatrolStats->get($guardId);
+            $nightPatrol = $nightPatrolStats->get($guardId);
 
             // Calculate performance score
             // Formula: Patrol Distance (50%) + Attendance (30%) + Incidents Reported (20%)
             
             // 1. Patrol Distance Component (50%): Normalize distance to 0-100 scale
-            $guardDistance = $patrol ? $patrol->total_distance_km : 0;
+            $guardDistance = $patrol ? ($patrol->total_distance_km ?? 0) : 0;
             $distanceScore = min(100, ($guardDistance / $maxDistance) * 100);
             $distanceComponent = $distanceScore * 0.5; // 50% weight
             
@@ -387,49 +389,50 @@ class AnalyticsDataService
             
             // 3. Incidents Reported Component (20%): Normalize incidents to 0-100 scale
             // More incidents reported = better (shows vigilance and reporting)
-            $guardIncidents = $incidents ? $incidents->total_incidents : 0;
+            $guardIncidents = $incidents ? ($incidents->total_incidents ?? 0) : 0;
             $incidentsScore = min(100, ($guardIncidents / $maxIncidents) * 100);
             $incidentsComponent = $incidentsScore * 0.2; // 20% weight
             
             // Final score: Sum of all weighted components
-            // Max possible: 50 + 30 + 20 = 100
             $score = $distanceComponent + $attendanceComponent + $incidentsComponent;
-            
-            // Constraint: 0 <= score <= 100 (should already be within range, but ensure)
             $score = max(0, min(100, $score));
 
             $performance->push((object) [
-                'id' => $guard->id,
+                'id' => $guardId,
                 'name' => $guard->name,
                 // Patrol stats
-                'patrol_sessions' => $patrol ? $patrol->total_sessions : 0,
-                'completed_sessions' => $patrol ? $patrol->completed_sessions : 0,
-                'ongoing_sessions' => $patrol ? $patrol->ongoing_sessions : 0,
-                'total_distance_km' => $patrol ? $patrol->total_distance_km : 0,
-                'avg_distance_per_session' => $patrol ? $patrol->avg_distance_per_session : 0,
-                'avg_duration_hours' => $patrol ? $patrol->avg_duration_hours : 0,
+                'patrol_sessions' => $patrol ? ($patrol->total_sessions ?? 0) : 0,
+                'completed_sessions' => $patrol ? ($patrol->completed_sessions ?? 0) : 0,
+                'ongoing_sessions' => $patrol ? ($patrol->ongoing_sessions ?? 0) : 0,
+                'total_distance_km' => $guardDistance,
+                'avg_distance_per_session' => $patrol ? ($patrol->avg_distance_per_session ?? 0) : 0,
+                'avg_duration_hours' => $patrol ? ($patrol->avg_duration_hours ?? 0) : 0,
                 // Attendance stats
-                'days_present' => $attendance ? $attendance->days_present : 0,
-                'late_days' => $attendance ? $attendance->late_days : 0,
-                'avg_late_minutes' => $attendance ? $attendance->avg_late_minutes : 0,
-                'attendance_rate' => $attendance && $daysInRange > 0 
-                    ? round(($attendance->days_present / $daysInRange) * 100, 1) 
-                    : 0,
+                'days_present' => $attendance ? ($attendance->days_present ?? 0) : 0,
+                'late_days' => $attendance ? ($attendance->late_days ?? 0) : 0,
+                'avg_late_minutes' => $attendance ? ($attendance->avg_late_minutes ?? 0) : 0,
+                'attendance_rate' => $attendanceRate,
                 // Incident stats
-                'incidents_reported' => $incidents ? $incidents->total_incidents : 0,
-                'resolved_incidents' => $incidents ? $incidents->resolved_incidents : 0,
-                'pending_incidents' => $incidents ? $incidents->pending_incidents : 0,
-                'high_priority_incidents' => $incidents ? $incidents->high_priority_incidents : 0,
+                'incidents_reported' => $guardIncidents,
+                'resolved_incidents' => $incidents ? ($incidents->resolved_incidents ?? 0) : 0,
+                'pending_incidents' => $incidents ? ($incidents->pending_incidents ?? 0) : 0,
+                'high_priority_incidents' => $incidents ? ($incidents->high_priority_incidents ?? 0) : 0,
                 // Specialized patrol stats
-                'foot_patrol_count' => $footPatrol ? $footPatrol->foot_patrol_count : 0,
-                'foot_patrol_distance_km' => $footPatrol ? $footPatrol->foot_patrol_distance_km : 0,
-                'night_patrol_count' => $nightPatrol ? $nightPatrol->night_patrol_count : 0,
-                'night_patrol_distance_km' => $nightPatrol ? $nightPatrol->night_patrol_distance_km : 0,
+                'foot_patrol_count' => $footPatrol ? ($footPatrol->foot_patrol_count ?? 0) : 0,
+                'foot_patrol_distance_km' => $footPatrol ? ($footPatrol->foot_patrol_distance_km ?? 0) : 0,
+                'night_patrol_count' => $nightPatrol ? ($nightPatrol->night_patrol_count ?? 0) : 0,
+                'night_patrol_distance_km' => $nightPatrol ? ($nightPatrol->night_patrol_distance_km ?? 0) : 0,
                 // Performance score
                 'performance_score' => round($score, 1),
             ]);
         }
 
-        return $performance->sortByDesc('performance_score')->values();
+        $sorted = $performance->sortByDesc('performance_score')->values();
+        
+        if ($limit) {
+            return $sorted->take($limit);
+        }
+
+        return $sorted;
     }
 }

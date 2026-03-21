@@ -44,7 +44,7 @@ class SiteController extends Controller
             return view('sitelist')->with('Sites', $Sites)->with("client_id", $supervisor_id)->with('supervisor_id', $supervisor_id);
         } else {
             Log::info($user->name . ' view site list, User_id: ' . $user->id);
-            if ($user->role_id == 1) {
+            if ($user->role_id == 1 || $user->role_id == 8) {
                 if ($client_id != 0) {
                     $clientName = ClientDetails::where('id', $client_id)->first();
                     $Sites = SiteDetails::where('company_id', $user->company_id)->where('client_id', $client_id)->orderBy('name', 'asc')->get();
@@ -89,7 +89,7 @@ class SiteController extends Controller
         $request->session()->forget('supervisor_id');
         Log::info($user->name . ' view site list, User_id: ' . $user->id);
         $admin = Users::where('id', $client_id)->first();
-        if ($user->role_id == 1) {
+        if ($user->role_id == 1 || $user->role_id == 8) {
             if ($client_id != 0) {
                 $clientName = ClientDetails::where('id', $client_id)->first();
                 $Sites = SiteDetails::where('company_id', $user->company_id)->where('client_id', $client_id)->orderBy('name', 'asc')->get();

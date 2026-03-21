@@ -1,12 +1,10 @@
-
 @php
     use App\Models\User;
     use Illuminate\Support\Facades\Auth;
 
     $user = Auth::user() ?? session('user');
     $company = session('company');
-    $date = now()->format('Y-m-d');
-    $notificationsCount = 0;
+    $notificationsCount = 3; // Mocked for demonstration
 
     $isForest = $company?->is_forest ?? false;
     $roles = [
@@ -14,182 +12,579 @@
         2 => $isForest ? 'Ranger' : 'Supervisor',
         7 => $isForest ? 'ACF' : 'Admin',
         4 => 'Client',
+        8 => 'Global Admin',
     ];
 @endphp
 
-<nav class="navbar navbar-expand bg-body-tertiary shadow-sm px-3 py-2 border-bottom w-100"
-     style="backdrop-filter: blur(12px); --bs-bg-opacity:.85; transition:background-color .3s ease;">
+<style>
+    /* =========================================
+       SAPPHIRE HEADER — PREMIUM & MINIMAL
+    ========================================= */
 
-    {{-- Mobile Sidebar Toggle --}}
-    <button class="btn border-0 me-2 d-lg-none" id="sidebarToggle" type="button" style="z-index:1100;">
-        <i class="bi bi-list fs-4"></i>
-    </button>
+    /* Header Shell */
+    .sapphire-header-wrapper {
+        position: sticky;
+        top: 0;
+        z-index: 1040;
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), padding 0.3s ease;
+    }
 
-    <div class="d-flex align-items-center">
-        <a class="navbar-brand fw-semibold text-primary d-flex align-items-center me-3"
-           href="{{ url('/home') }}">
+    .sapphire-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 1.5rem;
+        height: var(--header-height, 65px);
+        background-color: rgba(255, 255, 255, 0.85);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border-bottom: 1px solid var(--border-color);
+        transition: all 0.3s ease;
+    }
 
-            <img src="{{ asset('images/logo1.png') }}"
-                 class="img-fluid d-lg-none"
-                 style="height:32px">
+    [data-bs-theme="dark"] .sapphire-header {
+        background-color: rgba(15, 23, 42, 0.85);
+    }
 
-            <span class="d-none d-md-block fw-bold text-body ms-2"
-                  style="font-size:1.1rem;">
-                {{ $company?->name ?? 'Patrol Analytics' }}
-            </span>
+    /* === 4 HEADER LAYOUT OPTIONS === */
+    .sapphire-header-wrapper.layout-sticky {
+        padding: 0;
+    }
 
-        </a>
-    </div>
+    .sapphire-header-wrapper.layout-floating {
+        top: 16px;
+        padding: 0 24px;
+    }
 
-    <ul class="navbar-nav ms-auto align-items-center flex-row gap-3">
+    .sapphire-header-wrapper.layout-floating .sapphire-header {
+        border-radius: 100px;
+        border: 1px solid var(--border-color);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+        max-width: 1400px;
+        margin: 0 auto;
+    }
 
-        {{-- Theme Toggle --}}
-        <li class="nav-item">
-            <button
-                class="btn btn-link nav-link px-2 d-flex align-items-center rounded-circle border bg-body"
-                id="themeToggle"
-                type="button"
-                aria-label="Toggle theme"
-                style="width:38px;height:38px;justify-content:center;">
+    .sapphire-header-wrapper.layout-autohide {
+        padding: 0;
+    }
 
-                <i class="bi fs-5" id="themeIcon"></i>
+    .sapphire-header-wrapper.header-hidden {
+        transform: translateY(-120%);
+    }
 
+    .sapphire-header-wrapper.layout-minimal .sapphire-header {
+        background-color: transparent !important;
+        backdrop-filter: none;
+        border-bottom: 2px solid var(--sapphire-primary);
+        padding: 0 1rem;
+    }
+
+    /* Density Controls */
+    body.density-compact {
+        --header-height: 54px;
+    }
+
+    body.density-comfortable {
+        --header-height: 70px;
+    }
+
+    /* =========================================
+       LEFT: BREADCRUMBS
+    ========================================= */
+    .header-breadcrumb {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: var(--text-muted);
+    }
+
+    .header-breadcrumb .brand-accent {
+        color: var(--text-main);
+        font-weight: 800;
+        letter-spacing: -0.5px;
+        font-size: 1.05rem;
+    }
+
+    .header-breadcrumb .separator {
+        color: var(--border-color);
+        font-weight: 300;
+    }
+
+    .header-breadcrumb .current-page {
+        color: var(--sapphire-primary);
+    }
+
+    /* =========================================
+       RIGHT: UTILITIES & ICONS
+    ========================================= */
+    .nav-utils {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .nav-icon-btn {
+        width: 36px;
+        height: 36px;
+        border-radius: 8px;
+        background: transparent;
+        border: 1px solid transparent;
+        color: var(--text-muted);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        position: relative;
+    }
+
+    .nav-icon-btn:hover,
+    .nav-icon-btn.active {
+        background-color: var(--bg-body);
+        border-color: var(--border-color);
+        color: var(--sapphire-primary);
+    }
+
+    .nav-icon-btn i {
+        font-size: 1.15rem;
+    }
+
+    /* Notification Dot */
+    .notification-dot {
+        position: absolute;
+        top: 6px;
+        right: 8px;
+        width: 8px;
+        height: 8px;
+        background-color: var(--sapphire-danger);
+        border-radius: 50%;
+        box-shadow: 0 0 0 2px var(--bg-card);
+    }
+
+    /* Profile Dropdown Override */
+    .profile-avatar {
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        object-fit: cover;
+        background: var(--sapphire-primary);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 0.9rem;
+        cursor: pointer;
+        border: 2px solid transparent;
+        transition: border-color 0.2s ease;
+    }
+
+    .profile-avatar:hover {
+        border-color: var(--sapphire-primary);
+    }
+
+    /* Dropdown Menus */
+    .sapphire-dropdown-menu {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.08);
+        padding: 8px 0;
+        min-width: 240px;
+        margin-top: 12px !important;
+        z-index: 1050;
+    }
+
+    .dropdown-section-title {
+        font-size: 0.65rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: var(--text-muted);
+        padding: 8px 20px 4px 20px;
+    }
+
+    .sapphire-dropdown-item {
+        padding: 8px 20px;
+        color: var(--text-main);
+        font-size: 0.85rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        transition: all 0.2s ease;
+        text-decoration: none;
+        cursor: pointer;
+        background: transparent;
+        border: none;
+        width: 100%;
+    }
+
+    .sapphire-dropdown-item:hover,
+    .sapphire-dropdown-item.active {
+        background: var(--bg-body);
+        color: var(--sapphire-primary);
+    }
+
+    .sapphire-dropdown-item i {
+        font-size: 1rem;
+        color: var(--text-muted);
+        transition: color 0.2s ease;
+    }
+
+    .sapphire-dropdown-item:hover i,
+    .sapphire-dropdown-item.active i {
+        color: var(--sapphire-primary);
+    }
+
+    /* Theme Check Icon */
+    .theme-check-icon {
+        display: none;
+        color: var(--sapphire-primary);
+        font-size: 1rem;
+    }
+
+    .sapphire-dropdown-item.active .theme-check-icon {
+        display: block;
+    }
+</style>
+
+<div class="sapphire-header-wrapper" id="headerWrapper">
+    <header class="sapphire-header">
+
+        {{-- Left: Mobile Toggle & Dynamic Breadcrumbs --}}
+        <div class="d-flex align-items-center gap-3">
+            <button class="btn border-0 d-lg-none p-0 nav-icon-btn" id="sidebarToggle" type="button">
+                <i class="bi bi-list"></i>
             </button>
-        </li>
 
-        {{-- Notifications --}}
-        <li class="nav-item position-relative">
-
-            <a href="#"
-               class="btn btn-link nav-link px-2 d-flex align-items-center rounded-circle border bg-body"
-               style="width:38px;height:38px;justify-content:center;">
-
-                <i class="bi bi-bell fs-5"></i>
-
-                @if($notificationsCount > 0)
-                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
-                          style="font-size:.65rem;">
-                        {{ $notificationsCount }}
-                    </span>
-                @endif
-
-            </a>
-
-        </li>
-
-        <div class="vr mx-1 opacity-25"></div>
-
-        {{-- Profile --}}
-        <li class="nav-item dropdown">
-
-            <a class="nav-link dropdown-toggle d-flex align-items-center p-0 rounded-pill pe-2"
-               data-bs-toggle="dropdown"
-               style="border:1px solid var(--bs-border-color);background:var(--bs-body-bg);">
-
-                @if($user?->profile_pic)
-                    <img src="{{ $user->profile_pic }}"
-                         class="rounded-circle object-fit-cover shadow-sm ms-n1 my-n1"
-                         width="38" height="38">
+            <div class="header-breadcrumb d-none d-md-flex">
+                @if ($user->role_id == 8)
+                    <span class="brand-accent"><i class="bi bi-globe me-1"></i>
+                        {{ $company?->name ?? 'Global Admin' }}</span>
                 @else
-                    <div class="bg-primary text-white rounded-circle d-flex justify-content-center align-items-center shadow-sm ms-n1 my-n1"
-                         style="width:38px;height:38px;font-weight:bold;">
-                        {{ substr($user?->name ?? 'U',0,1) }}
-                    </div>
+                    <span
+                        class="brand-accent">{{ $user?->company_name ?? ($company?->name ?? 'Patrol Analytics') }}</span>
                 @endif
+                <span class="separator">/</span>
+                {{-- <span class="current-page" id="dynamicPageTitle">@yield('title', 'Dashboard')</span> --}}
+            </div>
+        </div>
 
-                <div class="d-none d-sm-block ms-2 lh-sm text-start pe-2 py-1">
-                    <span class="d-block fw-semibold text-body"
-                          style="font-size:.85rem;">
-                        {{ $user?->name ?? 'Guest' }}
-                    </span>
+        {{-- Right: Utilities --}}
+        <div class="nav-utils">
 
-                    <small class="text-body-secondary"
-                           style="font-size:.70rem;">
-                        {{ $roles[$user?->role_id ?? 0] ?? 'User' }}
-                    </small>
+            {{-- Search (Command Palette Trigger) --}}
+            <button class="nav-icon-btn" id="searchTrigger" title="Search (Ctrl+K)">
+                <i class="bi bi-search"></i>
+            </button>
+
+            {{-- Browser Fullscreen Toggle --}}
+            <button class="nav-icon-btn d-none d-md-flex" id="fullscreenToggle" title="Toggle Fullscreen">
+                <i class="bi bi-arrows-fullscreen" id="fullscreenIcon"></i>
+            </button>
+
+            {{-- Appearance & Settings Dropdown (Zen mode moved here to save space) --}}
+            <div class="dropdown">
+                <button class="nav-icon-btn" data-bs-toggle="dropdown" aria-expanded="false" title="Display Settings">
+                    <i class="bi bi-sliders2"></i>
+                </button>
+                <div class="dropdown-menu dropdown-menu-end sapphire-dropdown-menu">
+
+                    <div class="dropdown-section-title">Focus & Layout</div>
+                    <button class="sapphire-dropdown-item" id="zenModeToggle">
+                        <div class="d-flex align-items-center gap-2"><i class="bi bi-layout-sidebar-inset-reverse"></i>
+                            Zen Mode (Focus)</div>
+                    </button>
+                    <div class="my-2 border-bottom" style="border-color: var(--border-color);"></div>
+
+                    <div class="dropdown-section-title">Header Style</div>
+                    <button class="sapphire-dropdown-item layout-option" data-layout="sticky"
+                        onclick="setHeaderLayout('sticky')">
+                        <div class="d-flex align-items-center gap-2"><i class="bi bi-layout-top"></i> Sticky Top</div>
+                        <i class="bi bi-check2 theme-check-icon"></i>
+                    </button>
+                    <button class="sapphire-dropdown-item layout-option" data-layout="floating"
+                        onclick="setHeaderLayout('floating')">
+                        <div class="d-flex align-items-center gap-2"><i class="bi bi-capsule"></i> Floating Pill</div>
+                        <i class="bi bi-check2 theme-check-icon"></i>
+                    </button>
+                    <button class="sapphire-dropdown-item layout-option" data-layout="autohide"
+                        onclick="setHeaderLayout('autohide')">
+                        <div class="d-flex align-items-center gap-2"><i class="bi bi-arrows-collapse"></i> Auto-Hide
+                            Scroll</div>
+                        <i class="bi bi-check2 theme-check-icon"></i>
+                    </button>
+                    <button class="sapphire-dropdown-item layout-option" data-layout="minimal"
+                        onclick="setHeaderLayout('minimal')">
+                        <div class="d-flex align-items-center gap-2"><i class="bi bi-border-bottom"></i> Minimal Edge
+                        </div>
+                        <i class="bi bi-check2 theme-check-icon"></i>
+                    </button>
+
+                    <div class="my-2 border-bottom" style="border-color: var(--border-color);"></div>
+
+                    <div class="dropdown-section-title">UI Density</div>
+                    <button class="sapphire-dropdown-item density-option" data-density="comfortable"
+                        onclick="setUIDensity('comfortable')">
+                        <div class="d-flex align-items-center gap-2"><i class="bi bi-view-list"></i> Comfortable</div>
+                        <i class="bi bi-check2 theme-check-icon"></i>
+                    </button>
+                    <button class="sapphire-dropdown-item density-option" data-density="compact"
+                        onclick="setUIDensity('compact')">
+                        <div class="d-flex align-items-center gap-2"><i class="bi bi-view-stacked"></i> Compact</div>
+                        <i class="bi bi-check2 theme-check-icon"></i>
+                    </button>
+                </div>
+            </div>
+
+            {{-- Advanced Theme Toggle (Light/Dark/System) --}}
+            <div class="dropdown">
+                <button class="nav-icon-btn" data-bs-toggle="dropdown" aria-expanded="false" title="Theme Mode">
+                    <i class="bi" id="headerThemeIcon"></i>
+                </button>
+                <div class="dropdown-menu dropdown-menu-end sapphire-dropdown-menu" style="min-width: 180px;">
+                    <button class="sapphire-dropdown-item theme-option" data-theme="light"
+                        onclick="setAppTheme('light')">
+                        <div class="d-flex align-items-center gap-2"><i class="bi bi-sun"></i> Light</div>
+                        <i class="bi bi-check2 theme-check-icon"></i>
+                    </button>
+                    <button class="sapphire-dropdown-item theme-option" data-theme="dark" onclick="setAppTheme('dark')">
+                        <div class="d-flex align-items-center gap-2"><i class="bi bi-moon-stars"></i> Dark</div>
+                        <i class="bi bi-check2 theme-check-icon"></i>
+                    </button>
+                    <button class="sapphire-dropdown-item theme-option" data-theme="system"
+                        onclick="setAppTheme('system')">
+                        <div class="d-flex align-items-center gap-2"><i class="bi bi-display"></i> System Default
+                        </div>
+                        <i class="bi bi-check2 theme-check-icon"></i>
+                    </button>
+                </div>
+            </div>
+
+            {{-- Notifications --}}
+            <button class="nav-icon-btn" title="Notifications">
+                <i class="bi bi-bell"></i>
+                @if ($notificationsCount > 0)
+                    <div class="notification-dot"></div>
+                @endif
+            </button>
+
+            <div class="vr mx-2" style="height: 20px; opacity: 0.15; background-color: var(--text-main);"></div>
+
+            {{-- Profile Dropdown --}}
+            <div class="dropdown">
+                <div data-bs-toggle="dropdown" aria-expanded="false" title="{{ $user?->name }}"
+                    style="cursor: pointer;">
+                    @if ($user?->profile_pic)
+                        <img src="{{ $user->profile_pic }}" class="profile-avatar shadow-sm" alt="Avatar">
+                    @else
+                        <div class="profile-avatar shadow-sm">
+                            {{ substr($user?->name ?? 'U', 0, 1) }}
+                        </div>
+                    @endif
                 </div>
 
-            </a>
+                <div class="dropdown-menu dropdown-menu-end sapphire-dropdown-menu" style="min-width: 220px;">
+                    <div class="px-4 py-2 mb-2"
+                        style="background: var(--bg-body); border-bottom: 1px solid var(--border-color); border-radius: 12px 12px 0 0; margin-top: -8px;">
+                        <div class="fw-bold" style="color: var(--text-main); font-size: 0.95rem;">{{ $user?->name }}
+                        </div>
+                        <div
+                            style="color: var(--sapphire-primary); font-size: 0.7rem; font-weight: 700; text-transform: uppercase;">
+                            {{ $roles[$user?->role_id ?? 0] ?? 'User' }}
+                        </div>
+                    </div>
 
-            <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 mt-3 rounded-3"
-                style="min-width:16rem;">
-
-                <li class="px-3 py-2 border-bottom mb-2 bg-body-tertiary">
-                    <div class="fw-bold text-body">{{ $user?->name }}</div>
-                    <div class="small text-body-secondary">{{ $company?->name }}</div>
-                </li>
-
-                <li>
-                    <a class="dropdown-item py-2 d-flex align-items-center"
-                       href="{{ route('profile',$user?->id ?? 0) }}">
-                        <i class="bi bi-person me-2 fs-5 text-primary"></i>
-                        My Profile
+                    <a class="sapphire-dropdown-item" href="{{ route('profile', $user?->id ?? 0) }}">
+                        <div class="d-flex align-items-center gap-2"><i class="bi bi-person"></i> My Account</div>
                     </a>
-                </li>
 
-                <li><hr class="dropdown-divider"></li>
+                    <div class="my-2 border-bottom" style="border-color: var(--border-color);"></div>
 
-                <li>
-                    <form action="{{ route('logout') }}" method="POST">
+                    <form action="{{ route('logout') }}" method="POST" class="m-0 p-0">
                         @csrf
-                        <button class="dropdown-item py-2 d-flex align-items-center text-danger">
-                            <i class="bi bi-box-arrow-right me-2 fs-5"></i>
-                            Logout
+                        <button type="submit" class="sapphire-dropdown-item" style="color: var(--sapphire-danger);">
+                            <div class="d-flex align-items-center gap-2">
+                                <i class="bi bi-box-arrow-right" style="color: var(--sapphire-danger);"></i> Sign out
+                            </div>
                         </button>
                     </form>
-                </li>
+                </div>
+            </div>
 
-            </ul>
-
-        </li>
-
-    </ul>
-
-</nav>
+        </div>
+    </header>
+</div>
 
 <script>
+    document.addEventListener('DOMContentLoaded', () => {
 
-document.addEventListener('DOMContentLoaded', () => {
+        /* =========================================================
+           1. COMMAND PALETTE (Ctrl+K Shortcut)
+        ========================================================= */
+        document.addEventListener('keydown', (e) => {
+            // Listen for Ctrl+K or Cmd+K
+            if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+                e.preventDefault();
+                // Trigger your search modal/logic here
+                alert("Command Palette Opened! (Implement your search modal logic here)");
+            }
+        });
 
-    const html = document.documentElement;
-    const toggle = document.getElementById('themeToggle');
-    const icon = document.getElementById('themeIcon');
+        document.getElementById('searchTrigger').addEventListener('click', () => {
+            alert("Command Palette Opened! (Implement your search modal logic here)");
+        });
 
-    const savedTheme = localStorage.getItem('theme') || 'light';
+        /* =========================================================
+           2. FULLSCREEN API LOGIC
+        ========================================================= */
+        const fullscreenBtn = document.getElementById('fullscreenToggle');
+        const fullscreenIcon = document.getElementById('fullscreenIcon');
 
-    html.setAttribute('data-bs-theme', savedTheme);
+        if (fullscreenBtn) {
+            fullscreenBtn.addEventListener('click', () => {
+                if (!document.fullscreenElement) {
+                    document.documentElement.requestFullscreen().catch(err => console.log(err));
+                } else {
+                    document.exitFullscreen();
+                }
+            });
 
-    const setIcon = (theme) => {
-
-        icon.classList.remove('bi-moon-stars','bi-sun');
-
-        if(theme === 'dark'){
-            icon.classList.add('bi-sun');
-        }else{
-            icon.classList.add('bi-moon-stars');
+            document.addEventListener('fullscreenchange', () => {
+                if (document.fullscreenElement) {
+                    fullscreenIcon.classList.replace('bi-arrows-fullscreen', 'bi-fullscreen-exit');
+                } else {
+                    fullscreenIcon.classList.replace('bi-fullscreen-exit', 'bi-arrows-fullscreen');
+                }
+            });
         }
 
-    };
+        /* =========================================================
+           3. ZEN MODE (Focus Mode)
+        ========================================================= */
+        const zenToggle = document.getElementById('zenModeToggle');
+        const sidebar = document.getElementById('sidebar');
 
-    setIcon(savedTheme);
+        zenToggle.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation(); // Keep dropdown open if desired, or let it close naturally
 
-    toggle.addEventListener('click', () => {
+            document.body.classList.toggle('zen-mode-active');
+            if (document.body.classList.contains('zen-mode-active')) {
+                if (sidebar) sidebar.style.transform = 'translateX(-100%)';
+                document.querySelector('.content').style.marginLeft = '0';
+            } else {
+                if (sidebar) sidebar.style.transform = '';
+                document.querySelector('.content').style.marginLeft = '';
+            }
+        });
 
-        const current = html.getAttribute('data-bs-theme');
+        /* =========================================================
+           4. SMART HEADER LAYOUTS & AUTO-HIDE
+        ========================================================= */
+        const headerWrapper = document.getElementById('headerWrapper');
+        let lastScrollY = window.scrollY;
+        let isAutoHideEnabled = localStorage.getItem('header-layout') === 'autohide';
 
-        const newTheme = current === 'dark' ? 'light' : 'dark';
+        window.setHeaderLayout = function(layoutName) {
+            headerWrapper.classList.remove('layout-sticky', 'layout-floating', 'layout-autohide',
+                'layout-minimal');
+            headerWrapper.classList.remove('header-hidden');
+            isAutoHideEnabled = false;
 
-        html.setAttribute('data-bs-theme', newTheme);
+            headerWrapper.classList.add(`layout-${layoutName}`);
+            if (layoutName === 'autohide') isAutoHideEnabled = true;
 
-        localStorage.setItem('theme', newTheme);
+            localStorage.setItem('header-layout', layoutName);
+            updateDropdownCheckmarks('.layout-option', layoutName);
+        };
 
-        setIcon(newTheme);
+        window.addEventListener('scroll', () => {
+            if (!isAutoHideEnabled) return;
+            if (window.scrollY > lastScrollY && window.scrollY > 80) {
+                headerWrapper.classList.add('header-hidden'); // Hide scrolling down
+            } else {
+                headerWrapper.classList.remove('header-hidden'); // Show scrolling up
+            }
+            lastScrollY = window.scrollY;
+        }, {
+            passive: true
+        });
 
-        window.dispatchEvent(new Event('themeChanged'));
+        setHeaderLayout(localStorage.getItem('header-layout') || 'sticky');
 
+        /* =========================================================
+           5. UI DENSITY
+        ========================================================= */
+        window.setUIDensity = function(density) {
+            document.body.classList.remove('density-compact', 'density-comfortable');
+            document.body.classList.add(`density-${density}`);
+            localStorage.setItem('ui-density', density);
+            updateDropdownCheckmarks('.density-option', density);
+        };
+
+        setUIDensity(localStorage.getItem('ui-density') || 'comfortable');
+
+        /* =========================================================
+           6. LIGHT / DARK / SYSTEM MODE LOGIC
+        ========================================================= */
+        const htmlTag = document.documentElement;
+        const headerThemeIcon = document.getElementById('headerThemeIcon');
+
+        function applyTheme(theme) {
+            let activeTheme = theme;
+
+            // If system, check OS preference
+            if (theme === 'system') {
+                activeTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+            }
+
+            htmlTag.setAttribute('data-bs-theme', activeTheme);
+
+            // Update the Top Level Icon
+            headerThemeIcon.className = 'bi'; // reset
+            if (theme === 'system') {
+                headerThemeIcon.classList.add('bi-display');
+            } else if (activeTheme === 'dark') {
+                headerThemeIcon.classList.add('bi-moon-stars');
+            } else {
+                headerThemeIcon.classList.add('bi-sun');
+            }
+
+            // Update Checkmarks
+            updateDropdownCheckmarks('.theme-option', theme);
+            window.dispatchEvent(new Event('themeChanged'));
+        }
+
+        window.setAppTheme = function(theme) {
+            localStorage.setItem('app-theme-preference', theme);
+            applyTheme(theme);
+        };
+
+        // Listen for OS System Theme changes
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+            if (localStorage.getItem('app-theme-preference') === 'system') {
+                applyTheme('system');
+            }
+        });
+
+        // Initialize Theme
+        const savedThemePref = localStorage.getItem('app-theme-preference') || 'system';
+        applyTheme(savedThemePref);
+
+        /* Helper to update checkmarks in dropdowns */
+        function updateDropdownCheckmarks(selectorClass, activeValue) {
+            document.querySelectorAll(selectorClass).forEach(btn => {
+                if (btn.getAttribute('data-' + selectorClass.split('-')[0].replace('.', '')) ===
+                    activeValue) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+        }
     });
-
-});
-
 </script>
-

@@ -1,3 +1,16 @@
+@php
+    // Detect User and Role
+    $authUser = Auth::user() ?? session('user');
+    $roleId = $authUser->role_id ?? null;
+
+    // Role Definitions
+    $isGlobalAdmin = $roleId == 8; // Provider / Global Admin
+
+    // State Detection
+    $isGlobalRoute = request()->is('global*');
+    $isSimulating = $isGlobalAdmin && !$isGlobalRoute;
+@endphp
+
 <style>
     /* ================================================
        SIDEBAR — SAPPHIRE THEME INTEGRATION
@@ -127,6 +140,23 @@
         color: var(--sapphire-primary);
     }
 
+    /* SECTION TITLES */
+    .sidebar-section-title {
+        font-size: 0.65rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: var(--text-muted);
+        margin: 16px 18px 4px 18px;
+        opacity: 0;
+        transition: opacity 0.2s ease;
+        white-space: nowrap;
+    }
+
+    .sidebar:hover .sidebar-section-title {
+        opacity: 1;
+    }
+
     /* ================================================
        NAV LINKS
     ================================================ */
@@ -182,8 +212,28 @@
         font-weight: 600;
     }
 
+    /* Special Active State for Exit Simulation Button */
+    .sidebar-link.btn-exit-sim {
+        background: rgba(239, 68, 68, 0.1);
+        color: var(--sapphire-danger);
+        border: 1px solid rgba(239, 68, 68, 0.2);
+    }
+
+    .sidebar-link.btn-exit-sim i {
+        color: var(--sapphire-danger);
+    }
+
+    .sidebar-link.btn-exit-sim:hover {
+        background: var(--sapphire-danger);
+        color: #ffffff;
+    }
+
+    .sidebar-link.btn-exit-sim:hover i {
+        color: #ffffff;
+    }
+
     /* Glowing Indicator Dot */
-    .sidebar-link.active::before {
+    .sidebar-link.active:not(.btn-exit-sim)::before {
         content: "";
         position: absolute;
         left: -10px;
@@ -419,7 +469,7 @@
 <div class="sidebar" id="sidebar">
 
     {{-- ===== HEADER / LOGO ===== --}}
-    <div class="sidebar-header">
+    {{-- <div class="sidebar-header">
         <div class="sidebar-logo-icon">
             <img src="{{ asset('images/logo1.png') }}" alt="Logo">
         </div>
@@ -427,151 +477,228 @@
             <h6>PUGARCH</h6>
             <span>AI Intel</span>
         </div>
-    </div>
+    </div> --}}
 
+    <div class="sidebar-header">
+
+        <!-- ICON -->
+        <div class="sidebar-logo-icon forest-icon">
+            <!-- Forest SVG -->
+            <svg viewBox="0 0 24 24" fill="none">
+                <path d="M12 2L6 10H10L5 18H19L14 10H18L12 2Z" fill="white" />
+            </svg>
+        </div>
+
+        <!-- TEXT -->
+        <div class="sidebar-logo-text">
+            <div class="font-headline font-black text-xl tracking-tight text-primary">
+                Pugarch
+            </div>
+            <div class="font-label text-[10px] font-semibold uppercase tracking-widest text-on-surface-variant">
+                Forest Intelligence
+            </div>
+        </div>
+
+    </div>
     {{-- ===== SCROLLABLE CONTENT ===== --}}
     <div class="sidebar-content">
 
-        {{-- Dashboard --}}
-        <a href="/home" class="sidebar-link {{ request()->is('home') ? 'active' : '' }}" title="Dashboard">
-            <i class="bi bi-speedometer2"></i>
-            <span class="link-text">Dashboard</span>
-        </a>
+        @if ($isGlobalAdmin && $isGlobalRoute)
+            {{-- ==============================================
+                 GLOBAL ADMIN DASHBOARD (Provider View)
+            ============================================== --}}
+            <div class="sidebar-section-title">Global Management</div>
 
-        {{-- Clients --}}
-        <a href="{{ route('clients') }}" class="sidebar-link {{ request()->routeIs('clients*') ? 'active' : '' }}"
-            title="Clients">
-            <i class="bi bi-building"></i>
-            <span class="link-text">Clients</span>
-        </a>
-
-        {{-- Sites --}}
-        <a href="{{ route('sites.getsites', 0) }}"
-            class="sidebar-link {{ request()->routeIs('sites*') ? 'active' : '' }}" title="Sites">
-            <i class="bi bi-geo-alt"></i>
-            <span class="link-text">Sites</span>
-        </a>
-
-        {{-- Dropdown: Users --}}
-        <div class="sidebar-dropdown">
-            <a href="#"
-                class="sidebar-link dropdown-toggle {{ request()->routeIs('guards*') || request()->routeIs('registrations*') ? 'active' : '' }}"
-                title="Users" onclick="toggleDropdown(event, 'users-menu')">
-                <i class="bi bi-people"></i>
-                <span class="link-text">Users</span>
-                <i class="bi bi-chevron-down dropdown-arrow"></i>
+            <a href="{{ route('global.companies') }}"
+                class="sidebar-link {{ request()->routeIs('global.companies*') ? 'active' : '' }}"
+                title="All Companies">
+                <i class="bi bi-buildings"></i>
+                <span class="link-text">Companies</span>
             </a>
-            <div class="sidebar-submenu" id="users-menu"
-                style="{{ request()->routeIs('guards*') || request()->routeIs('registrations*') ? 'display: block;' : 'display: none;' }}">
-                <a href="{{ route('guards') }}"
-                    class="sidebar-sublink {{ request()->routeIs('guards*') ? 'active' : '' }}">All Users</a>
-                <a href="{{ route('registrations.index') }}"
-                    class="sidebar-sublink {{ request()->routeIs('registrations*') ? 'active' : '' }}">Registrations</a>
-            </div>
-        </div>
 
-        {{-- Dynamic Labels --}}
-        <a href="/dynamic-labels" class="sidebar-link {{ request()->is('dynamic-labels*') ? 'active' : '' }}"
-            title="Dynamic Labels">
-            <i class="bi bi-tags"></i>
-            <span class="link-text">Dynamic Labels</span>
-        </a>
-
-        {{-- Dropdown: Attendance --}}
-        <div class="sidebar-dropdown">
-            <a href="#" class="sidebar-link dropdown-toggle {{ request()->is('attendance/*') ? 'active' : '' }}"
-                title="Attendance Summary" onclick="toggleDropdown(event, 'attendance-menu')">
-                <i class="bi bi-calendar-check"></i>
-                <span class="link-text">Attendance</span>
-                <i class="bi bi-chevron-down dropdown-arrow"></i>
+            <a href="{{ route('global.superadmins') }}"
+                class="sidebar-link {{ request()->routeIs('global.superadmins*') ? 'active' : '' }}"
+                title="Super Admins">
+                <i class="bi bi-person-badge"></i>
+                <span class="link-text">Super Admins</span>
             </a>
-            <div class="sidebar-submenu" id="attendance-menu"
-                style="{{ request()->is('attendance/*') ? 'display: block;' : 'display: none;' }}">
-                <a href="/attendance/explorer"
-                    class="sidebar-sublink {{ request()->is('attendance/explorer') ? 'active' : '' }}">Overview</a>
-                <a href="/attendance/logs"
-                    class="sidebar-sublink {{ request()->is('attendance/logs') ? 'active' : '' }}">Logs</a>
-                <a href="/attendance/requests"
-                    class="sidebar-sublink {{ request()->is('attendance/requests') ? 'active' : '' }}">Requests</a>
-            </div>
-        </div>
 
-        {{-- Events --}}
-        <a href="{{ route('events.reports.dashboard') }}"
-            class="sidebar-link {{ request()->is('events/reports-dashboard*') ? 'active' : '' }}" title="Events">
-            <i class="bi bi-calendar-event"></i>
-            <span class="link-text">Events</span>
-        </a>
-
-        {{-- Know Your Area --}}
-        <a href="{{ route('know-your-area.normal') }}"
-            class="sidebar-link {{ request()->is('know-your-area.normal') ? 'active' : '' }}" title="Know Your Area">
-            <i class="bi bi-map"></i>
-            <span class="link-text">Know Your Area</span>
-        </a>
-
-        {{-- Dropdown: Plantation --}}
-        <div class="sidebar-dropdown">
-            <a href="#" class="sidebar-link dropdown-toggle {{ request()->is('plantation*') ? 'active' : '' }}"
-                title="Plantation" onclick="toggleDropdown(event, 'plantation-menu')">
-                <i class="bi bi-tree"></i>
-                <span class="link-text">Plantation</span>
-                <i class="bi bi-chevron-down dropdown-arrow"></i>
+            <a href="{{ route('global.admins') }}"
+                class="sidebar-link {{ request()->routeIs('global.admins*') ? 'active' : '' }}" title="Admins">
+                <i class="bi bi-person-gear"></i>
+                <span class="link-text">Admins</span>
             </a>
-            <div class="sidebar-submenu" id="plantation-menu"
-                style="{{ request()->is('plantation*') ? 'display: block;' : 'display: none;' }}">
-                <a href="/plantation/dashboard"
-                    class="sidebar-sublink {{ request()->is('plantation/dashboard') ? 'active' : '' }}">Dashboard</a>
-                <a href="/plantation/analytics"
-                    class="sidebar-sublink {{ request()->is('plantation/analytics') ? 'active' : '' }}">Analytics</a>
-            </div>
-        </div>
 
-        {{-- Dropdown: Patrolling --}}
-        <div class="sidebar-dropdown">
-            <a href="#"
-                class="sidebar-link dropdown-toggle {{ request()->routeIs('patrolling.*') || (request()->is('patrol*') && !request()->is('patrol/maps')) ? 'active' : '' }}"
-                title="Patrolling" onclick="toggleDropdown(event, 'patrolling-menu')">
-                <i class="bi bi-shield-check"></i>
-                <span class="link-text">Patrolling</span>
-                <i class="bi bi-chevron-down dropdown-arrow"></i>
+            <a href="/global/dynamic-labels"
+                class="sidebar-link {{ request()->is('/global/dynamic-labels*') ? 'active' : '' }}"
+                title="Dynamic Labels">
+                <i class="bi bi-tags"></i>
+                <span class="link-text">Dynamic Labels</span>
             </a>
-            <div class="sidebar-submenu" id="patrolling-menu"
-                style="{{ request()->routeIs('patrolling.*') || (request()->is('patrol*') && !request()->is('patrol/maps')) ? 'display: block;' : 'display: none;' }}">
-                <a href="{{ route('patrolling.log', ['flag' => 'all']) }}"
-                    class="sidebar-sublink {{ request()->routeIs('patrolling.log') ? 'active' : '' }}">Patrol Logs</a>
-                <a href="{{ route('patrolling') }}"
-                    class="sidebar-sublink {{ request()->routeIs('patrolling') ? 'active' : '' }}">All Patrolling</a>
-                <a href="{{ route('patrolling.analysis') }}"
-                    class="sidebar-sublink {{ request()->routeIs('patrolling.analysis') ? 'active' : '' }}">Map
-                    View</a>
-                <a href="{{ route('patrolling.analytics.pro.advanced') }}"
-                    class="sidebar-sublink {{ request()->routeIs('patrolling.analytics.pro.advanced') ? 'active' : '' }}">Advanced
-                    Analytics</a>
+        @else
+            {{-- ==============================================
+                 COMPANY SPECIFIC DASHBOARD (Client View)
+            ============================================== --}}
+
+            @if ($isSimulating)
+                {{-- Exit Simulation Button for Global Admins --}}
+                <a href="{{ route('global.exit_simulation') }}" class="sidebar-link btn-exit-sim mb-3"
+                    title="Exit Simulation">
+                    <i class="bi bi-box-arrow-left"></i>
+                    <span class="link-text fw-bold">Back to Global</span>
+                </a>
+            @endif
+
+            <div class="sidebar-section-title">Company Menu</div>
+
+            {{-- Dashboard --}}
+            <a href="/home" class="sidebar-link {{ request()->is('home') ? 'active' : '' }}" title="Dashboard">
+                <i class="bi bi-speedometer2"></i>
+                <span class="link-text">Dashboard</span>
+            </a>
+
+            {{-- Clients / Ranges --}}
+            <a href="{{ route('clients') }}" class="sidebar-link {{ request()->routeIs('clients*') ? 'active' : '' }}"
+                title="Clients">
+                <i class="bi bi-building"></i>
+                <span class="link-text">Clients</span>
+            </a>
+
+            {{-- Sites / Beats --}}
+            <a href="{{ route('sites.getsites', 0) }}"
+                class="sidebar-link {{ request()->routeIs('sites*') ? 'active' : '' }}" title="Sites">
+                <i class="bi bi-geo-alt"></i>
+                <span class="link-text">Sites</span>
+            </a>
+
+            {{-- Dropdown: Users --}}
+            <div class="sidebar-dropdown">
+                <a href="#"
+                    class="sidebar-link dropdown-toggle {{ request()->routeIs('guards*') || request()->routeIs('registrations*') ? 'active' : '' }}"
+                    title="Users" onclick="toggleDropdown(event, 'users-menu')">
+                    <i class="bi bi-people"></i>
+                    <span class="link-text">Users</span>
+                    <i class="bi bi-chevron-down dropdown-arrow"></i>
+                </a>
+                <div class="sidebar-submenu" id="users-menu"
+                    style="{{ request()->routeIs('guards*') || request()->routeIs('registrations*') ? 'display: block;' : 'display: none;' }}">
+                    <a href="{{ route('guards') }}"
+                        class="sidebar-sublink {{ request()->routeIs('guards*') ? 'active' : '' }}">All Users</a>
+                    <a href="{{ route('registrations.index') }}"
+                        class="sidebar-sublink {{ request()->routeIs('registrations*') ? 'active' : '' }}">Registrations</a>
+                </div>
             </div>
-        </div>
 
-        {{-- Reports --}}
-        <a href="/reports/monthly" class="sidebar-link {{ request()->is('reports/monthly') ? 'active' : '' }}"
-            title="Reports">
-            <i class="bi bi-file-earmark-text"></i>
-            <span class="link-text">Reports</span>
-        </a>
+            {{-- Dynamic Labels (If allowed within company view, else remove) --}}
+            <a href="/dynamic-labels" class="sidebar-link {{ request()->is('dynamic-labels*') ? 'active' : '' }}"
+                title="Dynamic Labels">
+                <i class="bi bi-tags"></i>
+                <span class="link-text">Dynamic Labels</span>
+            </a>
 
-        {{-- Anukampa --}}
-        <a href="{{ route('anukampa.dashboard') }}"
-            class="sidebar-link {{ request()->is('anukampa*') ? 'active' : '' }}" title="Anukampa">
-            <i class="bi bi-heart-pulse"></i>
-            <span class="link-text">Anukampa</span>
-        </a>
+            {{-- Dropdown: Attendance --}}
+            <div class="sidebar-dropdown">
+                <a href="#"
+                    class="sidebar-link dropdown-toggle {{ request()->is('attendance/*') ? 'active' : '' }}"
+                    title="Attendance Summary" onclick="toggleDropdown(event, 'attendance-menu')">
+                    <i class="bi bi-calendar-check"></i>
+                    <span class="link-text">Attendance</span>
+                    <i class="bi bi-chevron-down dropdown-arrow"></i>
+                </a>
+                <div class="sidebar-submenu" id="attendance-menu"
+                    style="{{ request()->is('attendance/*') ? 'display: block;' : 'display: none;' }}">
+                    <a href="/attendance/explorer"
+                        class="sidebar-sublink {{ request()->is('attendance/explorer') ? 'active' : '' }}">Overview</a>
+                    <a href="/attendance/logs"
+                        class="sidebar-sublink {{ request()->is('attendance/logs') ? 'active' : '' }}">Logs</a>
+                    <a href="/attendance/requests"
+                        class="sidebar-sublink {{ request()->is('attendance/requests') ? 'active' : '' }}">Requests</a>
+                </div>
+            </div>
 
-        {{-- Camera Tracking --}}
-        <a href="/reports/camera-tracking"
-            class="sidebar-link {{ request()->is('reports/camera-tracking') ? 'active' : '' }}"
-            title="Camera Tracking">
-            <i class="bi bi-camera-video"></i>
-            <span class="link-text">Camera Tracking</span>
-        </a>
+            {{-- Events --}}
+            <a href="{{ route('report-configs.dashboard') }}"
+                class="sidebar-link {{ request()->is('report-configs*') ? 'active' : '' }}">
+                <i class="bi bi-calendar-event"></i>
+                <span class="link-text">Events</span>
+            </a>
+
+            {{-- Know Your Area --}}
+            <a href="{{ route('know-your-area.normal') }}"
+                class="sidebar-link {{ request()->is('know-your-area.normal') ? 'active' : '' }}"
+                title="Know Your Area">
+                <i class="bi bi-map"></i>
+                <span class="link-text">Know Your Area</span>
+            </a>
+
+            {{-- Dropdown: Plantation --}}
+            <div class="sidebar-dropdown">
+                <a href="#"
+                    class="sidebar-link dropdown-toggle {{ request()->is('plantation*') ? 'active' : '' }}"
+                    title="Plantation" onclick="toggleDropdown(event, 'plantation-menu')">
+                    <i class="bi bi-tree"></i>
+                    <span class="link-text">Plantation</span>
+                    <i class="bi bi-chevron-down dropdown-arrow"></i>
+                </a>
+                <div class="sidebar-submenu" id="plantation-menu"
+                    style="{{ request()->is('plantation*') ? 'display: block;' : 'display: none;' }}">
+                    <a href="/plantation/dashboard"
+                        class="sidebar-sublink {{ request()->is('plantation/dashboard') ? 'active' : '' }}">Dashboard</a>
+                    <a href="/plantation/analytics"
+                        class="sidebar-sublink {{ request()->is('plantation/analytics') ? 'active' : '' }}">Analytics</a>
+                </div>
+            </div>
+
+            {{-- Dropdown: Patrolling --}}
+            <div class="sidebar-dropdown">
+                <a href="#"
+                    class="sidebar-link dropdown-toggle {{ request()->routeIs('patrolling.*') || (request()->is('patrol*') && !request()->is('patrol/maps')) ? 'active' : '' }}"
+                    title="Patrolling" onclick="toggleDropdown(event, 'patrolling-menu')">
+                    <i class="bi bi-shield-check"></i>
+                    <span class="link-text">Patrolling</span>
+                    <i class="bi bi-chevron-down dropdown-arrow"></i>
+                </a>
+                <div class="sidebar-submenu" id="patrolling-menu"
+                    style="{{ request()->routeIs('patrolling.*') || (request()->is('patrol*') && !request()->is('patrol/maps')) ? 'display: block;' : 'display: none;' }}">
+                    <a href="{{ route('patrolling.log', ['flag' => 'all']) }}"
+                        class="sidebar-sublink {{ request()->routeIs('patrolling.log') ? 'active' : '' }}">Patrol
+                        Logs</a>
+                    <a href="{{ route('patrolling') }}"
+                        class="sidebar-sublink {{ request()->routeIs('patrolling') ? 'active' : '' }}">All
+                        Patrolling</a>
+                    <a href="{{ route('patrolling.analysis') }}"
+                        class="sidebar-sublink {{ request()->routeIs('patrolling.analysis') ? 'active' : '' }}">Map
+                        View</a>
+                    <a href="{{ route('patrolling.analytics.pro.advanced') }}"
+                        class="sidebar-sublink {{ request()->routeIs('patrolling.analytics.pro.advanced') ? 'active' : '' }}">Advanced
+                        Analytics</a>
+                </div>
+            </div>
+
+            <div class="sidebar-section-title">Reports & Analytics</div>
+
+            {{-- Reports --}}
+            <a href="/reports/monthly" class="sidebar-link {{ request()->is('reports/monthly') ? 'active' : '' }}"
+                title="Reports">
+                <i class="bi bi-file-earmark-text"></i>
+                <span class="link-text">Reports</span>
+            </a>
+
+            {{-- Anukampa --}}
+            <a href="{{ route('anukampa.dashboard') }}"
+                class="sidebar-link {{ request()->is('anukampa*') ? 'active' : '' }}" title="Anukampa">
+                <i class="bi bi-heart-pulse"></i>
+                <span class="link-text">Anukampa</span>
+            </a>
+
+            {{-- Camera Tracking --}}
+            <a href="/reports/camera-tracking"
+                class="sidebar-link {{ request()->is('reports/camera-tracking') ? 'active' : '' }}"
+                title="Camera Tracking">
+                <i class="bi bi-camera-video"></i>
+                <span class="link-text">Camera Tracking</span>
+            </a>
+        @endif
 
     </div>
 
@@ -596,27 +723,6 @@
                 title="Toggle Light/Dark Mode">
                 <i class="bi bi-moon-stars-fill"></i>
             </button>
-        </div>
-
-        {{-- User Profile --}}
-        <div class="sidebar-user">
-            <div class="sidebar-user-avatar">
-                @if (Auth::check() && Auth::user()->profile_photo)
-                    <img src="{{ asset('storage/' . Auth::user()->profile_photo) }}" alt="User">
-                @else
-                    <i class="bi bi-person-fill"></i>
-                @endif
-            </div>
-            <div class="sidebar-user-info">
-                <strong>{{ Auth::check() ? Auth::user()->name : 'User' }}</strong>
-                <small>{{ Auth::check() ? Auth::user()->email : '' }}</small>
-            </div>
-            <form method="POST" action="{{ route('logout') }}" class="m-0 p-0">
-                @csrf
-                <button type="submit" class="sidebar-user-logout" title="Logout">
-                    <i class="bi bi-power fs-5"></i>
-                </button>
-            </form>
         </div>
     </div>
 

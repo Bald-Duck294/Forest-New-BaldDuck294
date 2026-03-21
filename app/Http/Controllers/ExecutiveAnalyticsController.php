@@ -688,6 +688,9 @@ class ExecutiveAnalyticsController extends Controller
         // Role-based: only show users the current role can see (excludes other SuperAdmins and role_id 1 from lists)
         $accessibleUserIds = RoleBasedFilterService::getAccessibleUserIds();
 
+        // Limit results for dashboard stability unless a specific user search is active
+        $displayLimit = $userId ? null : 50;
+
         // Use the dedicated service to get comprehensive performance data (excludes SuperAdmins)
         $fullPerformance = $this->analyticsService->getGuardPerformanceData(
             $startDate,
@@ -695,7 +698,8 @@ class ExecutiveAnalyticsController extends Controller
             $companyId,
             $siteIds,
             $userId,
-            $accessibleUserIds
+            $accessibleUserIds,
+            $displayLimit
         );
 
         // Debug: Log what we're getting
@@ -710,9 +714,13 @@ class ExecutiveAnalyticsController extends Controller
             return $guard;
         });
 
+        $totalCount = $displayLimit ? $this->analyticsService->getActiveGuards($companyId, $userId, $accessibleUserIds, $siteIds)->count() : $fullPerformance->count();
+
         return [
             'topPerformers' => $fullPerformance->take(5)->values(),
             'fullPerformance' => $fullPerformance,
+            'isLimited' => $displayLimit && $totalCount > $displayLimit,
+            'totalCount' => $totalCount,
         ];
     }
 

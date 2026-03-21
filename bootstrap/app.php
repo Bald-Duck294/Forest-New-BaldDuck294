@@ -15,6 +15,9 @@ return Application::configure(basePath: dirname(__DIR__))
             'role' => \App\Http\Middleware\CheckRole::class,
             'role.filters' => \App\Http\Middleware\ApplyRoleFilters::class,
         ]);
+        $middleware->web(append: [
+            \App\Http\Middleware\HandleCompanySimulation::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

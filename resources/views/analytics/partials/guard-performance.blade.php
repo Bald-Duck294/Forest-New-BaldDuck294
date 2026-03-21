@@ -24,7 +24,14 @@
 <div class="bg-white dark:bg-card-bg p-6 rounded-2xl border border-slate-200 dark:border-slate-700/50 mb-6">
     <div class="flex items-center justify-between mb-6">
         <h4 class="font-bold text-lg text-slate-900 dark:text-white">Guard Performance Overview</h4>
-        <button class="text-sm text-neon-blue font-medium hover:underline p-0 bg-transparent border-0 cursor-pointer">View All</button>
+        @if($guardPerformance['isLimited'] ?? false)
+            <div class="flex items-center gap-4">
+                <span class="text-xs text-slate-500">Showing top {{ $fullPerf->count() }} of {{ $guardPerformance['totalCount'] ?? $fullPerf->count() }} guards</span>
+                <a href="{{ route('guards') }}" class="text-sm text-neon-blue font-medium hover:underline p-0 bg-transparent border-0 cursor-pointer">View All</a>
+            </div>
+        @else
+            <button class="text-sm text-neon-blue font-medium hover:underline p-0 bg-transparent border-0 cursor-pointer">View All</button>
+        @endif
     </div>
 
     @if($showNoData)
@@ -40,12 +47,12 @@
                 <thead class="text-xs text-slate-500 uppercase bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-700/50">
                     <tr>
                         <th class="px-4 py-3 font-semibold text-center w-12 cursor-pointer" data-sortable>Rank</th>
-                        <th class="px-4 py-3 font-semibold cursor-pointer" data-sortable>Guard</th>
+                        <th class="px-4 py-3 font-semibold cursor-pointer" data-sortable font-medium>Guard</th>
                         <th class="px-4 py-3 font-semibold text-center cursor-pointer" data-sortable data-type="number">Patrols</th>
                         <th class="px-4 py-3 font-semibold text-center cursor-pointer" data-sortable data-type="number">Distance</th>
                         <th class="px-4 py-3 font-semibold text-center hidden md:table-cell cursor-pointer" data-sortable data-type="number">Avg Time</th>
                         <th class="px-4 py-3 font-semibold text-center cursor-pointer" data-sortable data-type="number">Incidents</th>
-                        <th class="px-4 py-3 font-semibold text-center cursor-pointer" data-sortable data-type="number">Score /5.0</th>
+                        <th class="px-4 py-3 font-semibold text-center cursor-pointer" data-sortable data-type="number">Score</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-200 dark:divide-slate-700/50">
@@ -89,11 +96,13 @@
                             </td>
                             <td class="px-4 py-3 text-center">
                                 <div class="flex items-center justify-center">
-                                    <span class="font-bold text-neon-emerald mr-2">{{ number_format($guard->performance_score ?? 0, 1) }}</span>
+                                    @php
+                                        // Normalize 0-100 score to 0-5 for display
+                                        $displayScore = ($guard->performance_score ?? 0) / 20;
+                                        $scoreWidth = min(100, $guard->performance_score ?? 0);
+                                    @endphp
+                                    <span class="font-bold text-neon-emerald mr-2">{{ number_format($displayScore, 1) }}</span>
                                     <div class="w-16 h-1.5 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
-                                        @php
-                                            $scoreWidth = min(100, (($guard->performance_score ?? 0) / 5) * 100);
-                                        @endphp
                                         <div class="h-full bg-neon-emerald" style="width: {{ $scoreWidth }}%"></div>
                                     </div>
                                 </div>

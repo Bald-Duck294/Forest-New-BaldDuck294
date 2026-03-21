@@ -34,7 +34,7 @@ class SupervisorController extends Controller
         Log::info($user->name . ' view supervisor list, User_id: ' . $user->id);
         $option = "";
 
-        if ($user->role_id == '1') {
+        if ($user->role_id == '1' || $user->role_id == '8') {
 
             $records = DB::table('users')
                 ->where('users.company_id', $user->company_id)
@@ -134,7 +134,7 @@ class SupervisorController extends Controller
         $date = $cur_date->format("Y-m-d");
 
 
-        if ($user->role_id == '1' || $user->role_id == '7') {
+        if ($user->role_id == '1' || $user->role_id == '7' || $user->role_id == '8') {
             $totalRecords = DB::table('users')
                 ->where('users.company_id', $user->company_id)
                 ->where('users.role_id', 2)

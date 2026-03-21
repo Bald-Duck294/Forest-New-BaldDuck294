@@ -29,7 +29,7 @@ class RegistrationController extends Controller
         /** @var \App\Users $user */
         $user = session('user');
 
-        if (!$user || $user->role_id != 1) {
+        if (!$user || !in_array($user->role_id, [1, 8])) {
             return redirect()->route('home')->with('error', 'Unauthorized access.');
         }
 
@@ -76,7 +76,7 @@ class RegistrationController extends Controller
         /** @var \App\Users $user */
         $user = session('user');
 
-        if (!$user || $user->role_id != 1) {
+        if (!$user || !in_array($user->role_id, [1, 8])) {
             return redirect()->route('home')->with('error', 'Unauthorized access.');
         }
 
@@ -93,7 +93,7 @@ class RegistrationController extends Controller
         /** @var \App\Users $user */
         $user = session('user');
 
-        if (!$user || $user->role_id != 1) {
+        if (!$user || !in_array($user->role_id, [1, 8])) {
             return redirect()->route('home')->with('error', 'Unauthorized access.');
         }
 
@@ -146,7 +146,7 @@ class RegistrationController extends Controller
         /** @var \App\Users $user */
         $user = session('user');
 
-        if (!$user || $user->role_id != 1) {
+        if (!$user || !in_array($user->role_id, [1, 8])) {
             return redirect()->route('home')->with('error', 'Unauthorized access.');
         }
 
@@ -164,7 +164,7 @@ class RegistrationController extends Controller
         /** @var \App\Users $user */
         $user = session('user');
 
-        if (!$user || $user->role_id != 1) {
+        if (!$user || !in_array($user->role_id, [1, 8])) {
             return redirect()->route('home')->with('error', 'Unauthorized access.');
         }
 
@@ -216,7 +216,7 @@ class RegistrationController extends Controller
         /** @var \App\Users $user */
         $user = session('user');
 
-        if (!$user || $user->role_id != 1) {
+        if (!$user || !in_array($user->role_id, [1, 8])) {
             return redirect()->route('home')->with('error', 'Unauthorized access.');
         }
 
@@ -245,7 +245,7 @@ class RegistrationController extends Controller
         /** @var \App\Users $user */
         $user = session('user');
 
-        if (!$user || $user->role_id != 1) {
+        if (!$user || !in_array($user->role_id, [1, 8])) {
             return redirect()->route('home')->with('error', 'Unauthorized access.');
         }
 

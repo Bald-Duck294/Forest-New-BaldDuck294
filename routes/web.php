@@ -25,11 +25,15 @@ use App\Http\Controllers\SupervisorController;
 use App\Http\Controllers\GuardsController;
 use App\Http\Controllers\UsersController;
 use App\Http\Controllers\ForestController;
+use App\Http\Controllers\ModuleController;
+use App\Http\Controllers\GlobalSuperAdminController;
 use App\Http\Controllers\ForestReportConfigController;
 use App\Http\Controllers\RegistrationController;
 use App\Http\Controllers\PatrollingController;
 use App\Http\Controllers\PatrolAnalysisController;
 use App\Http\Controllers\WebBoundaryController;
+use App\Http\Controllers\GuardReportController;
+use App\Http\Controllers\IncidenceController;
 /* Auth Routes */
 
 Route::get('/login', [AuthController::class , 'showLoginForm'])->name('login');
@@ -38,10 +42,18 @@ Route::post('/logout', [AuthController::class , 'logout'])->name('logout');
 
 /* Root redirect - redirect to login if not authenticated */
 Route::get('/', function () {
-    if (Auth::check()) {
-        return redirect()->route('dashboard');
+
+    if (!Auth::check()) {
+        return redirect()->route('login');
     }
-    return redirect()->route('login');
+
+    $user = session('user');
+
+    if ($user && (int)$user->role_id === 8) {
+        return redirect()->route('global.dashboard');
+    }
+
+    return redirect()->route('dashboard');
 });
 
 
@@ -50,6 +62,11 @@ Route::get('/', function () {
 Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard', [DashboardController::class , 'index'])->name('dashboard');
     Route::get('/home', [DashboardController::class , 'index']); // Alias for home
+
+
+    Route::get('/global-dashboard', [GlobalSuperAdminController::class , 'dashboard'])
+        ->name('global.dashboard');
+
 
     /* Profile */
     Route::get('/profile/{user}', [ProfileController::class , 'show'])->name('profile');
@@ -403,7 +420,6 @@ Route::prefix('fetch')->group(function () {
     Route::get('/noshow', [GuardsController::class , 'fetchNoShow'])->name('fetchNoShow');
 
     Route::get('/log', [GuardsController::class , 'fetchLog'])->name('fetchLog');
-
 });
 
 Route::prefix('forest')->group(function () {
@@ -416,7 +432,6 @@ Route::prefix('forest')->group(function () {
 
     Route::get('/user-summary', [ForestController::class , 'userSummary'])
         ->name('forest.userSummary');
-
 });
 
 Route::get('/users/edit/{id}', [UsersController::class , 'edit'])
@@ -425,64 +440,98 @@ Route::get('/users/edit/{id}', [UsersController::class , 'edit'])
 Route::post('/users/update/{id}', [UsersController::class , 'update'])
     ->name('users.update');
 
+Route::prefix('modules')->group(function () {
 
-Route::prefix('events')->group(function () {
+    Route::get('/', [ModuleController::class , 'index'])
+        ->name('modules.index');
 
-    /* --------------------------
-     REPORT CONFIGURATION CRUD
-     ---------------------------*/
-
-    Route::get('/report-configs', [ForestReportConfigController::class , 'index'])
-        ->name('report-configs.index');
-
-    Route::get('/report-configs/create', [ForestReportConfigController::class , 'create'])
-        ->name('report-configs.create');
-
-    Route::post('/report-configs/store', [ForestReportConfigController::class , 'store'])
-        ->name('report-configs.store');
-
-    Route::get('/report-configs/edit/{id}', [ForestReportConfigController::class , 'edit'])
-        ->name('report-configs.edit');
-
-    Route::post('/report-configs/update/{id}', [ForestReportConfigController::class , 'update'])
-        ->name('report-configs.update');
-
-    Route::delete('/report-configs/delete/{id}', [ForestReportConfigController::class , 'destroy'])
-        ->name('report-configs.destroy');
-
-
-    /* --------------------------
-     REPORTS DASHBOARD
-     ---------------------------*/
-
-    Route::get('/reports-dashboard', [ForestReportConfigController::class , 'reportsDashboard'])
-        ->name('events.reports.dashboard');
-
-
-    /* --------------------------
-     REPORT TABLE
-     ---------------------------*/
-
-    Route::get('/reports-table', [ForestReportConfigController::class , 'reportsTable'])
-        ->name('events.reports.table');
-
-
-    /* --------------------------
-     VIEW SINGLE REPORT
-     ---------------------------*/
-
-    Route::get('/reports/{id}', [ForestReportConfigController::class , 'show'])
-        ->name('events.reports.show');
-
-
-    /* --------------------------
-     UPDATE REPORT STATUS
-     ---------------------------*/
-
-    Route::post('/reports/update-status/{id}', [ForestReportConfigController::class , 'updateStatus'])
-        ->name('events.reports.updateStatus');
-
+    Route::post('/update', [ModuleController::class , 'update'])
+        ->name('modules.update');
 });
+
+
+
+Route::get('/companies/create', [GlobalSuperAdminController::class , 'createCompany'])
+    ->name('companies.create');
+
+Route::post('/companies/store', [GlobalSuperAdminController::class , 'storeCompany'])
+    ->name('companies.store');
+
+Route::get(
+    '/companies/{id}/edit',
+[GlobalSuperAdminController::class , 'editCompany']
+)->name('companies.edit');
+
+Route::post(
+    '/companies/{id}/update',
+[GlobalSuperAdminController::class , 'updateCompany']
+)->name('companies.update');
+
+
+Route::prefix('global')->group(function () {
+
+    Route::get('/superadmins', [GlobalSuperAdminController::class , 'superAdmins'])
+        ->name('global.superadmins');
+
+    Route::get('/superadmins/{id}', [GlobalSuperAdminController::class , 'viewSuperAdmin'])
+        ->name('global.superadmins.view');
+
+    Route::get('/admins', [GlobalSuperAdminController::class , 'admins'])
+        ->name('global.admins');
+
+    Route::get('/admins/{id}', [GlobalSuperAdminController::class , 'viewAdmin'])
+        ->name('global.admins.view');
+
+    Route::get('/users/edit/{id}', [GlobalSuperAdminController::class , 'editUser'])
+        ->name('global.users.edit');
+
+    Route::post('/users/update/{id}', [GlobalSuperAdminController::class , 'updateUser'])
+        ->name('global.users.update');
+    Route::get('/companies', [GlobalSuperAdminController::class , 'companies'])
+        ->name('global.companies');
+    Route::get('/enter-simulation/{id}', [GlobalSuperAdminController::class , 'viewCompanyDashboard'])->name('global.enter_simulation');
+    Route::get('/exit-simulation', [GlobalSuperAdminController::class , 'exitCompanyDashboard'])->name('global.exit_simulation');
+
+    Route::prefix('dynamic-labels')->group(function () {
+
+            Route::get('/', [DynamicLabelsController::class , 'index']);
+
+            Route::post('/master', [DynamicLabelsController::class , 'storeMaster']);
+
+            Route::post('/master/update/{id}', [DynamicLabelsController::class , 'updateMaster']);
+
+            Route::get(
+                '/company/{companyId}',
+            [DynamicLabelsController::class , 'editCompany']
+            );
+
+            Route::post(
+                '/company/{companyId}',
+            [DynamicLabelsController::class , 'saveCompany']
+            );
+
+            Route::post('/master/delete/{id}', [DynamicLabelsController::class , 'deleteMaster']);
+        }
+        );
+    });
+Route::prefix('report-configs')
+    ->name('report-configs.')
+    ->controller(ForestReportConfigController::class)
+    ->group(function () {
+
+        Route::get('/', 'index')->name('index');
+        Route::get('/create', 'create')->name('create');
+        Route::post('/', 'store')->name('store');
+
+        Route::get('/{id}/edit', 'edit')->name('edit');
+        Route::put('/{id}', 'update')->name('update');
+        Route::delete('/{id}', 'destroy')->name('destroy');
+        Route::get('/reports-table', 'reportsTable')->name('table');
+        Route::get('/reports/{id}', 'show')->name('show');
+        Route::post('/reports/{id}/update-status', 'updateStatus')->name('updateStatus');
+        // 🔥 THIS WAS MISSING
+        Route::get('/reports-dashboard', 'reportsDashboard')->name('dashboard');
+    });
 
 Route::prefix('registrations')->group(function () {
 
@@ -509,37 +558,13 @@ Route::prefix('registrations')->group(function () {
 
 });
 
-
-
-/* -------------------------
- PATROLLING -------------------------*/
-
-Route::prefix('patrolling')->group(function () {
-
-    Route::get('/', [PatrollingController::class , 'index'])->name('patrolling');
-
-    Route::get('/analysis', [PatrollingController::class , 'analysis'])
-        ->name('patrolling.analysis');
-
-    Route::get('/details/{patrol}', [PatrollingController::class , 'show'])
-        ->name('patrolling.details');
-
-    Route::get('/create', [PatrollingController::class , 'create'])
-        ->name('patrolling.create');
-
-    Route::post('/', [PatrollingController::class , 'store'])
-        ->name('patrolling.store');
-});
-
-
-/* -------------------------
- PATROL LOGS -------------------------*/
-
 Route::get('/patrol-log/{flag}', [PatrollingController::class , 'logs'])
     ->name('patrolling.log');
 
 Route::get('/patrol-log/{id}/details', [PatrollingController::class , 'logDetails'])
     ->name('patrolling.log.details');
+
+
 
 
 /* -------------------------
@@ -614,3 +639,171 @@ Route::controller(WebBoundaryController::class)->group(function () {
     Route::get('/boundary/beats/{sectionId}', 'getBeats')->name('boundary.beats');
 
 });
+
+
+/* -------------------------
+ PATROLLING -------------------------*/
+
+Route::prefix('patrolling')->group(function () {
+
+    Route::get('/', [PatrollingController::class , 'index'])->name('patrolling');
+
+    Route::get('/analysis', [PatrollingController::class , 'analysis'])
+        ->name('patrolling.analysis');
+
+    Route::get('/details/{patrol}', [PatrollingController::class , 'show'])
+        ->name('patrolling.details');
+
+    Route::get('/create', [PatrollingController::class , 'create'])
+        ->name('patrolling.create');
+
+    Route::post('/', [PatrollingController::class , 'store'])
+        ->name('patrolling.store');
+});
+
+
+
+
+Route::post('downloadClientWiseReport', [ReportController::class , 'downloadClientWiseReport'])->name('downloadClientWiseReport');
+
+Route::get('downloadDailyTour', [ReportController::class , 'downloadDailyTour'])->name('downloadDailyTour');
+
+Route::get('IncidenceReport/{fromDate}/{toDate}/{geofences}/{priority}/{incidentSubType}', [ReportController::class , 'IncidenceReport'])->name('IncidenceReport');
+
+Route::post('downloadIncidenceReport', [ReportController::class , 'downloadIncidenceReport'])->name('downloadIncidenceReport');
+
+Route::get('VisitorReport/{fromDate}/{toDate}/{geofences}/{incidentSubType}', [ReportController::class , 'VisitorReport'])->name('VisitorReport');
+
+Route::get('downloadVisitorReport', [ReportController::class , 'downloadVisitorReport'])->name('downloadVisitorReport');
+
+Route::get('downloadUserAttendanceReport', [ReportController::class , 'downloadUserAttendanceReport'])->name('downloadUserAttendanceReport');
+
+Route::post('downloadSiteWiseGuardReport', [ReportController::class , 'downloadSiteWiseGuardReport'])->name('downloadSiteWiseGuardReport');
+
+Route::get('downloadVisitorReportCount', [ReportController::class , 'downloadVisitorReportCount'])->name('downloadVisitorReportCount');
+
+Route::get('downloadWorkingSummaryReport', [ReportController::class , 'downloadWorkingSummaryReport'])->name('downloadWorkingSummaryReport');
+
+Route::get('visitors/{date}/{siteId}', [ReportController::class , 'visitorSummaryReport'])->name('visitors');
+
+Route::get('downloadVisitorSummaryReport', [ReportController::class , 'downloadVisitorSummaryReport'])->name('downloadVisitorSummaryReport');
+
+Route::get('TourReport/{fromDate}/{toDate}/{geofences}/{tourSubType}/{userId}', [ReportController::class , 'TourReport'])->name('TourReport');
+
+Route::get('DayTour/{tourDate}/{geofences}/{tourSubType}/{userId}', [ReportController::class , 'DayTour'])->name('DayTour');
+
+Route::get('tourSummary/{date}/{tourId}/{siteId}', [ReportController::class , 'tourSummary'])->name('tourSummary');
+
+Route::get('downloadTourSummary', [ReportController::class , 'downloadTourSummary'])->name('downloadTourSummary');
+
+Route::get('incidenceSummary/{date}/{type}/{geofences}', [ReportController::class , 'incidenceSummary'])->name('incidenceSummary');
+
+Route::post('downloadIncidenceSummary', [ReportController::class , 'downloadIncidenceSummary'])->name('downloadIncidenceSummary');
+
+Route::get('guardAttendanceReport/{guardId}/{fromDate}/{toDate}', [ReportController::class , 'guardAttendanceReport'])->name('guardAttendanceReport');
+
+Route::get('AttendanceReport/{fromDate}/{toDate}/{geofences}/{attendanceSubType}/{userId}/{supervisor}', [ReportController::class , 'AttendanceReport'])->name('AttendanceReport');
+
+Route::get('downloadGuardReport', [ReportController::class , 'downloadGuardReport'])->name('downloadGuardReport');
+
+Route::get('downloadTourDayWise', [ReportController::class , 'downloadTourDayWise'])->name('downloadTourDayWise');
+
+Route::get('singleDayTour/{guardTourLogId}/{date}', [ReportController::class , 'singleDayTour'])->name('singleDayTour');
+
+Route::post('downloadsingleDayTour', [ReportController::class , 'downloadsingleDayTour'])->name('downloadsingleDayTour');
+
+Route::get('downloadGuardTourReport', [ReportController::class , 'downloadGuardTourReport'])->name('downloadGuardTourReport');
+
+Route::post('downloadEmergencyAttendance', [ReportController::class , 'downloadEmergencyAttendance'])->name('downloadEmergencyAttendance');
+
+Route::post('downloadOnSiteReport', [ReportController::class , 'downloadOnSiteReport'])->name('downloadOnSiteReport');
+
+Route::post('downloadForgotToMarkExit', [ReportController::class , 'downloadForgotToMarkExit'])->name('downloadForgotToMarkExit');
+
+Route::post('downloadPerformanceReport', [ReportController::class , 'downloadPerformanceReport'])->name('downloadPerformanceReport');
+
+Route::get('PerformanceReport/{fromDate}/{toDate}/{geofences}', [ReportController::class , 'PerformanceReport'])->name('PerformanceReport');
+
+Route::post('downloadAllGuardAttendance', [ReportController::class , 'downloadAllGuardAttendance'])->name('downloadAllGuardAttendance');
+
+Route::post('downloadAbsentReport', [ReportController::class , 'downloadAbsentReport'])->name('downloadAbsentReport');
+
+Route::post('downloadLateReport', [ReportController::class , 'downloadLateReport'])->name('downloadLateReport');
+
+Route::post('downloadClientVisitReport', [ReportController::class , 'downloadClientVisitReport'])->name('downloadClientVisitReport');
+
+Route::post('downloadAllSupervisorAttendance', [ReportController::class , 'downloadAllSupervisorAttendance'])->name('downloadAllSupervisorAttendance');
+
+Route::post('downloadTourDiaryReport', [ReportController::class , 'downloadTourDiaryReport'])->name('downloadTourDiaryReport');
+
+Route::post('downloadSelfTourDiaryReport', [ReportController::class , 'downloadSelfTourDiaryReport'])->name('downloadSelfTourDiaryReport');
+
+Route::post('downloadSuperVisorTourDiaryReport', [ReportController::class , 'downloadSuperVisorTourDiaryReport'])->name('downloadSuperVisorTourDiaryReport');
+
+Route::post('downloadAdminTourDiaryReport', [ReportController::class , 'downloadAdminTourDiaryReport'])->name('downloadAdminTourDiaryReport');
+
+
+Route::prefix('report')->controller(GuardReportController::class)->group(function () {
+
+    Route::get('modal-view', 'reportModalView')->name('reportModalView');
+
+    Route::get('/', 'downoladExcel')->name('report');
+
+    Route::get('view', 'reportview')->name('report.view');
+
+    Route::get('guard/{id}', 'getSupervisorGuard')->name('report.guard');
+
+    Route::get('supervisor/{id}', 'getSupervisor')->name('report.supervisor');
+
+    Route::get('client-site/{id}', 'getClientSite')->name('clientSite');
+
+    Route::get('show', 'showReport')->name('showReport');
+});
+
+Route::prefix('incidence')->controller(IncidenceController::class)->group(function () {
+
+    // Main Incidence
+    Route::get('/', 'index')->name('incidence');
+
+    Route::get('get/{site_id}', 'getIncidence')->name('getincidence');
+
+    Route::get('action/{site_id}/{incidence_id}', 'incidenceActionTaken')->name('incidenceActionTaken');
+
+    Route::get('resolve/{id}', 'incidenceResolve')->name('incidence.resolve');
+    Route::get('ignore/{id}', 'incidenceIgnore')->name('incidence.ignore');
+    Route::get('escalate/{id}', 'incidenceEscalate')->name('incidence.escalate');
+
+    Route::get('list/{status}/{date}', 'incidences')->name('incidences');
+
+    // Export & Reports
+    Route::get('export', 'incidenceExport')->name('incidence.incidenceExport');
+    Route::get('fetch', 'fetchIncidences')->name('incidence.fetchincidences');
+    Route::get('attend-report-site', 'attendReportWithSite')->name('incidence.attendReportWithSite');
+
+    // Incidence Type
+    Route::prefix('type')->group(function () {
+
+            Route::get('/', 'incidenceType')->name('incidence.type');
+
+            Route::get('create', 'incidenceTypeCreate')->name('incidenceType.create');
+            Route::post('create', 'incidenceTypeCreateAction')->name('incidenceType.createaction');
+
+            Route::get('edit/{id}', 'editIncidenceType')->name('incidenceType.edit');
+            Route::post('edit', 'editIncidenceTypeAction')->name('incidenceType.editaction');
+
+            Route::get('delete/{id}', 'deleteIncidenceType')->name('incidenceType.delete');
+
+            Route::get('get/{id}', 'getIncidenceType')->name('getIncidence.type');
+        }
+        );
+
+        // Incidence Sub Type
+        Route::prefix('subtype')->group(function () {
+
+            Route::get('create', 'incidenceSubTypeCreate')->name('incidenceSubType.create');
+            Route::post('create', 'incidenceSubTypeCreateAction')->name('incidenceSubType.createaction');
+
+            Route::get('delete/{type_id}/{id}', 'deleteIncidenceSubType')->name('incidenceSubType.delete');
+        }
+        );
+    });

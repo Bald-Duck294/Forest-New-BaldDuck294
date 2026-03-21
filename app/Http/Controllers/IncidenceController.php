@@ -71,7 +71,7 @@ class IncidenceController extends Controller
     {
         $user = session('user');
         Log::info($user->name . 'view incidence site list, User_id: ' . $user->id);
-        if ($user->role_id == "1" || $user->role_id == "7") {
+        if ($user->role_id == "1" || $user->role_id == "7" || $user->role_id == "8") {
 
             $siteIds = IncidenceDetails::where('company_id', $user->company_id)->whereNotIn("statusFlag", [1, 2])->select('site_id')->distinct()->orderBy('site_id', 'DESC')->pluck('site_id')->toArray();
             //$site_id = IncidenceDetails::where('company_id', $user->company_id)->pluck('site_id')->toArray();
@@ -84,7 +84,8 @@ class IncidenceController extends Controller
 
             //dd($sites->count);exit;
             return view('incidencesitelist')->with('sites', $sites);
-        } elseif ($user->role_id == '2') {
+        }
+        elseif ($user->role_id == '2') {
 
             $sites = SiteAssign::where('user_id', $user->id)->first();
             $siteArray = json_decode($sites['site_id'], true);
@@ -96,7 +97,8 @@ class IncidenceController extends Controller
                 ->groupBy('site.id')
                 ->selectRaw('site.*')->get();
             return view('incidencesitelist')->with('sites', $sites);
-        } elseif ($user->role_id == '4') {
+        }
+        elseif ($user->role_id == '4') {
             $site = SiteDetails::where('client_id', $user->client_id)->pluck('id')->toArray();
 
             $siteIds = IncidenceDetails::whereIn('site_id', $site)->whereNotIn("statusFlag", [1, 2])->select('site_id')->distinct()->orderBy('site_id', 'DESC')->pluck('site_id')->toArray();
@@ -111,8 +113,8 @@ class IncidenceController extends Controller
             return view('incidencesitelist')->with('sites', $sites);
         }
 
-        //elseif($user->role_id  == '7'){
-        //}
+    //elseif($user->role_id  == '7'){
+    //}
 
     }
 
@@ -142,7 +144,8 @@ class IncidenceController extends Controller
                 return redirect('/incidence/type')
                     ->withErrors($validator)
                     ->withInput();
-            } else {
+            }
+            else {
 
                 ActivityLog::create([
                     'company_id' => $user->company_id,
@@ -192,7 +195,8 @@ class IncidenceController extends Controller
                 return redirect('/incidence/type')
                     ->withErrors($validator)
                     ->withInput();
-            } else {
+            }
+            else {
 
                 ActivityLog::create([
                     'company_id' => $user->company_id,
@@ -261,7 +265,8 @@ class IncidenceController extends Controller
                 return redirect('/incidence/Type')
                     ->withErrors($validator)
                     ->withInput();
-            } else {
+            }
+            else {
 
                 ActivityLog::create([
 
@@ -368,7 +373,7 @@ class IncidenceController extends Controller
                 }
             }
             $inc['checkList'] = $checkArray;
-            //dd($inc->checkList);
+        //dd($inc->checkList);
         }
         //dd($incidences);exit;
         return view('incidencelist')->with('incidences', $incidences);
@@ -381,15 +386,20 @@ class IncidenceController extends Controller
         $todayDate = date('Y-m-d', strtotime($date));
         if ($status == 'Pending with supervisor' || $status == '1') {
             $incidences = IncidenceDetails::where('dateFormat', $todayDate)->where("statusFlag", '0')->get();
-        } elseif ($status == 'Resolved' || $status == '0') {
+        }
+        elseif ($status == 'Resolved' || $status == '0') {
             $incidences = IncidenceDetails::where('dateFormat', $todayDate)->where("statusFlag", '1')->get();
-        } elseif ($status == 'Ignored' || $status == '2') {
+        }
+        elseif ($status == 'Ignored' || $status == '2') {
             $incidences = IncidenceDetails::where('dateFormat', $todayDate)->where("statusFlag", '2')->get();
-        } elseif ($status == 'Escalated To Admin' || $status == '3') {
+        }
+        elseif ($status == 'Escalated To Admin' || $status == '3') {
             $incidences = IncidenceDetails::where('dateFormat', $todayDate)->where("statusFlag", '3')->get();
-        } elseif ($status == 'Pending With Admin' || $status == '4') {
+        }
+        elseif ($status == 'Pending With Admin' || $status == '4') {
             $incidences = IncidenceDetails::where('dateFormat', $todayDate)->where("statusFlag", '4')->get();
-        } elseif ($status == 'Escalate To Client' || $status == '5') {
+        }
+        elseif ($status == 'Escalate To Client' || $status == '5') {
             $incidences = IncidenceDetails::where('dateFormat', $todayDate)->where("statusFlag", '5')->get();
         }
         return view('incidencelist')->with('incidences', $incidences);
@@ -409,7 +419,8 @@ class IncidenceController extends Controller
         if ($user->role_id == '1') {
             $incidence = DB::table('incidence_details')->where('company_id', $user->company_id)->whereNotIn('statusFlag', [1, 2])->select('count(*) as allcount')->count();
             return $incidence;
-        } elseif ($user->role_id == '2') {
+        }
+        elseif ($user->role_id == '2') {
             $sites = SiteAssign::where('user_id', $user->id)->first();
             $siteArray = json_decode($sites['site_id'], true);
             $incidence = DB::table('incidence_details')
@@ -434,14 +445,15 @@ class IncidenceController extends Controller
             $log = IncidenceDetails::where('id', $log_id)->first();
             // return redirect()->route('notification.incidentRead',$log_id, $flag);
             return Redirect::to('/notification/incidentRead/' . $log_id . '/' . $type);
-        } else {
+        }
+        else {
             $log = Attendance::where('id', $log_id)->first();
             // return redirect()->route('notification.incidentRead',$log_id, $flag);
             return Redirect::to('/notification/incidentRead/' . $log_id . '/' . $type);
         }
-        //$viewAllLog = ActivityLog::where('company_id', $user->company_id)->->orderBy('created_at', 'desc')->whereDate('created_at', Carbon::today())
-        //         ->get();
-        // dd($log);
+    //$viewAllLog = ActivityLog::where('company_id', $user->company_id)->->orderBy('created_at', 'desc')->whereDate('created_at', Carbon::today())
+    //         ->get();
+    // dd($log);
 
     }
     // incidence detail page
@@ -498,17 +510,18 @@ class IncidenceController extends Controller
                 ->whereIn('users.id', $site_UserIds)
                 ->whereBetween('attendance.dateFormat', [$startDate, $endDate])
                 ->select(
-                    'users.name as name',
-                    'users.id as user_id',
-                    'attendance.date as date',
-                    'attendance.site_name as site_name',
-                    'attendance.time_difference as duration',
-                    'site_assign.client_name as client_name'
-                )
+                'users.name as name',
+                'users.id as user_id',
+                'attendance.date as date',
+                'attendance.site_name as site_name',
+                'attendance.time_difference as duration',
+                'site_assign.client_name as client_name'
+            )
                 ->orderBy('name');
             // dd($test->pluck('name')->toArray() , 'test');
             return $test;
-        } else {
+        }
+        else {
             // tempo
             // dd('here2');
 
@@ -521,7 +534,8 @@ class IncidenceController extends Controller
                     ->whereBetween('attendance.dateFormat', [$startDate, $endDate])
                     ->select('users.name as name', 'users.id as user_id', 'attendance.date as date', 'attendance.site_name as site_name', 'attendance.time_difference as duration')
                     ->orderBy('name');
-            } else {
+            }
+            else {
                 // dd('here');
                 // tempo
 
@@ -535,9 +549,9 @@ class IncidenceController extends Controller
                     // ->orderBy('client_name')
                     // ->orderBy('site_name')
                     ->orderBy('name');
-                // dump($test->get() , 'test');
+            // dump($test->get() , 'test');
 
-                // dd($data->pluck('name') , "data , here");
+            // dd($data->pluck('name') , "data , here");
             }
         }
     }
@@ -553,27 +567,28 @@ class IncidenceController extends Controller
                 ->select('user_id', 'site_name', 'client_name')
                 ->get()
                 ->mapToGroups(function ($item, $key) {
-                    return [
-                        $item['user_id'] => [
-                            'site' => $item['site_name'],
-                            'client' => $item['client_name']
-                        ]
-                    ];
-                })
+                return [
+                    $item['user_id'] => [
+                        'site' => $item['site_name'],
+                        'client' => $item['client_name']
+                    ]
+                ];
+            })
                 ->toArray();
-        } else {
+        }
+        else {
             // Fetch specific site data
             return SiteAssign::where('company_id', $user->company_id)
                 ->select('user_id', 'site_name', 'client_name')
                 ->get()
                 ->mapToGroups(function ($item, $key) {
-                    return [
-                        $item['user_id'] => [
-                            'site' => $item['site_name'],
-                            'client' => $item['client_name']
-                        ]
-                    ];
-                })
+                return [
+                    $item['user_id'] => [
+                        'site' => $item['site_name'],
+                        'client' => $item['client_name']
+                    ]
+                ];
+            })
                 ->toArray();
         }
     }
@@ -615,7 +630,7 @@ class IncidenceController extends Controller
         $datetime1 = new DateTime($startDate);
         $datetime2 = new DateTime($endDate);
         $interval = $datetime1->diff($datetime2);
-        $daysCount = (int) $interval->format('%a') + 1;
+        $daysCount = (int)$interval->format('%a') + 1;
 
         $dateFormat = "Range";
         $date = date('d M Y', strtotime($startDate)) . " to " . date('d M Y', strtotime($endDate));
@@ -640,49 +655,51 @@ class IncidenceController extends Controller
             $supervisorIds = Users::where([['users.company_id', '=', $user->company_id], ['users.role_id', '=', 2]])
                 ->leftJoin('site_assign as site', 'users.id', '=', 'site.user_id')
                 ->where(function ($query) use ($siteArray) {
-                    foreach ($siteArray as $siteId) {
-                        $query->orWhereRaw('JSON_CONTAINS(site.site_id, ?)', [json_encode([$siteId])]);
-                    }
-                })->pluck('user_id')->toArray();
+                foreach ($siteArray as $siteId) {
+                    $query->orWhereRaw('JSON_CONTAINS(site.site_id, ?)', [json_encode([$siteId])]);
+                }
+            })->pluck('user_id')->toArray();
 
             $userIds = SiteAssign::whereIn('client_id', $client_ids)->pluck('user_id')->toArray();
 
             // $userIds = array_merge($userIds, $supervisorIds);
             $site_UserIds = array_merge($userIds, $supervisorIds);
 
-            // dd($site_UserIds);
-            // dd($dateRange , "date range");
-            // $data = Attendance::where('emergency_attend', 1)
-            //     ->whereIn('user_id', $userIds)
-            //     ->whereBetween('dateFormat', $dateRange)
-            //     ->get();
+        // dd($site_UserIds);
+        // dd($dateRange , "date range");
+        // $data = Attendance::where('emergency_attend', 1)
+        //     ->whereIn('user_id', $userIds)
+        //     ->whereBetween('dateFormat', $dateRange)
+        //     ->get();
 
-            //     // dd($data , "data");
+        //     // dd($data , "data");
 
-        } else if ($user->role_id == 1) {
+        }
+        else if ($user->role_id == 1) {
             // dump('role is not 3 ', $user->role_id != 2);
             $site_UserIds = SiteAssign::where('company_id', $user->company_id)
                 ->whereNotIn('role_id', [1, 4])
                 ->get()
                 ->pluck('user_id')
                 ->unique();
-            // dump($site_UserIds , "site user ids");
-        } else {
+        // dd($site_UserIds, "site user ids");
+        }
+        else {
 
             $site = SiteAssign::where('user_id', $user->id)->first();
             // dd($site , "site");/
             $siteArray = json_decode($site['site_id'], true);
             $site_UserIds = SiteAssign::where('company_id', $user->company_id)->whereIn('site_id', $siteArray)->where('role_id', 3)
                 ->get()->pluck('user_id')->unique();
-            // dump($site_UserIds, "when cli all");
+        // dump($site_UserIds, "when cli all");
 
-            // dd($siteArray,"site array");
+        // dd($siteArray,"site array");
         }
 
         // Process attendance data based on role and guard
         $test = $this->processAttendanceForOtherRoles($user, $startDate, $endDate, $guard, $geofences, $site_UserIds);
 
-        // dd($test->pluck('name')->toArray() , 'roles');
+        // dd($test->pluck('name')->toArray(), 'roles');
 
         // Generate attendance-related data
         $names = $test->groupBy(['user_id', 'name', 'date'])
@@ -690,6 +707,7 @@ class IncidenceController extends Controller
             ->mapToGroups(fn($item, $key) => [$item['user_id'] => $item['name']])
             ->toArray();
 
+        // dd($names, "names");
         $hours = $test->groupBy(['user_id', 'duration', 'date'])
             ->get()
             ->mapToGroups(fn($item, $key) => [$item['user_id'] => $item['duration']])
@@ -716,14 +734,14 @@ class IncidenceController extends Controller
             ->get()
             ->mapToGroups(fn($item, $key) => [$item['user_id'] => $item['date']])
             ->map(function ($dates) {
-                return array_unique($dates->toArray());
-            })
+            return array_unique($dates->toArray());
+        })
             ->toArray();
 
         $attendSites = $test->groupBy(['user_id', 'site_name'])
             ->get()->mapToGroups(function ($item, $key) {
-                return [$item['user_id'] => $item['site_name']];
-            })->toArray();
+            return [$item['user_id'] => $item['site_name']];
+        })->toArray();
         // dump($attendSites, "sites");
         // dd($test->pluck('name')->toArray() , "data");
         // dd($data , "data");
@@ -734,9 +752,9 @@ class IncidenceController extends Controller
 
         $supervisorAssignedSites =
             SiteAssign::where('company_id', $user->company_id)
-                ->whereIn('role_id', [7, 2])
-                ->select('user_id', 'site_id', 'role_id')
-                ->get();
+            ->whereIn('role_id', [7, 2])
+            ->select('user_id', 'site_id', 'role_id')
+            ->get();
         $supervisorSites = [];
 
 
@@ -744,7 +762,7 @@ class IncidenceController extends Controller
 
             $siteIds = is_string($assign->site_id)
                 ? json_decode($assign->site_id, true)
-                : (array) $assign->site_id;
+                : (array)$assign->site_id;
 
             if (empty($siteIds))
                 continue;
@@ -767,7 +785,8 @@ class IncidenceController extends Controller
                     'site' => [], // No site names for admins
                     'client' => $clientNames
                 ];
-            } else {
+            }
+            else {
                 // dd('supervisor');
                 // Supervisor: use site IDs to fetch site and client info
                 $sitesx = SiteDetails::whereIn('id', $siteIds)->get();
@@ -905,7 +924,7 @@ class IncidenceController extends Controller
         $datetime1 = new DateTime($startDate);
         $datetime2 = new DateTime($endDate);
         $interval = $datetime1->diff($datetime2);
-        $daysCount = (int) $interval->format('%a') + 1;
+        $daysCount = (int)$interval->format('%a') + 1;
 
         $dateFormat = "Range";
         $date = date('d M Y', strtotime($startDate)) . " to " . date('d M Y', strtotime($endDate));
@@ -924,13 +943,14 @@ class IncidenceController extends Controller
                 ->get()
                 ->pluck('user_id')
                 ->unique();
-        } else {
+        }
+        else {
             $site_UserIds = SiteAssign::where('client_id', $request->client)
                 ->get()
                 ->pluck('user_id')
                 ->unique();
 
-            // dump($site_UserIds , 'site user ids');
+        // dump($site_UserIds , 'site user ids');
         }
 
         // Query attendance data
@@ -941,43 +961,44 @@ class IncidenceController extends Controller
                 ->whereIn('users.id', $site_UserIds)
                 ->whereBetween('attendance.dateFormat', [$startDate, $endDate])
                 ->select(
-                    'users.name as name',
-                    'users.id as user_id',
-                    'attendance.date as date',
-                    'attendance.site_name as site_name',
-                    'attendance.time_difference as duration',
-                    'site_assign.client_name as client_name'
+                'users.name as name',
+                'users.id as user_id',
+                'attendance.date as date',
+                'attendance.site_name as site_name',
+                'attendance.time_difference as duration',
+                'site_assign.client_name as client_name'
 
-                )
+            )
                 ->orderBy('name');
-        } else {
+        }
+        else {
             $test = Users::where('users.company_id', $user->company_id)
                 ->leftjoin('attendance', 'users.id', '=', 'attendance.user_id')
                 ->leftjoin('site_assign', 'users.id', '=', 'site_assign.user_id')
                 ->whereIn('users.id', $site_UserIds)
                 ->whereBetween('attendance.dateFormat', [$startDate, $endDate])
                 ->select(
-                    'users.name as name',
-                    'users.id as user_id',
-                    'attendance.date as date',
-                    'attendance.site_name as site_name',
-                    'attendance.time_difference as duration',
-                    'site_assign.client_name as client_name'
-                )
+                'users.name as name',
+                'users.id as user_id',
+                'attendance.date as date',
+                'attendance.site_name as site_name',
+                'attendance.time_difference as duration',
+                'site_assign.client_name as client_name'
+            )
                 ->orderBy('name');
         }
 
         // Process user names
         $names = $test->groupBy(['user_id', 'name', 'date'])
             ->get()->mapToGroups(function ($item, $key) {
-                return [$item['user_id'] => $item['name']];
-            })->toArray();
+            return [$item['user_id'] => $item['name']];
+        })->toArray();
 
         // Process duration hours
         $hours = $test->groupBy(['user_id', 'duration', 'date'])
             ->get()->mapToGroups(function ($item, $key) {
-                return [$item['user_id'] => $item['duration']];
-            })->toArray();
+            return [$item['user_id'] => $item['duration']];
+        })->toArray();
 
         // Fetch site data
         // dump($test->pluck('user_id')->toArray() ,  $site_UserIds ,"test");
@@ -1006,8 +1027,8 @@ class IncidenceController extends Controller
             ->get()
             ->mapToGroups(fn($item, $key) => [$item['user_id'] => $item['date']])
             ->map(function ($dates) {
-                return array_unique($dates->toArray());
-            })
+            return array_unique($dates->toArray());
+        })
             ->toArray();
 
         // Now fetch users who haven't marked attendance but should be in the report
@@ -1140,7 +1161,8 @@ class IncidenceController extends Controller
                 ->get()
                 ->pluck('user_id')
                 ->unique();
-        } else {
+        }
+        else {
             $siteUserIds = SiteAssign::where('client_id', $request->client)->where('site_id', $geofences)
                 ->pluck('user_id')
                 ->unique();
@@ -1152,13 +1174,13 @@ class IncidenceController extends Controller
             ->whereIn('users.id', $siteUserIds)
             ->whereBetween('attendance.dateFormat', [$startDate, $endDate])
             ->select(
-                'users.name as name',
-                'users.id as user_id',
-                'attendance.date as date',
-                'attendance.site_name as site_name',
-                'attendance.time_difference as duration',
-                'site_assign.client_name as client_name'
-            )
+            'users.name as name',
+            'users.id as user_id',
+            'attendance.date as date',
+            'attendance.site_name as site_name',
+            'attendance.time_difference as duration',
+            'site_assign.client_name as client_name'
+        )
             ->orderBy('name');
         // dump($test->pluck('site_name')->toArray());
 
@@ -1171,14 +1193,14 @@ class IncidenceController extends Controller
 
         // Fetch site IDs for the user (if role_id is 2)
         $siteIds = $user->role_id == 2
-            ? SiteAssign::where('user_id', $user->id)
-                ->pluck('site_id')
-                ->map(function ($item) {
-                    return is_string($item) ? json_decode($item, true) : $item;
-                })
-                ->flatten()
-                ->unique()
-                ->values()
+            ?SiteAssign::where('user_id', $user->id)
+            ->pluck('site_id')
+            ->map(function ($item) {
+            return is_string($item) ? json_decode($item, true) : $item;
+        })
+            ->flatten()
+            ->unique()
+            ->values()
             : SiteAssign::where('client_id', $client)->where('site_id', $geofences)->get();
         // dd($siteIds, "is");
         // Check if the user is authorized to access the selected site
@@ -1190,19 +1212,19 @@ class IncidenceController extends Controller
         $userData = SiteAssign::where('site_assign.company_id', $user->company_id)
             ->leftJoin('attendance', 'site_assign.user_id', '=', 'attendance.user_id')
             ->when($user->role_id == 2, function ($query) use ($siteIds, $geofences) {
-                $query->whereIn('site_assign.site_id', $geofences != 'all' ? [$geofences] : $siteIds);
-            })
+            $query->whereIn('site_assign.site_id', $geofences != 'all' ? [$geofences] : $siteIds);
+        })
             ->when($user->role_id != 2 && $geofences != 'all', function ($query) use ($geofences) {
-                $query->where('site_assign.site_id', $geofences);
-            })
+            $query->where('site_assign.site_id', $geofences);
+        })
             ->whereBetween('attendance.dateFormat', [$startDate, $endDate])
             ->select(
-                'site_assign.user_name as name',
-                'site_assign.user_id as user_id',
-                'attendance.date as date',
-                'site_assign.client_name as client_name',
-                'attendance.site_name as site_name',
-            )
+            'site_assign.user_name as name',
+            'site_assign.user_id as user_id',
+            'attendance.date as date',
+            'site_assign.client_name as client_name',
+            'attendance.site_name as site_name',
+        )
             ->distinct()
             ->orderBy('site_assign.user_name', 'ASC');
 
@@ -1210,8 +1232,8 @@ class IncidenceController extends Controller
         // dd($userData->pluck('client_name')->toArray() , "userData");        // Group user data by user_id, name, and date
         $names = $userData->get()
             ->mapToGroups(function ($item) {
-                return [$item['user_id'] => $item['name']];
-            })
+            return [$item['user_id'] => $item['name']];
+        })
             ->toArray();
 
         // Fetch unique user IDs
@@ -1222,16 +1244,17 @@ class IncidenceController extends Controller
 
             $sites = $test->get()
                 ->mapToGroups(function ($item) {
-                    return [
-                        $item['user_id'] => [
-                            'site' => $item['site_name'],
-                            'client' => $item['client_name']
-                        ]
-                    ];
-                })
+                return [
+                $item['user_id'] => [
+                'site' => $item['site_name'],
+                'client' => $item['client_name']
+                ]
+                ];
+            })
                 ->toArray();
-            // dump($sites, "sites");
-        } else {
+        // dump($sites, "sites");
+        }
+        else {
             // $siteCollection = SiteAssign::where('company_id',$user->company_id)->where('site_id',$geofences);
             // $sites = $siteCollection->name;
             // dump('site Name')
@@ -1246,8 +1269,8 @@ class IncidenceController extends Controller
         // Group user data by user_id and date
         $data = $userData->get()
             ->mapToGroups(function ($item) {
-                return [$item['user_id'] => $item['date']];
-            })
+            return [$item['user_id'] => $item['date']];
+        })
             ->toArray();
 
         // Determine site name
@@ -1260,8 +1283,8 @@ class IncidenceController extends Controller
             ->groupBy(['user_id', 'weekoff'])
             ->get()
             ->mapToGroups(function ($item) {
-                return [$item['user_id'] => $item['weekoff']];
-            })
+            return [$item['user_id'] => $item['weekoff']];
+        })
             ->toArray();
 
         // Add missing users to weekoffs, data, and names
@@ -1283,15 +1306,15 @@ class IncidenceController extends Controller
             ->groupBy(['user_id', 'dateFormat'])
             ->get()
             ->mapToGroups(function ($item) {
-                return [$item['dateFormat'] => $item['user_id']];
-            })
+            return [$item['dateFormat'] => $item['user_id']];
+        })
             ->toArray();
         // dd($data , "attendCount");
         // Fetch hours data
         $hours = $test->get()
             ->mapToGroups(function ($item) {
-                return [$item['user_id'] => $item['duration']];
-            })
+            return [$item['user_id'] => $item['duration']];
+        })
             ->toArray();
 
         // Fetch company data
@@ -1471,28 +1494,29 @@ class IncidenceController extends Controller
         if ($client !== 'all' && $geofences == 'all') {
             $clientDetails = ClientDetails::find($client);
             $siteInfo['client']['name'] = $clientDetails->name ?? 'Unknown Client';
-            // dump($siteInfo, "siteInfo");
-        } else {
+        // dump($siteInfo, "siteInfo");
+        }
+        else {
             $clientDetails = ClientDetails::find($client);
             $site = SiteAssign::where('site_id', $geofences)->first();
             // dd($site->site_name , "site");
             $siteInfo['client']['name'] = $clientDetails->name ?? 'All Client';
             $siteInfo['name'] = $site->site_name ?? 'All Site';
-            // dump($siteInfo, "info when cli all");
+        // dump($siteInfo, "info when cli all");
         }
 
 
 
         // Fetch site IDs for the user (if role_id is 2)
         $siteIds = $user->role_id == 2
-            ? SiteAssign::where('user_id', $user->id)
-                ->pluck('site_id')
-                ->map(function ($item) {
-                    return is_string($item) ? json_decode($item, true) : $item;
-                })
-                ->flatten()
-                ->unique()
-                ->values()
+            ?SiteAssign::where('user_id', $user->id)
+            ->pluck('site_id')
+            ->map(function ($item) {
+            return is_string($item) ? json_decode($item, true) : $item;
+        })
+            ->flatten()
+            ->unique()
+            ->values()
             : collect();
         // dump($siteIds , "site eu");
 
@@ -1515,10 +1539,10 @@ class IncidenceController extends Controller
             $supervisorIds = Users::where([['users.company_id', '=', $user->company_id], ['users.role_id', '=', 2]])
                 ->leftJoin('site_assign as site', 'users.id', '=', 'site.user_id')
                 ->where(function ($query) use ($siteArray) {
-                    foreach ($siteArray as $siteId) {
-                        $query->orWhereRaw('JSON_CONTAINS(site.site_id, ?)', [json_encode([$siteId])]);
-                    }
-                })->pluck('users.id')->toArray();
+                foreach ($siteArray as $siteId) {
+                    $query->orWhereRaw('JSON_CONTAINS(site.site_id, ?)', [json_encode([$siteId])]);
+                }
+            })->pluck('users.id')->toArray();
             // dump($userIds, $supervisorIds, "ids");
 
             $userIds = array_merge($userIds, $supervisorIds);
@@ -1532,16 +1556,17 @@ class IncidenceController extends Controller
                 // dump($siteQuery->pluck('user_name')->toArray());
                 $siteQuery->when(
                     $geofences !== 'all' && $geofences !== null,
-                    fn($query) => $query->where('site_id', $geofences)
+                fn($query) => $query->where('site_id', $geofences)
 
                 )
                     ->whereIn('user_id', $userIds);
-                // ->where('company_id', $user->company_id);
+            // ->where('company_id', $user->company_id);
 
 
-                // dd($siteQuery->pluck('user_name')->toArray());
+            // dd($siteQuery->pluck('user_name')->toArray());
             }
-        } else if ($user->role_id == 7) {
+        }
+        else if ($user->role_id == 7) {
 
             // dump('in else if');
             // Fetch site assignments for the user
@@ -1555,11 +1580,12 @@ class IncidenceController extends Controller
                 // dd('not loading 2');
                 $siteArray = SiteDetails::whereIn('client_id', $client_ids)->pluck('id')->toArray();
                 $userIds = SiteAssign::whereIn('client_id', $client_ids)->pluck('user_id')->toArray();
-            } else {
+            }
+            else {
 
                 $siteArray = SiteDetails::where('client_id', $client)->pluck('id')->toArray();
                 $userIds = SiteAssign::where('client_id', $client)->pluck('user_id')->toArray();
-                // dd('not loading' , $siteArray , $userIds);
+            // dd('not loading' , $siteArray , $userIds);
             }
 
 
@@ -1568,10 +1594,10 @@ class IncidenceController extends Controller
             $supervisorIds = Users::where([['users.company_id', '=', $user->company_id], ['users.role_id', '=', 2]])
                 ->leftJoin('site_assign as site', 'users.id', '=', 'site.user_id')
                 ->where(function ($query) use ($siteArray) {
-                    foreach ($siteArray as $siteId) {
-                        $query->orWhereRaw('JSON_CONTAINS(site.site_id, ?)', [json_encode([$siteId])]);
-                    }
-                })->pluck('site.user_id')->toArray();
+                foreach ($siteArray as $siteId) {
+                    $query->orWhereRaw('JSON_CONTAINS(site.site_id, ?)', [json_encode([$siteId])]);
+                }
+            })->pluck('site.user_id')->toArray();
 
 
             // dd($userIds, "user ids");
@@ -1581,14 +1607,15 @@ class IncidenceController extends Controller
             // dump($siteQuery->pluck('user_name')->toArray());
             $siteQuery->when(
                 $geofences !== 'all' && $geofences !== null,
-                fn($query) => $query->where('site_id', $geofences)
+            fn($query) => $query->where('site_id', $geofences)
 
             )
                 ->whereIn('user_id', $site_UserIds);
 
-            // dd($siteQuery->pluck('client_id')->toArray());
-            // dd($siteQuery->pluck('user_id')->toArray());
-        } else {
+        // dd($siteQuery->pluck('client_id')->toArray());
+        // dd($siteQuery->pluck('user_id')->toArray());
+        }
+        else {
             // Supervisor role can only view sites assigned to them
             // dump('in else');
             // dump($siteIds , "site ids");
@@ -1598,7 +1625,7 @@ class IncidenceController extends Controller
                 $siteQuery->where('site_id', $geofences);
             }
             ;
-            // dump($siteQuery ->get() , "query");
+        // dump($siteQuery ->get() , "query");
 
         }
 
@@ -1626,13 +1653,14 @@ class IncidenceController extends Controller
             // Admin role attendance filtering
             $attendanceQuery
                 ->whereIn('user_id', $site_UserIds);
-            // dd($site_UserIds , "site ids");
-            // dd($attendanceQuery->pluck('client_name')->toArray() , "data11");
-        } else {
+        // dd($site_UserIds , "site ids");
+        // dd($attendanceQuery->pluck('client_name')->toArray() , "data11");
+        }
+        else {
             // Supervisor role attendance filtering
             $attendanceQuery->when(
                 $geofences == 'all',
-                fn($query) => $query->whereIn('site_id', $siteIds)
+            fn($query) => $query->whereIn('site_id', $siteIds)
             )
                 ->when($geofences !== 'all', fn($query) => $query->where('site_id', $geofences));
         }
@@ -1667,7 +1695,8 @@ class IncidenceController extends Controller
             ])->render();
 
             echo $modalData;
-        } else {
+        }
+        else {
             return 'error';
         }
     }
@@ -1727,11 +1756,13 @@ class IncidenceController extends Controller
             if ($client == 'all') {
                 $siteArray = SiteDetails::whereIn('client_id', $client_ids)->pluck('id')->toArray();
                 $userIds = SiteAssign::whereIn('client_id', $client_ids)->pluck('user_id')->toArray();
-            } elseif ($client !== 'all' && $geofences == 'all') {
+            }
+            elseif ($client !== 'all' && $geofences == 'all') {
 
                 $siteArray = SiteDetails::where('client_id', $client)->pluck('id')->toArray();
                 $userIds = SiteAssign::where('client_id', $client)->pluck('user_id')->toArray();
-            } else if ($client !== 'all' && $geofences !== 'all') {
+            }
+            else if ($client !== 'all' && $geofences !== 'all') {
 
                 $siteArray = SiteDetails::where('client_id', $client)->pluck('id')->toArray();
                 $userIds = SiteAssign::where('site_id', $geofences)->pluck('user_id')->toArray();
@@ -1743,10 +1774,10 @@ class IncidenceController extends Controller
             $supervisorIds = Users::where([['users.company_id', '=', $user->company_id], ['users.role_id', '=', 2]])
                 ->leftJoin('site_assign as site', 'users.id', '=', 'site.user_id')
                 ->where(function ($query) use ($siteArray) {
-                    foreach ($siteArray as $siteId) {
-                        $query->orWhereRaw('JSON_CONTAINS(site.site_id, ?)', [json_encode([$siteId])]);
-                    }
-                })->pluck('site.user_id')->toArray();
+                foreach ($siteArray as $siteId) {
+                    $query->orWhereRaw('JSON_CONTAINS(site.site_id, ?)', [json_encode([$siteId])]);
+                }
+            })->pluck('site.user_id')->toArray();
 
 
             // dd($userIds, "user ids");
@@ -1757,39 +1788,44 @@ class IncidenceController extends Controller
             // dump($siteQuery->pluck('user_name')->toArray());
             $siteQuery->when(
                 $geofences !== 'all' && $geofences !== null,
-                fn($query) => $query->where('site_id', $geofences)
+            fn($query) => $query->where('site_id', $geofences)
 
             )
                 ->whereIn('user_id', $site_UserIds);
 
-            // dump($siteQuery->pluck('client_id')->toArray(),'clie');
-            // dd($siteQuery->pluck('user_id')->toArray());
-        } else if ($user->role_id == 1) {
+        // dump($siteQuery->pluck('client_id')->toArray(),'clie');
+        // dd($siteQuery->pluck('user_id')->toArray());
+        }
+        else if ($user->role_id == 1) {
             if ($client == "all") {
                 $site_UserIds = SiteAssign::where('company_id', $user->company_id)->whereNotIn('role_id', [1, 2, 4])
                     ->pluck('user_id')->unique();
-            } elseif ($client != "all" && $geofences == "all") {
+            }
+            elseif ($client != "all" && $geofences == "all") {
                 $site_UserIds = SiteAssign::where('client_id', $client)
                     ->pluck('user_id')->unique();
-            } elseif ($client != "all" && $geofences != "all") {
+            }
+            elseif ($client != "all" && $geofences != "all") {
                 $site_UserIds = SiteAssign::where('client_id', $client)
                     ->where('site_id', $geofences)
                     ->pluck('user_id')->unique();
-                // dump($site_UserIds, "usr id");
-            } else {
+            // dump($site_UserIds, "usr id");
+            }
+            else {
                 $site_UserIds = [];
             }
-        } else {
+        }
+        else {
             // dump('the role id is 2');
             $siteIds = $user->role_id == 2
-                ? SiteAssign::where('user_id', $user->id)
-                    ->pluck('site_id')
-                    ->map(function ($item) {
-                        return is_string($item) ? json_decode($item, true) : $item;
-                    })
-                    ->flatten()
-                    ->unique()
-                    ->values()
+                ?SiteAssign::where('user_id', $user->id)
+                ->pluck('site_id')
+                ->map(function ($item) {
+                return is_string($item) ? json_decode($item, true) : $item;
+            })
+                ->flatten()
+                ->unique()
+                ->values()
                 : collect();
             // dump($siteIds, "siteIds arr");
 
@@ -1798,12 +1834,14 @@ class IncidenceController extends Controller
 
             if ($client == 'all') {
                 $site_UserIds = $site_UserIds_query->pluck('user_id');
-                // dump($client, $geofences, $site_UserIds ,"All client");
-            } else if ($client !== 'all' && $geofences == 'all') {
+            // dump($client, $geofences, $site_UserIds ,"All client");
+            }
+            else if ($client !== 'all' && $geofences == 'all') {
                 // $attendanceQuery->whereIn('user_id', $site_UserIds_query->pluck('user_id'));
                 $site_UserIds = $site_UserIds_query->pluck('user_id');
-                // dump($client, $geofences, $site_UserIds ,"client");
-            } else if ($client !== 'all' && $geofences !== 'all') {
+            // dump($client, $geofences, $site_UserIds ,"client");
+            }
+            else if ($client !== 'all' && $geofences !== 'all') {
                 $site_UserIds = $site_UserIds_query->where('site_id', $geofences)->pluck('user_id');
             }
         }
@@ -1812,15 +1850,16 @@ class IncidenceController extends Controller
         if ($client !== 'all' && $geofences == 'all') {
             $clientDetails = ClientDetails::find($client);
             $siteInfo['client']['name'] = $clientDetails->name ?? 'All Client';
-            // dump($siteInfo, "siteInfo");
-        } else {
+        // dump($siteInfo, "siteInfo");
+        }
+        else {
             $clientDetails = ClientDetails::find($client);
             $site = SiteDetails::where('id', $geofences)->first();
             // dd($site->site_name , "site");
             // dump($site );
             $siteInfo['client']['name'] = $clientDetails->name ?? 'All Client';
             $siteInfo['name'] = $site->name ?? 'All site';
-            // dump($siteInfo , "siteINfo");
+        // dump($siteInfo , "siteINfo");
         }
 
 
@@ -1877,20 +1916,20 @@ class IncidenceController extends Controller
 
             // dump('the role id is 2');
             $siteIds = $user->role_id == 2
-                ? SiteAssign::where('user_id', $user->id)
-                    ->pluck('site_id')
-                    ->map(function ($item) {
-                        return is_string($item) ? json_decode($item, true) : $item;
-                    })
-                    ->flatten()
-                    ->unique()
-                    ->values()
+                ?SiteAssign::where('user_id', $user->id)
+                ->pluck('site_id')
+                ->map(function ($item) {
+                return is_string($item) ? json_decode($item, true) : $item;
+            })
+                ->flatten()
+                ->unique()
+                ->values()
                 : collect();
             // dump($siteIds, "siteIds arr");
 
             $site_UserIds_query =
                 SiteAssign::where('company_id', $user->company_id)
-                    ->whereIn('site_id', $siteIds);
+                ->whereIn('site_id', $siteIds);
             //  dump($site_UserIds_query->pluck('user_id') , "site user ids");
 
             if ($client !== 'all' && $geofences == 'all') {
@@ -1899,13 +1938,14 @@ class IncidenceController extends Controller
                 $site_UserIds = $site_UserIds_query
                     ->pluck('user_id');
 
-                // dump($site_UserIds, "site userids 0");
-            } else if ($client !== 'all' && $geofences !== 'all') {
+            // dump($site_UserIds, "site userids 0");
+            }
+            else if ($client !== 'all' && $geofences !== 'all') {
                 // dump($client, $geofences, "client 1");
                 $site_UserIds = $site_UserIds_query
                     ->where('site_id', $geofences)
                     ->pluck('user_id');
-                // dump($site_UserIds, 'site_userids 1');
+            // dump($site_UserIds, 'site_userids 1');
             }
 
             // dump($site_UserIds, 'site_userids');
@@ -1937,15 +1977,16 @@ class IncidenceController extends Controller
                     ->orderBy('users.name', 'ASC')
                     ->get();
 
-                // $data = Attendance::where('attendance.company_id', $user->company_id)
-                //     ->leftJoin('site_assign as site', 'Attendance.user_id', '=', 'site.user_id')
-                //     ->whereIn('Attendance.user_id', $site_UserIds)
-                //     ->where('Attendance.role_id', 3)
-                //     ->whereNotBetween('Attendance.dateFormat', [$startDate, $endDate])
-                //     ->orderBy('site.user_name', 'ASC')
-                //     ->get();
+            // $data = Attendance::where('attendance.company_id', $user->company_id)
+            //     ->leftJoin('site_assign as site', 'Attendance.user_id', '=', 'site.user_id')
+            //     ->whereIn('Attendance.user_id', $site_UserIds)
+            //     ->where('Attendance.role_id', 3)
+            //     ->whereNotBetween('Attendance.dateFormat', [$startDate, $endDate])
+            //     ->orderBy('site.user_name', 'ASC')
+            //     ->get();
 
-            } elseif ($geofences != 'all' && $guard == 'all') {
+            }
+            elseif ($geofences != 'all' && $guard == 'all') {
 
                 // dump('geofences is not all');
                 $attend = Attendance::where('company_id', $user->company_id)
@@ -1975,19 +2016,20 @@ class IncidenceController extends Controller
                     ->get();
 
 
-                // $data = Attendance::where('attendance.company_id', $user->company_id)
-                //     ->leftJoin('site_assign as site', 'Attendance.user_id', '=', 'site.user_id')
-                //     // ->where('site.client_id', $client)
-                //     ->whereIn('Attendance.user_id', $site_UserIds)
-                //     ->where('Attendance.role_id', 3)
-                //     ->where('site.site_id', $geofences)
-                //     ->whereNotBetween('Attendance.dateFormat', [$startDate, $endDate])
-                //     ->orderBy('site.user_name', 'ASC')
-                //     ->get();
+            // $data = Attendance::where('attendance.company_id', $user->company_id)
+            //     ->leftJoin('site_assign as site', 'Attendance.user_id', '=', 'site.user_id')
+            //     // ->where('site.client_id', $client)
+            //     ->whereIn('Attendance.user_id', $site_UserIds)
+            //     ->where('Attendance.role_id', 3)
+            //     ->where('site.site_id', $geofences)
+            //     ->whereNotBetween('Attendance.dateFormat', [$startDate, $endDate])
+            //     ->orderBy('site.user_name', 'ASC')
+            //     ->get();
 
 
-                // $site = SiteDetails::where('id', $geofences)->value('site_name') ?? 'Unknown Site';
-            } elseif ($geofences != 'all' && $guard != 'all') {
+            // $site = SiteDetails::where('id', $geofences)->value('site_name') ?? 'Unknown Site';
+            }
+            elseif ($geofences != 'all' && $guard != 'all') {
 
                 // Confirm the guard is assigned to the selected geofence
                 $userSiteAssignment = SiteAssign::where('user_id', $guard)
@@ -2021,12 +2063,14 @@ class IncidenceController extends Controller
                     return 'No records found';
                 }
 
-                // $site = SiteDetails::where('id', $geofences)->value('site_name') ?? 'Unknown Site';
-            } else {
+            // $site = SiteDetails::where('id', $geofences)->value('site_name') ?? 'Unknown Site';
+            }
+            else {
                 $data = collect();
                 $site = 'No Site';
             }
-        } else if ($user->role_id == 7) {
+        }
+        else if ($user->role_id == 7) {
             $siteQuery = SiteAssign::where('company_id', $user->company_id);
 
             // dump('in else if');
@@ -2062,7 +2106,8 @@ class IncidenceController extends Controller
                     ->orderBy('site.client_name', 'ASC')
                     ->orderBy('users.name', 'ASC')
                     ->get();
-            } elseif ($request->geofences == 'all') {
+            }
+            elseif ($request->geofences == 'all') {
 
                 $siteArray = SiteDetails::where('client_id', $client)->pluck('id')->toArray();
                 $userIds = SiteAssign::where('client_id', $client)
@@ -2091,16 +2136,17 @@ class IncidenceController extends Controller
                     ->orderBy('users.name', 'ASC')
                     ->get();
 
-                // $data = Attendance::where('attendance.company_id', $user->company_id)
-                //     ->leftJoin('site_assign as site', 'Attendance.user_id', '=', 'site.user_id')
-                //     ->where('site.client_id', $client)
-                //     ->whereIn('Attendance.user_id', $userIds)
-                //     ->where('Attendance.role_id', 3)
-                //     ->whereNotBetween('Attendance.dateFormat', [$startDate, $endDate])
-                //     ->orderBy('site.user_name', 'ASC')
-                //     ->get();
+            // $data = Attendance::where('attendance.company_id', $user->company_id)
+            //     ->leftJoin('site_assign as site', 'Attendance.user_id', '=', 'site.user_id')
+            //     ->where('site.client_id', $client)
+            //     ->whereIn('Attendance.user_id', $userIds)
+            //     ->where('Attendance.role_id', 3)
+            //     ->whereNotBetween('Attendance.dateFormat', [$startDate, $endDate])
+            //     ->orderBy('site.user_name', 'ASC')
+            //     ->get();
 
-            } elseif ($geofences != 'all' && $guard == 'all') {
+            }
+            elseif ($geofences != 'all' && $guard == 'all') {
                 $userIds = SiteAssign::where('site_id', $request->geofences)->where('role_id', 3)->pluck('user_id')->toArray();
 
 
@@ -2144,7 +2190,8 @@ class IncidenceController extends Controller
                 if ($data->isEmpty()) {
                     return 'No records found';
                 }
-            } elseif ($geofences != 'all' && $guard != 'all') {
+            }
+            elseif ($geofences != 'all' && $guard != 'all') {
 
 
                 // Confirm the guard is assigned to the selected geofence
@@ -2183,7 +2230,8 @@ class IncidenceController extends Controller
             if ($data->isEmpty()) {
                 return 'No records found';
             }
-        } else {
+        }
+        else {
 
             if ($request->client == 'all') {
                 if (empty($attend)) {
@@ -2220,7 +2268,8 @@ class IncidenceController extends Controller
                 if ($data->isEmpty()) {
                     return 'No records found';
                 }
-            } elseif ($request->geofences == 'all') {
+            }
+            elseif ($request->geofences == 'all') {
                 // dd('when geo is all');
 
                 $userIds = SiteAssign::where('company_id', $user->company_id)
@@ -2251,7 +2300,8 @@ class IncidenceController extends Controller
                 if ($data->isEmpty()) {
                     return 'No records found';
                 }
-            } elseif ($geofences != 'all' && $guard == 'all') {
+            }
+            elseif ($geofences != 'all' && $guard == 'all') {
                 $userIds = SiteAssign::where('site_id', $request->geofences)
                     ->pluck('user_id')
                     ->toArray();
@@ -2275,7 +2325,8 @@ class IncidenceController extends Controller
                 if ($data->isEmpty()) {
                     return 'No records found';
                 }
-            } elseif ($geofences != 'all' && $guard != 'all') {
+            }
+            elseif ($geofences != 'all' && $guard != 'all') {
 
                 // Confirm the guard is assigned to the selected geofence
                 $userSiteAssignment = SiteAssign::where('user_id', $guard)
@@ -2373,7 +2424,8 @@ class IncidenceController extends Controller
             if ($client == 'all') {
                 $siteArray = SiteDetails::whereIn('client_id', $client_ids)->pluck('id')->toArray();
                 $userIds = SiteAssign::whereIn('client_id', $client_ids)->pluck('user_id')->toArray();
-            } else {
+            }
+            else {
 
                 $siteArray = SiteDetails::where('client_id', $client)->pluck('id')->toArray();
                 $userIds = SiteAssign::where('client_id', $client)->pluck('user_id')->toArray();
@@ -2385,10 +2437,10 @@ class IncidenceController extends Controller
             $supervisorIds = Users::where([['users.company_id', '=', $user->company_id], ['users.role_id', '=', 2]])
                 ->leftJoin('site_assign as site', 'users.id', '=', 'site.user_id')
                 ->where(function ($query) use ($siteArray) {
-                    foreach ($siteArray as $siteId) {
-                        $query->orWhereRaw('JSON_CONTAINS(site.site_id, ?)', [json_encode([$siteId])]);
-                    }
-                })->pluck('site.user_id')->toArray();
+                foreach ($siteArray as $siteId) {
+                    $query->orWhereRaw('JSON_CONTAINS(site.site_id, ?)', [json_encode([$siteId])]);
+                }
+            })->pluck('site.user_id')->toArray();
 
 
             // dd($userIds, "user ids");
@@ -2399,7 +2451,7 @@ class IncidenceController extends Controller
             // dump($siteQuery->pluck('user_name')->toArray());
             $siteQuery->when(
                 $geofences !== 'all' && $geofences !== null,
-                fn($query) => $query->where('site_id', $geofences)
+            fn($query) => $query->where('site_id', $geofences)
 
             )
                 ->whereIn('user_id', $userIds);
@@ -2413,8 +2465,9 @@ class IncidenceController extends Controller
                     ->whereIn('attendance.user_id', $userIds)
                     ->get();
 
-                // dd($data->pluck('client_name')->toArray());
-            } elseif ($geofences == 'all') {
+            // dd($data->pluck('client_name')->toArray());
+            }
+            elseif ($geofences == 'all') {
                 // Case 2: All sites for a specific client
                 $userIds = SiteAssign::where('company_id', $user->company_id)
                     ->where('client_id', $client)
@@ -2423,7 +2476,8 @@ class IncidenceController extends Controller
                 $data = $attendanceQuery
                     ->whereIn('attendance.user_id', $userIds)
                     ->get();
-            } elseif ($guard == 'all') {
+            }
+            elseif ($guard == 'all') {
                 // Case 3: All guards for a specific site
                 $userIds = SiteAssign::where('company_id', $user->company_id)
                     ->where('site_id', $geofences)
@@ -2432,24 +2486,26 @@ class IncidenceController extends Controller
                 $data = $attendanceQuery
                     ->whereIn('attendance.user_id', $userIds)
                     ->get();
-            } elseif ($guard != 'all') {
+            }
+            elseif ($guard != 'all') {
                 // Case 4: Specific guard for a specific site
                 $data = $attendanceQuery
                     ->where('attendance.user_id', $guard)
                     ->get();
             }
-        } else if ($user->role_id == 2) {
+        }
+        else if ($user->role_id == 2) {
 
             // dump('the role id is 2');
             $siteIds = $user->role_id == 2
-                ? SiteAssign::where('user_id', $user->id)
-                    ->pluck('site_id')
-                    ->map(function ($item) {
-                        return is_string($item) ? json_decode($item, true) : $item;
-                    })
-                    ->flatten()
-                    ->unique()
-                    ->values()
+                ?SiteAssign::where('user_id', $user->id)
+                ->pluck('site_id')
+                ->map(function ($item) {
+                return is_string($item) ? json_decode($item, true) : $item;
+            })
+                ->flatten()
+                ->unique()
+                ->values()
                 : collect();
             // dump($siteIds, "siteIds arr");
 
@@ -2460,18 +2516,21 @@ class IncidenceController extends Controller
                 // will not be applicable in the supervisor login
                 $site_UserIds = $site_UserIds_query->pluck('user_id');
                 $data = $attendanceQuery->where('attendance.user_id', $site_UserIds)->get();
-            } else if ($client !== 'all' && $geofences == 'all') {
+            }
+            else if ($client !== 'all' && $geofences == 'all') {
                 // $attendanceQuery->whereIn('user_id', $site_UserIds_query->pluck('user_id'));
                 $site_UserIds = $site_UserIds_query->pluck('user_id');
                 // dump($client, $geofences, $site_UserIds, "client");
                 $data = $attendanceQuery->whereIn('attendance.user_id', $site_UserIds)->get();
-                // dd($data->pluck('user_id')->toArray() , "daata");
-            } else if ($client !== 'all' && $geofences !== 'all' && $guard == 'all') {
+            // dd($data->pluck('user_id')->toArray() , "daata");
+            }
+            else if ($client !== 'all' && $geofences !== 'all' && $guard == 'all') {
                 // dump('in 3rd' , $geofences , );
                 $site_UserIds = $site_UserIds_query->where('site_id', $geofences)->pluck('user_id');
                 // dump( $site_UserIds , "site user ids");
                 $data = $attendanceQuery->whereIn('attendance.user_id', $site_UserIds)->get();
-            } elseif ($geofences != 'all' && $guard != 'all') {
+            }
+            elseif ($geofences != 'all' && $guard != 'all') {
                 // Case 3: Single site, single employee
                 // dd($guard , "guard");
                 // dd('in eles if last');
@@ -2482,14 +2541,16 @@ class IncidenceController extends Controller
                 $siteDetails = SiteDetails::find($geofences);
                 $site = $siteDetails ? $siteDetails->site_name : 'Unknown Site';
             }
-        } else {
+        }
+        else {
             // Other roles (e.g., role ID != 2)
             if ($client == 'all') {
                 // Case 1: All clients
                 // dump('cli is all');
                 $data = $attendanceQuery
                     ->get();
-            } elseif ($geofences == 'all') {
+            }
+            elseif ($geofences == 'all') {
                 // Case 2: All sites for a specific client
                 $userIds = SiteAssign::where('company_id', $user->company_id)
                     ->where('client_id', $client)
@@ -2498,7 +2559,8 @@ class IncidenceController extends Controller
                 $data = $attendanceQuery
                     ->whereIn('attendance.user_id', $userIds)
                     ->get();
-            } elseif ($guard == 'all') {
+            }
+            elseif ($guard == 'all') {
                 // Case 3: All guards for a specific site
                 // dump($geofences, "geofences", $guard, "ono");
                 $userIds = SiteAssign::where('company_id', $user->company_id)
@@ -2508,7 +2570,8 @@ class IncidenceController extends Controller
                 $data = $attendanceQuery
                     ->whereIn('attendance.user_id', $userIds)
                     ->get();
-            } elseif ($guard != 'all') {
+            }
+            elseif ($guard != 'all') {
                 // Case 4: Specific guard for a specific site
                 $data = $attendanceQuery
                     ->where('attendance.user_id', $guard)
@@ -2531,7 +2594,8 @@ class IncidenceController extends Controller
             $siteName = SiteDetails::where('company_id', $user->company_id)->where('id', $geofences)->first();
 
             $siteName = ($client !== 'all' && $geofences !== 'all') ? $siteName->name : 'All';
-        } else {
+        }
+        else {
             $clientName = '';
             $siteName = SiteDetails::where('company_id', $user->company_id)->where('id', $geofences)->first();
 
@@ -2562,7 +2626,7 @@ class IncidenceController extends Controller
         $endDate = $dateRange['end'];
         $startDatee = date('d-m-Y', strtotime($startDate));
 
-        $daysCount = (int) $interval->format('%a') + 1;
+        $daysCount = (int)$interval->format('%a') + 1;
         $reportMonth = date('d-m-Y', strtotime($startDate)) . " to " . date('d-m-Y', strtotime($endDate));
         $clientName = "";
 
@@ -2573,11 +2637,13 @@ class IncidenceController extends Controller
 
             if ($request->supervisorSelect == "all") {
                 $site_UserIds = SiteAssign::where('company_id', $user->company_id)->where('role_id', 2)->get()->pluck('user_id')->unique();
-            } else {
+            }
+            else {
                 // dump('here');
                 $site_UserIds = SiteAssign::where('company_id', $user->company_id)->where('user_id', $request->supervisorSelect)->where('role_id', 2)->get()->pluck('user_id')->unique();
             }
-        } else if ($user->role_id == 7) {
+        }
+        else if ($user->role_id == 7) {
             $siteQuery = SiteAssign::where('company_id', $user->company_id);
 
 
@@ -2595,17 +2661,18 @@ class IncidenceController extends Controller
                 $supervisorIds = Users::where([['users.company_id', '=', $user->company_id], ['users.role_id', '=', 2]])
                     ->leftJoin('site_assign as site', 'users.id', '=', 'site.user_id')
                     ->where(function ($query) use ($siteArray) {
-                        foreach ($siteArray as $siteId) {
-                            $query->orWhereRaw('JSON_CONTAINS(site.site_id, ?)', [json_encode([$siteId])]);
-                        }
-                    })->pluck('site.user_id')->toArray();
+                    foreach ($siteArray as $siteId) {
+                        $query->orWhereRaw('JSON_CONTAINS(site.site_id, ?)', [json_encode([$siteId])]);
+                    }
+                })->pluck('site.user_id')->toArray();
                 $site_UserIds = $supervisorIds;
 
-                //    dd($site_UserIds, $client_ids, "ids");
-            } else {
+            //    dd($site_UserIds, $client_ids, "ids");
+            }
+            else {
                 $site_UserIds = SiteAssign::where('company_id', $user->company_id)->where('user_id', $request->supervisorSelect)->where('role_id', 2)->get()->pluck('user_id')->unique();
 
-                // dump('in else', $site_UserIds, $request->supervisorSelect);
+            // dump('in else', $site_UserIds, $request->supervisorSelect);
             }
 
 
@@ -2621,13 +2688,13 @@ class IncidenceController extends Controller
             // dump($siteQuery->pluck('user_name')->toArray());
             $siteQuery->when(
                 $geofences !== 'all' && $geofences !== null,
-                fn($query) => $query->where('site_id', $geofences)
+            fn($query) => $query->where('site_id', $geofences)
 
             )
                 ->whereIn('user_id', $site_UserIds);
 
-            // dd($siteQuery->pluck('client_id')->toArray());
-            // dd($siteQuery->pluck('user_id')->toArray());
+        // dd($siteQuery->pluck('client_id')->toArray());
+        // dd($siteQuery->pluck('user_id')->toArray());
 
 
         }
@@ -2641,9 +2708,9 @@ class IncidenceController extends Controller
             ->whereIn('users.id', $site_UserIds)
             ->where('users.role_id', 2)
             ->leftJoin('attendance', function ($join) use ($startDate, $endDate) {
-                $join->on('users.id', '=', 'attendance.user_id')
-                    ->whereBetween('attendance.dateFormat', [$startDate, $endDate]);
-            })
+            $join->on('users.id', '=', 'attendance.user_id')
+                ->whereBetween('attendance.dateFormat', [$startDate, $endDate]);
+        })
             ->select('users.name as name', 'users.id as user_id', 'attendance.dateFormat as date', 'attendance.site_name as site_name', 'attendance.duration_for_calc as duration', 'attendance.entry_time', 'attendance.exit_date_time', 'attendance.gpsTime')
             ->orderBy('name');
 
@@ -2653,13 +2720,13 @@ class IncidenceController extends Controller
 
         $names = $test->groupBy(['user_id', 'name', 'date', 'site_name'])
             ->get()->mapToGroups(function ($item) {
-                return [$item['user_id'] => $item['name']];
-            })->toArray();
+            return [$item['user_id'] => $item['name']];
+        })->toArray();
 
         $sites = $test->groupBy(['user_id', 'name', 'date', 'site_name'])
             ->get()->mapToGroups(function ($item) {
-                return [$item['user_id'] => $item['site_name']];
-            })->toArray();
+            return [$item['user_id'] => $item['site_name']];
+        })->toArray();
 
         // dd($sites , "sites");
         // $hours = $test->groupBy(['user_id', 'duration', 'date'])
@@ -2686,8 +2753,8 @@ class IncidenceController extends Controller
             // dump('when supervisor select is all', $request->supervisorSelect);
             $data = $test->groupBy(['user_id', 'name', 'date', 'site_name'])
                 ->get()->mapToGroups(function ($item) {
-                    return [$item['user_id'] => $item['date']];
-                })->toArray();
+                return [$item['user_id'] => $item['date']];
+            })->toArray();
 
             // dump($data ,'data 1');
             // dump($test->get() , 'test data 1');
@@ -2700,10 +2767,11 @@ class IncidenceController extends Controller
 
             $attendCount = $data1->groupBy(['user_id', 'dateFormat'])
                 ->get()->mapToGroups(function ($item) {
-                    return [$item['dateFormat'] => $item['user_id']];
-                })->toArray();
+                return [$item['dateFormat'] => $item['user_id']];
+            })->toArray();
             ksort($attendCount);
-        } else {
+        }
+        else {
             // dump('when clietn is all');
             // dd($test->get() ,"test data");
             // $data = $test->groupBy(['user_id', 'name', 'date', 'site_name'])
@@ -2721,19 +2789,19 @@ class IncidenceController extends Controller
             $data = $test->groupBy(['user_id', 'name', 'date', 'site_name'])
                 ->get()
                 ->mapToGroups(function ($item) {
-                    // Create an array with all the required information
-                    $attendanceInfo = [
-                        'date' => $item['date'],
-                        'site_name' => $item['site_name'],
-                        'entry_time' => $item['entry_time'] ?? null,
-                        'exit_date_time' => $item['exit_date_time'] ?? null,
-                        'time_difference' => $item['duration'] ?? null,
-                        'gpsTime' => $item['gpsTime'] ?? null
-                    ];
+                // Create an array with all the required information
+                $attendanceInfo = [
+                    'date' => $item['date'],
+                    'site_name' => $item['site_name'],
+                    'entry_time' => $item['entry_time'] ?? null,
+                    'exit_date_time' => $item['exit_date_time'] ?? null,
+                    'time_difference' => $item['duration'] ?? null,
+                    'gpsTime' => $item['gpsTime'] ?? null
+                ];
 
-                    // Return with user_id as key and attendance info as value
-                    return [$item['user_id'] => $attendanceInfo];
-                });
+                // Return with user_id as key and attendance info as value
+                return [$item['user_id'] => $attendanceInfo];
+            });
             $attendance = Attendance::where('user_id', $request->supervisorSelect)->whereBetween('dateFormat', [$startDate, $endDate])
                 ->selectRaw('sum(TIME_TO_SEC(time_calculation)) as actualTime, sum(TIME_TO_SEC(gpsTime)) as gpsTime')->first();
             $actualTime = $attendance->actualTime;
@@ -2775,7 +2843,7 @@ class IncidenceController extends Controller
         foreach ($supervisorAssignedSites as $assign) {
             $siteIds = is_string($assign->site_id)
                 ? json_decode($assign->site_id, true)
-                : (array) $assign->site_id;
+                : (array)$assign->site_id;
 
             if (empty($siteIds))
                 continue;
@@ -2845,7 +2913,8 @@ class IncidenceController extends Controller
                 'generatedOn' => $this->generatedOn
 
             ])->render();
-        } else {
+        }
+        else {
 
             // dd($data , "data");
 
@@ -2887,7 +2956,7 @@ class IncidenceController extends Controller
                 ->with('guardId', $request->supervisorSelect)
                 ->with('guardId', $request->supervisorSelect)
                 ->render();
-            // dd($modaldata , "modaldata");
+        // dd($modaldata , "modaldata");
         }
 
 
@@ -2918,8 +2987,9 @@ class IncidenceController extends Controller
         if ($client !== 'all' && $geofences == 'all') {
             $clientDetails = ClientDetails::find($client);
             $siteInfo['client']['name'] = $clientDetails->name ?? 'Unknown Client';
-            // dump($siteInfo, "siteInfo");
-        } else {
+        // dump($siteInfo, "siteInfo");
+        }
+        else {
             $clientDetails = ClientDetails::find($client);
             $site = SiteAssign::where('site_id', $geofences)->first();
             // dd($site->site_name , "site");
@@ -2934,7 +3004,7 @@ class IncidenceController extends Controller
 
         // Fetch company and site details
         $companyName = CompanyDetails::where('id', $user->company_id)->first();
-        $siteDetails = ($site !== 'all') ? SiteDetails::where('id', $site)->first() : null;
+        $siteDetails = ($site !== 'all') ?SiteDetails::where('id', $site)->first() : null;
 
         // Prepare date range
         $fromDate = new DateTime($startDate);
@@ -2952,7 +3022,8 @@ class IncidenceController extends Controller
                 ->when($client != 'all' && $geofences == 'all', fn($query) => $query->where('client_id', $client))
                 ->when($client != 'all' && $geofences != 'all', fn($query) => $query->where('site_id', $geofences))
                 ->orderBy('user_name');
-        } else if ($user->role_id == 7) {
+        }
+        else if ($user->role_id == 7) {
             $siteQuery = SiteAssign::where('company_id', $user->company_id);
 
             // dump('in else if');
@@ -2966,7 +3037,8 @@ class IncidenceController extends Controller
             if ($client == 'all') {
                 $siteArray = SiteDetails::whereIn('client_id', $client_ids)->pluck('id')->toArray();
                 $userIds = SiteAssign::whereIn('client_id', $client_ids)->pluck('user_id')->toArray();
-            } else {
+            }
+            else {
 
                 $siteArray = SiteDetails::where('client_id', $client)->pluck('id')->toArray();
                 $userIds = SiteAssign::where('client_id', $client)->pluck('user_id')->toArray();
@@ -2978,10 +3050,10 @@ class IncidenceController extends Controller
             $supervisorIds = Users::where([['users.company_id', '=', $user->company_id], ['users.role_id', '=', 2]])
                 ->leftJoin('site_assign as site', 'users.id', '=', 'site.user_id')
                 ->where(function ($query) use ($siteArray) {
-                    foreach ($siteArray as $siteId) {
-                        $query->orWhereRaw('JSON_CONTAINS(site.site_id, ?)', [json_encode([$siteId])]);
-                    }
-                })->pluck('site.user_id')->toArray();
+                foreach ($siteArray as $siteId) {
+                    $query->orWhereRaw('JSON_CONTAINS(site.site_id, ?)', [json_encode([$siteId])]);
+                }
+            })->pluck('site.user_id')->toArray();
 
 
             // dd($userIds, "user ids");
@@ -2991,7 +3063,7 @@ class IncidenceController extends Controller
             // dump($siteQuery->pluck('user_name')->toArray());
             $siteQuery->when(
                 $geofences !== 'all' && $geofences !== null,
-                fn($query) => $query->where('site_id', $geofences)
+            fn($query) => $query->where('site_id', $geofences)
 
             )
                 ->whereIn('user_id', $site_UserIds);
@@ -3007,7 +3079,8 @@ class IncidenceController extends Controller
                 // dump($client, $geofences, "client");
                 // $attendanceQuery->whereIn('user_id', $site_UserIds_query->pluck('user_id'));
                 $site_UserIds = $site_UserIds_query->where('client_id', $client)->pluck('user_id');
-            } else if ($client !== 'all' && $geofences !== 'all') {
+            }
+            else if ($client !== 'all' && $geofences !== 'all') {
                 $site_UserIds = $site_UserIds_query->where('site_id', $geofences)->pluck('user_id');
             }
 
@@ -3021,18 +3094,19 @@ class IncidenceController extends Controller
                 // dd('stop');
                 return 'No records found';
             }
-        } else {
+        }
+        else {
 
             // dump('the role id is 2');
             $siteIds = $user->role_id == 2
-                ? SiteAssign::where('user_id', $user->id)
-                    ->pluck('site_id')
-                    ->map(function ($item) {
-                        return is_string($item) ? json_decode($item, true) : $item;
-                    })
-                    ->flatten()
-                    ->unique()
-                    ->values()
+                ?SiteAssign::where('user_id', $user->id)
+                ->pluck('site_id')
+                ->map(function ($item) {
+                return is_string($item) ? json_decode($item, true) : $item;
+            })
+                ->flatten()
+                ->unique()
+                ->values()
                 : collect();
             // dump($siteIds, "siteIds arr");
 
@@ -3041,11 +3115,13 @@ class IncidenceController extends Controller
 
             if ($client == 'all') {
                 $site_UserIds = $site_UserIds_query->pluck('user_id');
-            } else if ($client !== 'all' && $geofences == 'all') {
+            }
+            else if ($client !== 'all' && $geofences == 'all') {
                 // dump($client, $geofences, "client");
                 // $attendanceQuery->whereIn('user_id', $site_UserIds_query->pluck('user_id'));
                 $site_UserIds = $site_UserIds_query->pluck('user_id');
-            } else if ($client !== 'all' && $geofences !== 'all') {
+            }
+            else if ($client !== 'all' && $geofences !== 'all') {
                 $site_UserIds = $site_UserIds_query->where('site_id', $geofences)->pluck('user_id');
             }
 
@@ -3098,12 +3174,12 @@ class IncidenceController extends Controller
             $absentDays = $totalWorkingDays - $presentDays;
 
             return [
-                'user_name' => $guard->user_name,
-                'user_id' => $guard->user_id,
-                'totalWorkingDays' => $totalWorkingDays,
-                'daysWorked' => $presentDays,
-                'absentDays' => $absentDays,
-                'weekOffCount' => count($weekOffDates),
+            'user_name' => $guard->user_name,
+            'user_id' => $guard->user_id,
+            'totalWorkingDays' => $totalWorkingDays,
+            'daysWorked' => $presentDays,
+            'absentDays' => $absentDays,
+            'weekOffCount' => count($weekOffDates),
             ];
         });
 
@@ -3150,46 +3226,56 @@ class IncidenceController extends Controller
         if ($user->role_id == 1) {
             if ($client === "all") {
                 $userIds = Users::where('company_id', $user->company_id)->pluck('id')->toArray();
-            } elseif ($geofences === "all") {
+            }
+            elseif ($geofences === "all") {
                 $userIds = SiteAssign::where('client_id', $client)->pluck('user_id')->toArray();
-            } elseif ($guard === "all") {
+            }
+            elseif ($guard === "all") {
                 $userIds = SiteAssign::where('site_id', $geofences)->pluck('user_id')->toArray();
-            } else {
+            }
+            else {
                 $userIds = [$guard];
             }
-        } elseif ($user->role_id == 7) {
+        }
+        elseif ($user->role_id == 7) {
             $siteAssigned = SiteAssign::where('user_id', $user->id)->first();
             $client_ids = json_decode($siteAssigned['site_id'] ?? '[]', true);
 
             if ($client === "all") {
                 $siteArray = SiteDetails::whereIn('client_id', $client_ids)->pluck('id')->toArray();
                 $userIds = SiteAssign::whereIn('client_id', $client_ids)->pluck('user_id')->toArray();
-            } elseif ($geofences === "all") {
+            }
+            elseif ($geofences === "all") {
                 $userIds = SiteAssign::where('client_id', $client)->pluck('user_id')->toArray();
-            } elseif ($guard === "all") {
+            }
+            elseif ($guard === "all") {
                 $userIds = SiteAssign::where('site_id', $geofences)->pluck('user_id')->toArray();
-            } else {
+            }
+            else {
                 $userIds = [$guard];
             }
-        } else {
+        }
+        else {
             $requestData['client'] = null;
 
             $siteIds = $user->role_id == 2
-                ? SiteAssign::where('user_id', $user->id)
-                    ->pluck('site_id')
-                    ->map(fn($item) => is_string($item) ? json_decode($item, true) : $item)
-                    ->flatten()
-                    ->unique()
-                    ->values()
+                ?SiteAssign::where('user_id', $user->id)
+                ->pluck('site_id')
+                ->map(fn($item) => is_string($item) ? json_decode($item, true) : $item)
+                ->flatten()
+                ->unique()
+                ->values()
                 : collect();
 
             $site_UserIds_query = SiteAssign::where('company_id', $user->company_id)->whereIn('site_id', $siteIds);
 
             if ($geofences === 'all') {
                 $userIds = $site_UserIds_query->pluck('user_id');
-            } elseif ($geofences !== 'all' && $guard === 'all') {
+            }
+            elseif ($geofences !== 'all' && $guard === 'all') {
                 $userIds = $site_UserIds_query->where('site_id', $geofences)->pluck('user_id');
-            } else {
+            }
+            else {
                 $userIds = [$guard];
             }
         }
@@ -3259,12 +3345,12 @@ class IncidenceController extends Controller
         $requestData['client'] = null;
 
         $siteIds = $user->role_id == 2
-            ? SiteAssign::where('user_id', $user->id)
-                ->pluck('site_id')
-                ->map(fn($item) => is_string($item) ? json_decode($item, true) : $item)
-                ->flatten()
-                ->unique()
-                ->values()
+            ?SiteAssign::where('user_id', $user->id)
+            ->pluck('site_id')
+            ->map(fn($item) => is_string($item) ? json_decode($item, true) : $item)
+            ->flatten()
+            ->unique()
+            ->values()
             : collect();
 
 
@@ -3347,19 +3433,22 @@ class IncidenceController extends Controller
                 $userIds = Users::where([['users.company_id', '=', $user->company_id], ['users.role_id', '=', 2]])
                     ->leftJoin('site_assign as site', 'users.id', '=', 'site.user_id')
                     ->where(function ($query) use ($siteArray) {
-                        foreach ($siteArray as $siteId) {
-                            $query->orWhereRaw('JSON_CONTAINS(site.site_id, ?)', [json_encode([$siteId])]);
-                        }
-                    })->pluck('site.user_id')->toArray();
-            } else {
+                    foreach ($siteArray as $siteId) {
+                        $query->orWhereRaw('JSON_CONTAINS(site.site_id, ?)', [json_encode([$siteId])]);
+                    }
+                })->pluck('site.user_id')->toArray();
+            }
+            else {
 
                 $userIds = $request->supervisorSelect;
             }
-        } else {
+        }
+        else {
             // for role id 1
             if ($request->supervisorSelect == "all") {
                 $userIds = SiteAssign::where('company_id', $user->company_id)->where('role_id', 2)->get()->pluck('user_id')->unique();
-            } else {
+            }
+            else {
                 // dump('here');
                 $userIds = $request->supervisorSelect;
             }
@@ -3370,10 +3459,10 @@ class IncidenceController extends Controller
             ->leftJoin('site_assign as site', 'tour_diary.user_id', '=', 'site.user_id')
             ->leftJoin('client_details as site_clients', 'site.client_id', '=', 'site_clients.id')
             ->when($request->supervisorSelect !== 'all', function ($query) use ($request) {
-                return $query->where('tour_diary.user_id', $request->supervisorSelect);
-            }, function ($query) use ($userIds) {
-                return $query->whereIn('tour_diary.user_id', $userIds);
-            })
+            return $query->where('tour_diary.user_id', $request->supervisorSelect);
+        }, function ($query) use ($userIds) {
+            return $query->whereIn('tour_diary.user_id', $userIds);
+        })
             ->whereBetween('tour_diary.start_time', [$startDate . ' 00:00:00', $endDate . ' 23:59:59'])
             ->orderBy('tour_diary.start_time', 'ASC')
             ->selectRaw('
@@ -3441,7 +3530,8 @@ class IncidenceController extends Controller
         if ($request->adminSelect == 'all') {
             // $userIds = Users::where('company_id', $user->company_id)->where('role_id', $user->role_id)->pluck('id')->toArray();
             $userIds = SiteAssign::where('company_id', $user->company_id)->where('role_id', 7)->get()->pluck('user_id')->unique();
-        } else {
+        }
+        else {
             $userIds = $request->adminSelect;
         }
         // dd($userIds, "userIds");
@@ -3453,10 +3543,10 @@ class IncidenceController extends Controller
             ->leftJoin('site_assign as site', 'tour_diary.user_id', '=', 'site.user_id')
             ->leftJoin('client_details as site_clients', 'site.client_id', '=', 'site_clients.id')
             ->when($request->supervisorSelect !== 'all', function ($query) use ($request) {
-                return $query->where('tour_diary.user_id', $request->supervisorSelect);
-            }, function ($query) use ($userIds) {
-                return $query->whereIn('tour_diary.user_id', $userIds);
-            })
+            return $query->where('tour_diary.user_id', $request->supervisorSelect);
+        }, function ($query) use ($userIds) {
+            return $query->whereIn('tour_diary.user_id', $userIds);
+        })
             ->whereBetween('tour_diary.start_time', [$startDate . ' 00:00:00', $endDate . ' 23:59:59'])
             ->orderBy('tour_diary.start_time', 'ASC')
             ->selectRaw('
@@ -3533,14 +3623,17 @@ class IncidenceController extends Controller
         if ($request->client == "all" && ($request->geofences == null || $request->geofences == 'all')) {
             // Case 1: Client is "all" and geofences are null or "all"
             $guard = 'all';
-        } elseif ($request->client != "all" && ($request->geofences == null || $request->geofences == 'all')) {
+        }
+        elseif ($request->client != "all" && ($request->geofences == null || $request->geofences == 'all')) {
             // Case 2: Single client and geofences are "all"
             $guard = 'all';
-        } elseif ($request->client != "all" && $request->geofences != null && $request->geofences != 'all') {
+        }
+        elseif ($request->client != "all" && $request->geofences != null && $request->geofences != 'all') {
             // Case 3: Single client and single geofence (site)
             $guard = isset($_GET['guard']) ? $_GET['guard'] : 'none';
-            // dd($guard , "guard");
-        } else {
+        // dd($guard , "guard");
+        }
+        else {
             // Fallback case
             $guard = isset($_GET['guard']) ? $_GET['guard'] : '';
         }
@@ -3551,14 +3644,16 @@ class IncidenceController extends Controller
         if ($attendanceSubType == 'EmployeeAttendanceReport') {
             // dump($attendanceSubType);
             $subType = 'Employee Attendance Report';
-            // dump($subType , 1417);
-            // $subType = $attendanceSubType;
-        } else if ($attendanceSubType == 'EmployeeAttendanceReportwithHours') {
+        // dump($subType , 1417);
+        // $subType = $attendanceSubType;
+        }
+        else if ($attendanceSubType == 'EmployeeAttendanceReportwithHours') {
             $subType = 'Employee Attendance Report With Hours';
-            // dump($subType , 1417);
-        } else {
+        // dump($subType , 1417);
+        }
+        else {
             $subType = 'Employee Attendance Report With Site';
-            // dump($subType , 1421);
+        // dump($subType , 1421);
         }
 
         $client = $request->client;
@@ -3599,7 +3694,7 @@ class IncidenceController extends Controller
             $datetime1 = new DateTime($startDate);
             $datetime2 = new DateTime($endDate);
             $interval = $datetime1->diff($datetime2);
-            $daysCount = (int) $interval->format('%a');
+            $daysCount = (int)$interval->format('%a');
             $daysCount = $daysCount + 1;
             $reportMonth = date('d-m-Y', strtotime($startDate)) . " to " . date('d-m-Y', strtotime($endDate));
             $geoName = DB::table('incidence_details')->where('site_id', '=', $geofences)->first();
@@ -3618,12 +3713,13 @@ class IncidenceController extends Controller
                 // dump($client , $geofences  ,"data about client and geofences");
                 if ($client == 'all' || $client != 'all' && $geofences == 'all') {
                     $siteName = 'All';
-                    // dump($companyName , "companyName");
+                // dump($companyName , "companyName");
 
-                } else {
+                }
+                else {
                     $site = SiteAssign::where('site_id', $geofences)->first();
                     $siteName = $site->site_name;
-                    // dump($siteName , $geofences , $companyName , "company data");
+                // dump($siteName , $geofences , $companyName , "company data");
 
                 }
 
@@ -3632,16 +3728,18 @@ class IncidenceController extends Controller
                         // ->join('site_details as site', 'site.id', '=', 'inci.site_id')
                         ->where('inci.company_id', $user->company_id)
                         ->whereBetween('inci.dateFormat', [$startDate, $endDate]);
-                } elseif ($geofences == 'all') {
+                }
+                elseif ($geofences == 'all') {
                     // dd($request->client,$startDate,$endDate);
                     $IncidenceDetails = DB::table('incidence_details as inci')
                         // ->join('site_details as site', 'site.id', '=', 'inci.site_id')
                         ->where('inci.client_id', $request->client)
                         ->whereBetween('inci.dateFormat', [$startDate, $endDate]);
-                    //->where('inci.site_id', '=', $geofences)
-                    // ->whereBetween('dateFormat', [$startDate, $endDate])->get();
+                //->where('inci.site_id', '=', $geofences)
+                // ->whereBetween('dateFormat', [$startDate, $endDate])->get();
 
-                } else {
+                }
+                else {
                     $IncidenceDetails = DB::table('incidence_details')->where('site_id', '=', $geofences);
                 }
 
@@ -3652,8 +3750,9 @@ class IncidenceController extends Controller
                     if ($priority == 'All') {
 
                         $IncidenceDetails = $IncidenceDetails;
-                        // dd($startDate, $endDate, $IncidenceDetails);
-                    } else {
+                    // dd($startDate, $endDate, $IncidenceDetails);
+                    }
+                    else {
 
                         $IncidenceDetails = $IncidenceDetails->where('inci.priority', $priority);
                     }
@@ -3670,10 +3769,12 @@ class IncidenceController extends Controller
                         ->with('companyName', $companyName)
                         ->render();
                     echo $modaldata;
-                } else {
+                }
+                else {
                     return "error";
                 }
-            } else {
+            }
+            else {
                 // dd('When In Incidence Report , subType is set to  Incidence Summary report');
                 // dd($request);
                 if ($geofences == 'all') {
@@ -3683,14 +3784,16 @@ class IncidenceController extends Controller
                             // ->join('site_details as site', 'site.id', '=', 'inci.site_id')
                             ->where('inci.company_id', $user->company_id)
                             ->whereBetween('dateFormat', [$startDate, $endDate]);
-                        // dd($IncidenceDetails->get());
-                    } else {
+                    // dd($IncidenceDetails->get());
+                    }
+                    else {
                         $IncidenceDetails = DB::table('incidence_details as inci')
                             ->join('site_assign as site', 'site.id', '=', 'inci.site_id')
                             ->where('site.client_id', $request->client)
                             ->whereBetween('dateFormat', [$startDate, $endDate]);
                     }
-                } else {
+                }
+                else {
                     $IncidenceDetails = DB::table('incidence_details')->where('site_id', '=', $geofences)->whereBetween('dateFormat', [$startDate, $endDate]);
                 }
 
@@ -3708,11 +3811,12 @@ class IncidenceController extends Controller
                     ->with('data', $IncidenceDetails)
                     ->with('geoName', $geoName)->with('client', $request->client)->with('geofences', $geofences)->with('incidenceSubType', $incidenceSubType)->with('toDate', $endDate)->with('daysCount', $daysCount)->with('fromDate', $startDate)->render();
                 echo $modaldata;
-                //} else {
-                //     return "error";
-                //}
+            //} else {
+            //     return "error";
+            //}
             }
-        } elseif ($type == 'visitor') {
+        }
+        elseif ($type == 'visitor') {
             $startDate = date('Y-m-d', strtotime($request->fromDate));
             $endDate = date('Y-m-d', strtotime($request->toDate));
             Log::info($user->name . ' view visitor report, User_id: ' . $user->id);
@@ -3724,10 +3828,12 @@ class IncidenceController extends Controller
                 if (count($VisitorDetails) > 0) {
                     $modaldata = view('reports/visitorDailyView')->with('VisitorDetails', $VisitorDetails)->with('geofences', $geofences)->with('fromDate', $startDate)->with('toDate', $endDate)->render();
                     echo $modaldata;
-                } else {
+                }
+                else {
                     return "error";
                 }
-            } else {
+            }
+            else {
 
                 $VisitorDetails = $VisitorDetails->where('site_id', '=', $geofences)->whereBetween('dateFormat', [$startDate, $endDate]);
                 $VisitorDetails = $VisitorDetails->get()->unique('date');
@@ -3735,11 +3841,13 @@ class IncidenceController extends Controller
                 if (count($VisitorDetails) > 0) {
                     $modaldata = view('reports/visitorReportCount')->with('VisitorDetails', $VisitorDetails)->with('geofences', $geofences)->with('fromDate', $startDate)->with('toDate', $endDate)->render();
                     echo $modaldata;
-                } else {
+                }
+                else {
                     return "error";
                 }
             }
-        } elseif ($type == 'tour') {
+        }
+        elseif ($type == 'tour') {
 
             Log::info($user->name . ' view tour report, User_id: ' . $user->id);
             $startDate = date('Y-m-d', strtotime($request->fromDate));
@@ -3747,7 +3855,7 @@ class IncidenceController extends Controller
             $datetime1 = new DateTime($startDate);
             $datetime2 = new DateTime($endDate);
             $interval = $datetime1->diff($datetime2);
-            $daysCount = (int) $interval->format('%a');
+            $daysCount = (int)$interval->format('%a');
             $daysCount = $daysCount + 1;
             $tourSubType = $request->tourSubType;
 
@@ -3762,7 +3870,8 @@ class IncidenceController extends Controller
                 if ($userId == 'all') {
                     $GuardTourLog = $GuardTourLog->where('site_id', $geofences);
                     $geo = SiteDetails::where('id', $geofences)->first();
-                } else {
+                }
+                else {
                     $attendance = Attendance::where('user_id', $userId)
                         ->where('dateFormat', $tourDate)
                         ->first();
@@ -3773,7 +3882,8 @@ class IncidenceController extends Controller
                             ->get()->toArray();
                         $geo = SiteDetails::where('id', $geofences)->first();
                         $GuardTourLog = $GuardTourLog->whereIn('id', $guardTour);
-                    } else {
+                    }
+                    else {
                         return "error";
                     }
                 }
@@ -3784,10 +3894,12 @@ class IncidenceController extends Controller
                 if (count($GuardTourLog) > 0) {
                     $modaldata = view('reports/tourDailyNew')->with('GuardTourLog', $GuardTourLog)->with('date', $date)->with('userId', $userId)->with('geo', $geofences)->with('geofences', $geofences)->with('tourDate', $tourDate)->with('tourDate', $tourDate)->with('subtype', $subtype)->render();
                     echo $modaldata;
-                } else {
+                }
+                else {
                     return "error";
                 }
-            } elseif ($request->tourSubType == 'tourDayWise') {
+            }
+            elseif ($request->tourSubType == 'tourDayWise') {
 
                 $reportMonth = $datetime1->format('d M Y') . " to " . $datetime2->format('d M Y');
                 $company = CompanyDetails::where('id', $user->company_id)->first();
@@ -3798,19 +3910,23 @@ class IncidenceController extends Controller
                     if (count($data) > 0) {
                         $modaldata = view('TourReport/tourDayWiseView')->with('data', $data)->with('site', $site)->with('dateRange', $reportMonth)->with('companyName', $companyName)->with('startDate', $startDate)->with('endDate', $endDate)->with('siteId', $geofences)->render();
                         echo $modaldata;
-                    } else {
+                    }
+                    else {
                         return "error";
                     }
-                } else {
+                }
+                else {
                     $data = GuardTourLog::where('guardId', $guard)->whereBetween('date', [$datetime1->format('Y-m-d'), $datetime2->format('Y-m-d')])->orderBy('date', 'ASC')->orderBy('tourName', 'ASC')->orderBy('round', 'ASC')->get();
                     if (count($data) > 0) {
                         $modaldata = view('TourReport/guardTourReportView')->with('data', $data)->with('site', $site)->with('dateRange', $reportMonth)->with('companyName', $companyName)->with('startDate', $startDate)->with('endDate', $endDate)->with('siteId', $geofences)->with('guard', $guard)->render();
                         echo $modaldata;
-                    } else {
+                    }
+                    else {
                         return "error";
                     }
                 }
-            } elseif ($request->tourSubType == 'guardTourReport') {
+            }
+            elseif ($request->tourSubType == 'guardTourReport') {
                 $guard = $request->guard;
                 $siteId = $request->geofences;
                 $reportMonth = $datetime1->format('d M Y') . " to " . $datetime2->format('d M Y');
@@ -3828,10 +3944,12 @@ class IncidenceController extends Controller
                         'endDate' => $endDate,
                         'guard' => $guard
                     ]);
-                } else {
+                }
+                else {
                     return "error";
                 }
-            } else {
+            }
+            else {
                 $GuardTourLog = DB::table('guard_tour');
                 // if ($guard == 'all') {
                 $GuardTourLog = $GuardTourLog->where('site_id', $geofences);
@@ -3857,11 +3975,13 @@ class IncidenceController extends Controller
 
                     $modaldata = view('reports/tourSummaryView')->with('GuardTourLog', $GuardTourLog)->with('userId', $guard)->with('geo', $geo)->with('geofences', $geofences)->with('startDate', $startDate)->with('endDate', $endDate)->with('daysCount', $daysCount)->render();
                     echo $modaldata;
-                } else {
+                }
+                else {
                     return "error";
                 }
             }
-        } elseif ($type == 'attendance') {
+        }
+        elseif ($type == 'attendance') {
 
             //dd($type);
             Log::info($user->name . ' view attendance report, User_id: ' . $user->id);
@@ -3870,7 +3990,7 @@ class IncidenceController extends Controller
             $datetime1 = new DateTime($startDate);
             $datetime2 = new DateTime($endDate);
             $interval = $datetime1->diff($datetime2);
-            $daysCount = (int) $interval->format('%a');
+            $daysCount = (int)$interval->format('%a');
             $daysCount = $daysCount + 1;
             $attendanceSubType = $request->attendanceSubType;
             // dd($attendanceSubType , "sub type");
@@ -3891,7 +4011,8 @@ class IncidenceController extends Controller
 
                 $result = $this->workingSummaryReportMethod($attendanceSubType, $client, $geofences, $startDate, $endDate, $user, $geofences, $generatedOn);
                 echo $result;
-            } elseif ($attendanceSubType == 'onSiteAttendanceReport') {
+            }
+            elseif ($attendanceSubType == 'onSiteAttendanceReport') {
                 // dd(2);
                 $geofencesNew = $request->geofences ?? 'all'; // Default to 'all' if null
                 $subType = 'Emergency Attendance Report';
@@ -3904,28 +4025,33 @@ class IncidenceController extends Controller
 
                 $result = $this->onSiteAttendanceMethod($attendanceSubType, $geofences, $client, $user, $startDate, $endDate, $dateRange);
                 echo $result;
-            } elseif ($attendanceSubType == 'forgetToMarkExit') {
+            }
+            elseif ($attendanceSubType == 'forgetToMarkExit') {
 
                 $result = $this->forgetToMarkExitMethod($attendanceSubType, $geofences, $client, $datetime1, $datetime2, $user, $startDate, $endDate, $companyName);
                 echo $result;
-            } elseif ($attendanceSubType == 'supervisorAttendance') {
+            }
+            elseif ($attendanceSubType == 'supervisorAttendance') {
 
                 $dateRange = [
                     'start' => $startDate, // Start date
-                    'end' => $endDate    // End date
+                    'end' => $endDate // End date
                 ];
                 $subType = 'Supervisor Attendance Report';
                 $result = $this->supervisorAttendanceReportMethod($subType, $interval, $daysCount, $user, $geofences, $client, $dateRange, $guard, $request, $currentDate);
-            } elseif ($attendanceSubType == 'EmployeeAttendanceReport' || $attendanceSubType == 'EmployeeAttendanceReportwithSite' || $attendanceSubType == 'EmployeeAttendanceReportwithHours') {
+            }
+            elseif ($attendanceSubType == 'EmployeeAttendanceReport' || $attendanceSubType == 'EmployeeAttendanceReportwithSite' || $attendanceSubType == 'EmployeeAttendanceReportwithHours') {
                 if ($client == 'all') {
                     $result = $this->allGuardReportMethod($user, $request, $startDate, $endDate, $attendanceSubType, $geofences, $guard, $type, $client, $subType, $dateRange, $generatedOn);
                     echo $result;
-                } else {
+                }
+                else {
 
                     if ($request->geofences == 'all') {
                         $result = $this->clientWiseReportMethod($request, $user, $startDate, $endDate, $geofences, $subType);
                         echo $result;
-                    } else if ($client != 'all' && $geofences != 'all' && $guard == 'all') {
+                    }
+                    else if ($client != 'all' && $geofences != 'all' && $guard == 'all') {
                         $result = $this->siteWiseReportMethod($client, $geofences, $guard, $request, $user, $startDate, $endDate, $attendanceSubType, $daysCount, $type, $subType);
                         echo $result;
                     }
@@ -3933,16 +4059,19 @@ class IncidenceController extends Controller
                         $result = $this->guardReportMethod($guard, $client, $startDate, $endDate, $user, $subType, $daysCount, $datetime1, $datetime2, $attendanceSubType);
                     }
                 }
-            } elseif ($attendanceSubType == 'absentReport') {
+            }
+            elseif ($attendanceSubType == 'absentReport') {
                 $result = $this->absentReportMethod($attendanceSubType, $user, $startDate, $endDate, $geofences, $guard, $request, $companyName, $client);
                 echo $result;
-            } elseif ($attendanceSubType == 'lateReport') {
+            }
+            elseif ($attendanceSubType == 'lateReport') {
                 $subType = 'Late Attendance Report';
                 $date = date('d-m-Y', strtotime($startDate)) . " to " . date('d-m-Y', strtotime($endDate));
 
                 $result = $this->generateLateAttendanceReport($request, $attendanceSubType, $geofences, $client, $user, $startDate, $endDate, $guard, $dateRange);
                 echo $result;
-            } elseif ($attendanceSubType == 'self') {
+            }
+            elseif ($attendanceSubType == 'self') {
                 // dd('name');
 
                 $subType = "Single Supervisor Attendance";
@@ -4011,7 +4140,7 @@ class IncidenceController extends Controller
                     $siteClientNames['client'][] = $clientNames;
 
 
-                    // dd($siteClientNames , "clientNames");
+                // dd($siteClientNames , "clientNames");
                 }
                 // dd($siteClientNames , "site clients names");
                 // dd($site_Ids, "site ids");
@@ -4039,7 +4168,8 @@ class IncidenceController extends Controller
                     ->with('flag', 'self')
                     ->render();
                 echo $modaldata;
-            } elseif ($type == 'visits') {
+            }
+            elseif ($type == 'visits') {
 
                 // dd($request->all());
                 $reportMonth = date('d-m-Y', strtotime($startDate)) . " to " . date('d-m-Y', strtotime($endDate));
@@ -4047,13 +4177,16 @@ class IncidenceController extends Controller
                 if ($request->client == "all") {
                     $data = ClientVisit::where('company_id', $user->company_id)->whereBetween('date', [$startDate, $endDate])
                         ->orderBy('date', 'ASC')->get();
-                } elseif ($request->geofences == 'all') {
+                }
+                elseif ($request->geofences == 'all') {
                     $data = ClientVisit::where('client_id', $request->client)->whereBetween('date', [$startDate, $endDate])
                         ->orderBy('date', 'ASC')->get();
-                } elseif ($request->guard == 'all') {
+                }
+                elseif ($request->guard == 'all') {
                     $data = ClientVisit::where('site_id', $request->geofences)->whereBetween('date', [$startDate, $endDate])
                         ->orderBy('date', 'ASC')->get();
-                } else {
+                }
+                else {
                     $data = ClientVisit::where('user_id', $request->guard)->whereBetween('date', [$startDate, $endDate])
                         ->orderBy('date', 'ASC')->get();
                 }
@@ -4075,11 +4208,13 @@ class IncidenceController extends Controller
                 if (count($data) > 0) {
                     $modaldata = view('reports/clientVisitReportView')->with('data', $data)->with('fromDate', $startDate)->with('toDate', $endDate)->with('reportMonth', $reportMonth)->with('companyName', $companyName)->with('allData', json_encode($allData, true))->render();
                     echo $modaldata;
-                } else {
+                }
+                else {
                     return "error";
                 }
             }
-        } elseif ($type == 'tourdiary') {
+        }
+        elseif ($type == 'tourdiary') {
             $requestData = $request->all();
             $tourSubType = $request->tourSubType;
             // dd($requestData , "requested data");                
@@ -4088,20 +4223,24 @@ class IncidenceController extends Controller
                 $subType = 'All_Employee_Tour_Diary_Report';
                 $result = $this->generateTourDiaryMethod($subType, $user, $startDate, $endDate, $requestData);
                 echo $result;
-            } elseif ($tourSubType === 'selftourdiaryreport') {
+            }
+            elseif ($tourSubType === 'selftourdiaryreport') {
                 $subType = 'Self_Tour_Diary_Report';
                 $result = $this->generateSelfTourDiaryMethod($subType, $user, $startDate, $endDate, $requestData);
                 echo $result;
-            } elseif ($tourSubType === 'admintourdiaryreport') {
+            }
+            elseif ($tourSubType === 'admintourdiaryreport') {
                 $subType = 'Admin_Tour_Diary_Report';
                 $result = $this->generateAdminTourDiaryMethod($request, $subType, $user, $startDate, $endDate, $requestData);
                 echo $result;
-            } else {
+            }
+            else {
                 $subType = 'Supervisor_Tour_Diary_Report';
                 $result = $this->generateSuperVisorTourDiaryMethod($request, $subType, $user, $startDate, $endDate, $requestData);
                 echo $result;
             }
-        } elseif ($type == 'patrolling') {
+        }
+        elseif ($type == 'patrolling') {
             $patrolSubType = $request->patrollingReportSubType;
             // dd($patrolSubType);
             // $requestData = $request->all();
@@ -4143,9 +4282,9 @@ class IncidenceController extends Controller
 
         $query = PatrolSession::query()
             ->with([
-                'user:id,name,role_id',
-                'site',
-            ])
+            'user:id,name,role_id',
+            'site',
+        ])
             ->where('company_id', '56')
             ->whereBetween('started_at', [$startDate, $endDate]);
         // dd($startDate, $endDate , "dates");
@@ -4258,20 +4397,20 @@ class IncidenceController extends Controller
             ->groupBy('user_id')
             ->map(function ($items) {
 
-                $completed = $items->whereNotNull('ended_at')->count();
-                $ongoing = $items->whereNull('ended_at')->count();
+            $completed = $items->whereNotNull('ended_at')->count();
+            $ongoing = $items->whereNull('ended_at')->count();
 
-                return [
-                    'guard' => $items->first()->user->name ?? 'N/A',
-                    'range' => $items->first()->site->client_name ?? 'N/A',
-                    'beat' => $items->first()->site->name ?? 'N/A',
-                    'total_sessions' => $items->count(),
-                    'completed' => $completed,
-                    'ongoing' => $ongoing,
-                    'total_distance' => round($items->sum('distance') / 1000, 2),
-                    'avg_distance' => round(($items->avg('distance') ?? 0) / 1000, 2),
-                ];
-            })
+            return [
+            'guard' => $items->first()->user->name ?? 'N/A',
+            'range' => $items->first()->site->client_name ?? 'N/A',
+            'beat' => $items->first()->site->name ?? 'N/A',
+            'total_sessions' => $items->count(),
+            'completed' => $completed,
+            'ongoing' => $ongoing,
+            'total_distance' => round($items->sum('distance') / 1000, 2),
+            'avg_distance' => round(($items->avg('distance') ?? 0) / 1000, 2),
+            ];
+        })
             ->values();
 
         return view('reports.patrollingSummaryView', [
@@ -4333,7 +4472,8 @@ class IncidenceController extends Controller
         if ($user->role_id == '1') {
             IncidenceDetails::where('id', '=', $incidence_id)
                 ->update(['actionRemark' => $request->remark, 'action' => 'Resolve', 'actionDate' => date('Y-m-d'), 'actionTime' => date('H:i:s'), 'status' => 'Resolve by Admin ' . $user->name, 'statusFlag' => '1']);
-        } else {
+        }
+        else {
             IncidenceDetails::where('id', '=', $incidence_id)
                 ->update(['actionRemark' => $request->remark, 'action' => 'Resolve', 'actionDate' => date('Y-m-d'), 'actionTime' => date('H:i:s'), 'status' => 'Resolve by Supervisor ' . $user->name, 'statusFlag' => '1']);
         }
@@ -4361,7 +4501,8 @@ class IncidenceController extends Controller
         $notification->status = 'resolved';
         if ($user->_role_id == 2) {
             $notification->supervisor_id = $user->id;
-        } elseif ($user->role_id == 1) {
+        }
+        elseif ($user->role_id == 1) {
             $notification->admin_id = $user->id;
         }
         $notification->company_id = $user->company_id;
@@ -4411,7 +4552,8 @@ class IncidenceController extends Controller
         if ($user->role_id == '1') {
             IncidenceDetails::where('id', '=', $incidence_id)
                 ->update(['actionRemark' => $request->remark, 'action' => 'Ignore', 'actionDate' => date('Y-m-d'), 'actionTime' => date('H:i:s'), 'status' => 'Ignore By Admin ' . $user->name, 'statusFlag' => '2']);
-        } else {
+        }
+        else {
             IncidenceDetails::where('id', '=', $incidence_id)
                 ->update(['actionRemark' => $request->remark, 'action' => 'Ignore', 'actionDate' => date('Y-m-d'), 'actionTime' => date('H:i:s'), 'status' => 'Ignore By Supervisor ' . $user->name, 'statusFlag' => '2']);
         }
@@ -4438,7 +4580,8 @@ class IncidenceController extends Controller
         $notification->status = 'resolved';
         if ($user->_role_id == 2) {
             $notification->supervisor_id = $user->id;
-        } elseif ($user->role_id == 1) {
+        }
+        elseif ($user->role_id == 1) {
             $notification->admin_id = $user->id;
         }
         $notification->company_id = $user->company_id;
@@ -4505,7 +4648,8 @@ class IncidenceController extends Controller
         $notification->status = 'resolved';
         if ($user->_role_id == 2) {
             $notification->supervisor_id = $user->id;
-        } elseif ($user->role_id == 1) {
+        }
+        elseif ($user->role_id == 1) {
             $notification->admin_id = $user->id;
         }
         $notification->company_id = $user->company_id;
@@ -4519,7 +4663,8 @@ class IncidenceController extends Controller
         if ($user->role_id == '1') {
             IncidenceDetails::where('id', '=', $incidence_id)
                 ->update(['actionRemark' => $request->remark, 'action' => 'escalate', 'actionDate' => date('Y-m-d'), 'actionTime' => date('H:i:s'), 'status' => 'Escalated to Client by ' . $user->name, 'statusFlag' => '5', 'admin_id' => $user->id]);
-        } else {
+        }
+        else {
             IncidenceDetails::where('id', '=', $incidence_id)
                 ->update(['actionRemark' => $request->remark, 'action' => 'escalate', 'actionDate' => date('Y-m-d'), 'actionTime' => date('H:i:s'), 'status' => 'Escalated to Admin by ' . $user->name, 'statusFlag' => '3', 'supervisor_id' => $user->id]);
         }
