@@ -1,6 +1,7 @@
 @php
     $hideGlobalFilters = true;
     $hideBackground = true;
+    $user = session('user');
 @endphp
 @extends('layouts.app')
 
@@ -27,6 +28,9 @@
         {{-- 5. Dashboard Views --}}
         @include('overallDashboard.index')
         @include('analyticalDashboard.index')
+
+        {{-- 6. Modals (Added here at the bottom of main!) --}}
+        @include('partials.dash-kpi-modal')
     </main>
 @endsection
 

@@ -117,7 +117,8 @@
 
     @foreach ($items as $item)
         <div class="col-6 col-md-4 col-kpi">
-            <div class="dash-card hover-lift h-100 p-3" onclick="navigateTo('{{ $item['nav'] ?? '' }}')"
+            <div class="dash-card hover-lift h-100 p-3"
+                onclick="openQuickView('{{ $item['nav'] ?? $item['id'] }}', '{{ $item['label'] }}')"
                 style="cursor: pointer;">
                 <div class="d-flex justify-content-between align-items-start mb-2">
                     <div style="min-width: 0;">
@@ -135,7 +136,8 @@
                     <p class="mb-0 text-truncate"
                         style="font-size: 0.65rem; font-weight: 600; color: var(--text-muted);">
                         @isset($item['nav'])
-                            <span style="color: var(--sapphire-primary);">Details <i class="bi bi-arrow-right"></i></span>
+                            <span style="color: var(--sapphire-primary);">Quick View <i
+                                    class="bi bi-box-arrow-up-right ms-1"></i></span>
                         @else
                             <i class="bi bi-check2-circle me-1" style="color: var(--sapphire-success);"></i>
                             {{ explode(' ', trim($item['trend']))[0] }}

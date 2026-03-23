@@ -1500,42 +1500,49 @@
     const mapLayerDefinitions = {
         criminal: [{
                 id: 'felling',
+                dbType: 'Illegal Felling',
                 label: 'Illegal Felling',
                 emoji: '🪓',
                 color: '#f43f5e'
             },
             {
                 id: 'transport',
+                dbType: 'Timber Transport',
                 label: 'Timber Transport',
                 emoji: '🚛',
                 color: '#f59e0b'
             },
             {
                 id: 'storage',
+                dbType: 'Timber Storage',
                 label: 'Timber Storage',
                 emoji: '📦',
                 color: '#f97316'
             },
             {
                 id: 'poaching',
+                dbType: 'Poaching',
                 label: 'Poaching',
                 emoji: '🐾',
                 color: '#b91c1c'
             },
             {
                 id: 'encroachment',
+                dbType: 'Encroachment',
                 label: 'Encroachment',
                 emoji: '🚧',
                 color: '#9333ea'
             },
             {
                 id: 'mining',
+                dbType: 'Illegal Mining',
                 label: 'Illegal Mining',
                 emoji: '⛏️',
                 color: '#475569'
             },
             {
                 id: 'jfmc',
+                dbType: 'JFMC Felling',
                 label: 'JFMC Felling',
                 emoji: '📋',
                 color: '#4f46e5'
@@ -1543,18 +1550,21 @@
         ],
         events: [{
                 id: 'sighting',
+                dbType: 'Animal Sighting',
                 label: 'Wild Animal Sighting',
                 emoji: '🦌',
                 color: '#059669'
             },
             {
                 id: 'water_status',
+                dbType: 'Water Status',
                 label: 'Water Source Status',
                 emoji: '💧',
                 color: '#3b82f6'
             },
             {
                 id: 'compensation',
+                dbType: 'Compensation',
                 label: 'Wildlife Compensation',
                 emoji: '💰',
                 color: '#0d9488'
@@ -1562,6 +1572,7 @@
         ],
         fire: [{
             id: 'fire',
+            dbType: 'fire',
             label: 'Fire Alerts',
             emoji: '🔥',
             color: '#f97316'
@@ -1611,18 +1622,18 @@
         infoWindow = new google.maps.InfoWindow();
 
         const dbMapData = window.dashboardData.mapData || [];
+
         const heatMapDataPoints = [];
         dbMapData.forEach(p => {
             if (p.latitude && p.longitude) {
                 const lat = parseFloat(p.latitude);
                 const lng = parseFloat(p.longitude);
-
-                // Only push to heatmap if both are valid numbers
                 if (!isNaN(lat) && !isNaN(lng)) {
                     heatMapDataPoints.push(new google.maps.LatLng(lat, lng));
                 }
             }
         });
+
         try {
             heatmapLayer = new google.maps.visualization.HeatmapLayer({
                 data: heatMapDataPoints,
@@ -1683,16 +1694,21 @@
             const layers = mapLayerDefinitions[category];
 
             layers.forEach((layerDef) => {
-                const layerRecords = dbMapData.filter(record =>
-                    record.report_type.toLowerCase() === layerDef.id.toLowerCase() &&
-                    record.latitude && record.longitude
-                );
+                const layerRecords = dbMapData.filter(record => {
+                    if (!record.report_type) return false;
+                    const type = record.report_type.toLowerCase().trim();
+                    return type === layerDef.dbType.toLowerCase() || type === layerDef.id
+                        .toLowerCase();
+                });
 
                 let markerArray = [];
 
                 layerRecords.forEach(record => {
                     const lat = parseFloat(record.latitude);
                     const lng = parseFloat(record.longitude);
+
+                    if (isNaN(lat) || isNaN(lng)) return;
+
                     const pos = new google.maps.LatLng(lat, lng);
 
                     const marker = new google.maps.Marker({
@@ -1706,49 +1722,31 @@
                     try {
                         const parsedData = typeof record.report_data === 'string' ? JSON.parse(
                             record.report_data) : record.report_data;
+                        if (layerDef.id === 'felling' || layerDef.id === 'jfmc') popupDetails =
+                            `Species: <b>${parsedData.species || 'N/A'}</b><br>Qty: ${parsedData.qty || 'N/A'}`;
+                        else if (layerDef.id === 'transport') popupDetails =
+                            `Vehicle: <b>${parsedData.vehicle_type || 'N/A'}</b>`;
+                        else if (layerDef.id === 'storage') popupDetails =
+                            `Species: <b>${parsedData.species || 'N/A'}</b>`;
+                        else if (layerDef.id === 'sighting') popupDetails =
+                            `Species: <b>${parsedData.species || 'N/A'}</b>`;
+                        else if (layerDef.id === 'water_status') popupDetails =
+                            `Source: <b>${parsedData.source_type || 'N/A'}</b>`;
+                        else if (layerDef.id === 'encroachment') popupDetails =
+                            `Type: <b>${parsedData.encroachment_type || 'N/A'}</b>`;
+                        else if (layerDef.id === 'mining') popupDetails =
+                            `Mineral: <b>${parsedData.mineral_type || 'N/A'}</b>`;
+                        else if (layerDef.id === 'compensation') popupDetails =
+                            `Claim: ₹${parsedData.amount_claimed || 'N/A'}`;
+                        else if (layerDef.id === 'fire') popupDetails =
+                            `Cause: <b>${parsedData.fire_cause || 'N/A'}</b>`;
+                        else if (layerDef.id === 'poaching') popupDetails =
+                            `Species: <b>${parsedData.species || 'N/A'}</b>`;
+                    } catch (e) {}
 
-                        if (layerDef.id === 'felling' || layerDef.id === 'jfmc') {
-                            popupDetails =
-                                `Species: <b>${parsedData.species || 'N/A'}</b><br>Qty: ${parsedData.qty || 'N/A'} | Vol: ${parsedData.volume || 'N/A'} Cmt`;
-                        } else if (layerDef.id === 'transport') {
-                            popupDetails =
-                                `Vehicle: <b>${parsedData.vehicle_type || 'N/A'}</b><br>Route: ${parsedData.route || 'N/A'}`;
-                        } else if (layerDef.id === 'storage') {
-                            popupDetails =
-                                `Species: <b>${parsedData.species || 'N/A'}</b><br>Stored in: ${parsedData.storage_type || 'N/A'}`;
-                        } else if (layerDef.id === 'sighting') {
-                            popupDetails =
-                                `Species: <b>${parsedData.species || 'N/A'}</b><br>Type: ${parsedData.sighting_type || 'N/A'} (${parsedData.num_animals || 1})`;
-                        } else if (layerDef.id === 'water_status') {
-                            const isDryStyle = parsedData.is_dry === 'Yes' ?
-                                'color: #ef4444; font-weight: bold;' :
-                                'color: #3b82f6; font-weight: bold;';
-                            popupDetails =
-                                `Source: <b>${parsedData.source_type || 'N/A'}</b><br>Is Dry: <span style="${isDryStyle}">${parsedData.is_dry || 'N/A'}</span>`;
-                        } else if (layerDef.id === 'encroachment') {
-                            popupDetails =
-                                `Type: <b>${parsedData.encroachment_type || 'N/A'}</b><br>Area: ${parsedData.area_hectare || 'N/A'} Ha`;
-                        } else if (layerDef.id === 'mining') {
-                            popupDetails =
-                                `Mineral: <b>${parsedData.mineral_type || 'N/A'}</b><br>Vol: ${parsedData.volume_cum || 'N/A'} CuM`;
-                        } else if (layerDef.id === 'compensation') {
-                            popupDetails =
-                                `Type: <b>${parsedData.comp_type || 'N/A'}</b><br>Claim: ₹${parsedData.amount_claimed || 'N/A'}`;
-                        } else if (layerDef.id === 'fire') {
-                            popupDetails =
-                                `Cause: <b>${parsedData.fire_cause || 'N/A'}</b><br>Burnt Area: ${parsedData.area_burnt || 'N/A'} Ha`;
-                        } else if (layerDef.id === 'poaching') {
-                            popupDetails =
-                                `Species: <b>${parsedData.species || 'N/A'}</b><br>Gender: ${parsedData.gender || 'N/A'}`;
-                        }
-                    } catch (e) {
-                        console.error("Could not parse JSON for record", record.id);
-                    }
-
-                    const infoContent = `<div style="font-family: 'Inter', sans-serif; min-width: 160px; padding: 5px;">
+                    const infoContent = `<div style="font-family: 'Inter', sans-serif; min-width: 150px; padding: 5px;">
                         <h6 style="font-weight: 700; color: #1e293b; font-size: 0.9rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 4px; margin-bottom: 6px;">${layerDef.emoji} ${layerDef.label}</h6>
-                        <p style="font-size: 0.8rem; color: #475569; margin-bottom: 6px; line-height: 1.4;">${popupDetails}</p>
-                        <p style="font-size: 0.65rem; color: #94a3b8; margin: 0;">ID: ${record.report_id || 'N/A'} | Loc: ${lat.toFixed(4)}, ${lng.toFixed(4)}</p>
+                        <p style="font-size: 0.8rem; color: #475569; margin-bottom: 6px;">${popupDetails}</p>
                     </div>`;
 
                     marker.addListener('click', () => {
@@ -1765,46 +1763,46 @@
             });
         });
 
-        if (hasPoints) {
-            overallMap.fitBounds(bounds);
-        }
+        if (hasPoints) overallMap.fitBounds(bounds);
     }
 
     function createLegend(dbMapData) {
-        const mapContainer = document.getElementById('map');
-        if (!mapContainer || document.getElementById('dynamic-map-legend')) return;
+        const container = document.getElementById('layerControlsContainer');
+        if (!container) return;
 
-        let legendItemsHtml = '';
+        container.innerHTML = '';
+        let anyDataFound = false;
 
         Object.values(mapLayerDefinitions).flat().forEach(layerDef => {
-            const count = dbMapData.filter(record => record.report_type.toLowerCase() === layerDef.id
-                .toLowerCase() && record.latitude).length;
+            const count = dbMapData.filter(record => {
+                if (!record.report_type) return false;
+                const type = record.report_type.toLowerCase().trim();
+                return (type === layerDef.dbType.toLowerCase() || type === layerDef.id.toLowerCase()) &&
+                    record.latitude;
+            }).length;
 
             if (count > 0) {
-                legendItemsHtml += `
-                    <div onclick="toggleMapLayer('${layerDef.id}', this)" style="display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 6px; cursor: pointer; padding: 4px; border-radius: 4px; transition: background 0.2s;" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='transparent'">
-                        <div style="display: flex; align-items: center; gap: 6px;">
-                            <div style="width: 12px; height: 12px; border-radius: 50%; background-color: ${layerDef.color}; flex-shrink: 0;"></div>
-                            <span style="color: #475569; font-size: 0.75rem; font-weight: 500;" title="${layerDef.label}">${layerDef.label}</span>
-                        </div>
-                        <span style="font-size: 0.65rem; font-weight: 700; color: #94a3b8; background: #f1f5f9; padding: 2px 6px; border-radius: 4px;">${count}</span>
+                anyDataFound = true;
+                const itemHtml = `
+                    <div class="layer-item active" id="item_${layerDef.id}" onclick="window.toggleMapLayer('${layerDef.id}', this)" style="cursor:pointer; display:flex; align-items:center; padding:10px; border-bottom:1px solid var(--border-color); transition:background 0.2s;">
+                        <div class="status-dot" style="background-color: ${layerDef.color}; width:8px; height:8px; border-radius:50%; margin-right:10px;"></div>
+                        <div class="layer-icon-box" style="color: ${layerDef.color}; font-size:1.2rem; margin-right:10px; width:30px; text-align:center;">${layerDef.emoji}</div>
+                        <div class="layer-label" style="flex-grow:1; font-weight:500; font-size:0.9rem;">${layerDef.label}</div>
+                        <div id="count_${layerDef.id}" class="count-pill" style="background:var(--bg-body); padding:2px 8px; border-radius:12px; font-size:0.75rem; font-weight:700;">${count}</div>
                     </div>`;
+                container.insertAdjacentHTML('beforeend', itemHtml);
             }
         });
 
-        const heatMapToggleHtml = `
-            <div onclick="toggleHeatmap(this)" style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: center; gap: 6px; cursor: pointer; font-size: 0.75rem; font-weight: bold; color: #ef4444;">
-                <i class="bi bi-fire"></i> Toggle Heatmap
-            </div>
-        `;
+        if (!anyDataFound) {
+            container.innerHTML = '<div class="p-3 text-muted text-center small">No map data available</div>';
+        }
 
-        mapContainer.insertAdjacentHTML('beforeend', `
-            <div id="dynamic-map-legend" style="position: absolute; bottom: 25px; left: 10px; background: rgba(255, 255, 255, 0.95); padding: 12px; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); border: 1px solid #e2e8f0; z-index: 1; min-width: 180px; backdrop-filter: blur(4px);">
-                <h6 style="font-weight: 700; color: #1e293b; font-size: 0.8rem; margin-bottom: 8px; border-bottom: 1px solid #e2e8f0; padding-bottom: 4px;">Map Filters</h6>
-                <div style="max-height: 250px; overflow-y: auto;">
-                    ${legendItemsHtml || '<span style="font-size: 0.75rem; color: #94a3b8;">No data points available</span>'}
+        container.insertAdjacentHTML('beforeend', `
+            <div class="layer-item mt-3 pt-3" onclick="window.toggleHeatmap(this)" style="cursor:pointer; display:flex; align-items:center; justify-content:center; padding:10px; border-top:2px dashed var(--border-color); background-color:rgba(239, 68, 68, 0.05); border-radius:8px;">
+                <div style="color: #ef4444; font-weight:bold; display:flex; align-items:center; gap:8px;">
+                    <i class="bi bi-fire fs-5"></i> Toggle Heatmap View
                 </div>
-                ${heatMapToggleHtml}
             </div>
         `);
     }
@@ -1820,8 +1818,10 @@
         });
 
         if (isVisible) {
+            element.classList.remove('active');
             element.style.opacity = '0.5';
         } else {
+            element.classList.add('active');
             element.style.opacity = '1';
         }
     };
@@ -1833,19 +1833,24 @@
 
         if (isHeatmapActive) {
             heatmapLayer.setMap(overallMap);
-            element.style.background = '#fee2e2';
-            element.style.borderRadius = '4px';
-            element.style.padding = '4px';
+            element.style.background = 'rgba(239, 68, 68, 0.15)';
 
             Object.values(overlayMapGroups).flat().forEach(m => m.setMap(null));
+
+            const items = document.querySelectorAll('.layer-item:not(.mt-3)');
+            items.forEach(item => item.style.opacity = '0.3');
+
         } else {
             heatmapLayer.setMap(null);
-            element.style.background = 'transparent';
+            element.style.background = 'rgba(239, 68, 68, 0.05)';
 
             Object.values(overlayMapGroups).flat().forEach(m => m.setMap(overallMap));
 
-            const legendDiv = document.getElementById('dynamic-map-legend');
-            Array.from(legendDiv.children[1].children).forEach(child => child.style.opacity = '1');
+            const items = document.querySelectorAll('.layer-item:not(.mt-3)');
+            items.forEach(item => {
+                if (item.classList.contains('active')) item.style.opacity = '1';
+                else item.style.opacity = '0.5';
+            });
         }
     };
 
@@ -1976,6 +1981,9 @@
     // =================================================================
     // 5. NAVIGATION & ANALYTICAL VIEW
     // =================================================================
+    // =================================================================
+    // 5. NAVIGATION & ANALYTICAL VIEW
+    // =================================================================
     function setViewMode(mode) {
         window.viewMode = mode;
         const overallBtn = document.getElementById('view-overall');
@@ -1991,11 +1999,23 @@
         if (mode === 'overall') {
             if (overallContainer) overallContainer.classList.remove('d-none');
             if (analyticalContainer) analyticalContainer.classList.add('d-none');
-            if (kpiGrid) kpiGrid.classList.remove('d-none');
+            if (kpiGrid) {
+                kpiGrid.classList.remove('d-none');
+                kpiGrid.style.removeProperty('display'); // Removes the inline hide, lets CSS take over
+            }
+            if (typeof overallMap !== 'undefined' && overallMap) {
+                setTimeout(() => {
+                    google.maps.event.trigger(overallMap, "resize");
+                }, 200);
+            }
         } else {
             if (overallContainer) overallContainer.classList.add('d-none');
             if (analyticalContainer) analyticalContainer.classList.remove('d-none');
-            if (kpiGrid) kpiGrid.classList.add('d-none');
+            if (kpiGrid) {
+                kpiGrid.classList.add('d-none');
+                // 🔥 FIX: Forces the grid to hide, overriding the CSS !important rule
+                kpiGrid.style.setProperty('display', 'none', 'important');
+            }
             buildAnalyticalUI();
         }
     }
@@ -2250,7 +2270,6 @@
     };
 
     document.addEventListener('DOMContentLoaded', () => {
-        // FIXED: Added 'URL' before SearchParams
         const urlParams = new URLSearchParams(window.location.search);
 
         if (urlParams.has('cat')) {
@@ -2265,9 +2284,24 @@
             setViewMode(urlParams.get('view'));
         }
 
-        // Initialize Charts and Map
         initOverallChart();
         initOverallMap();
+
+        const sidebar = document.getElementById('mapFilterSidebar');
+        const toggleBtn = document.getElementById('mapDrawerToggle');
+
+        if (toggleBtn && sidebar) {
+            toggleBtn.addEventListener('click', function() {
+                sidebar.classList.toggle('open');
+                this.classList.toggle('active');
+
+                const icon = this.querySelector('i');
+                if (icon) {
+                    icon.className = sidebar.classList.contains('open') ? 'bi bi-x-lg' :
+                        'bi bi-layers-half';
+                }
+            });
+        }
 
         window.addEventListener('themeChanged', () => {
             initOverallChart();
@@ -2277,4 +2311,55 @@
             }
         });
     });
+
+    // Handles opening the modal and fetching the 20 rows
+    window.openQuickView = function(categoryType, label) {
+        // Exclude system specific KPIs that don't need a table (like 'officers' or 'patrol')
+        if (categoryType === 'officers' || categoryType === 'patrol') {
+            return; // Or handle differently
+        }
+
+        // Set Title and View All Link
+        document.getElementById('kpiModalLabel').innerText = `${label} - Quick View`;
+
+        // Ensure "forestry" maps to "plantations" for the detailed route query parameter
+        const routeCategory = categoryType === 'forestry' ? 'plantations' : categoryType;
+        document.getElementById('viewAllDataBtn').href =
+            `{{ route('reports.detailed') }}?category=${routeCategory}`;
+
+        // Show Modal (Assuming Bootstrap 5)
+        const modal = new bootstrap.Modal(document.getElementById('kpiQuickViewModal'));
+        modal.show();
+
+        const tbody = document.getElementById('kpiModalTableBody');
+        tbody.innerHTML =
+            '<tr><td colspan="5" class="text-center py-5"><div class="spinner-border text-primary" role="status"></div><div class="mt-2 text-muted">Fetching records...</div></td></tr>';
+
+        // Fetch Data
+        fetch(`{{ route('kpi.quickview') }}?type=${categoryType}`)
+            .then(res => res.json())
+            .then(response => {
+                if (response.data && response.data.length > 0) {
+                    tbody.innerHTML = response.data.map(row => `
+                        <tr>
+                            <td class="ps-4 fw-bold text-slate-700">${row.id}</td>
+                            <td class="fw-semibold" style="color: var(--sapphire-primary);">${row.title}</td>
+                            <td class="text-muted">${row.location}</td>
+                            <td class="text-muted">${row.date}</td>
+                            <td class="text-end pe-4">
+                                <span class="badge bg-light text-dark border">${row.status}</span>
+                            </td>
+                        </tr>
+                    `).join('');
+                } else {
+                    tbody.innerHTML =
+                        '<tr><td colspan="5" class="text-center py-4 text-muted">No recent records found.</td></tr>';
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                tbody.innerHTML =
+                    '<tr><td colspan="5" class="text-center py-4 text-danger">Failed to load data.</td></tr>';
+            });
+    };
 </script>

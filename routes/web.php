@@ -807,3 +807,10 @@ Route::prefix('incidence')->controller(IncidenceController::class)->group(functi
         }
         );
     });
+
+
+// Quick View Modal Data
+Route::get('/api/kpi-quick-view', [App\Http\Controllers\ForestReportConfigController::class , 'getKpiQuickView'])->name('kpi.quickview');
+
+// Detailed Data Table View
+Route::get('/reports/detailed', [App\Http\Controllers\ForestReportConfigController::class , 'detailedDataTable'])->name('reports.detailed');

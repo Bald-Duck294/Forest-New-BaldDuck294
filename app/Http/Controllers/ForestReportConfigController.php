@@ -877,4 +877,134 @@ public function reportsDashboard(Request $request)
         ]);
         return redirect()->back()->with('success', 'Report updated');
     }
+
+    // =========================================================================
+    // 1. MODAL QUICK VIEW API (Latest 20 Rows)
+    // =========================================================================
+    public function getKpiQuickView(Request $request)
+    {
+        $type = $request->type; // 'criminal', 'events', 'fire', 'assets', 'forestry'
+        $companyId = session('user')->company_id ?? auth()->user()->company_id ?? 46;
+        $data = [];
+
+        if (in_array($type, ['criminal', 'events', 'fire'])) {
+            // Mapping UI types to DB categories
+            $catMap = [
+                'criminal' => ['crimes', 'Criminal Activity'], 
+                'events' => ['events', 'Events & Monitoring'], 
+                'fire' => ['fire']
+            ];
+            
+            $records = \Illuminate\Support\Facades\DB::table('forest_reports')
+                ->where('company_id', $companyId)
+                ->whereIn('category', $catMap[$type] ?? [$type])
+                ->latest()
+                ->limit(20)
+                ->get();
+
+            foreach ($records as $r) {
+                $data[] = [
+                    'id' => $r->report_id ?? 'RPT-'.$r->id,
+                    'title' => $r->report_type,
+                    'date' => \Carbon\Carbon::parse($r->created_at)->format('d M Y, h:i A'),
+                    'location' => $r->beat ?? $r->range ?? 'Unknown Location',
+                    'status' => $r->status ?? 'Pending'
+                ];
+            }
+        } elseif ($type === 'assets') {
+            $records = \App\Models\Asset::where('company_id', $companyId)->latest()->limit(20)->get();
+            foreach ($records as $r) {
+                $data[] = [
+                    'id' => 'AST-'.$r->id,
+                    'title' => $r->category ?? 'Equipment',
+                    'date' => \Carbon\Carbon::parse($r->created_at)->format('d M Y'),
+                    'location' => $r->condition ?? 'N/A',
+                    'status' => 'Active'
+                ];
+            }
+        } elseif ($type === 'forestry') {
+            $records = \App\Models\Plantation::latest()->limit(20)->get();
+            foreach ($records as $r) {
+                $data[] = [
+                    'id' => $r->code,
+                    'title' => $r->name . ' (' . ($r->plant_species ?? 'Mixed') . ')',
+                    'date' => \Carbon\Carbon::parse($r->created_at)->format('d M Y'),
+                    'location' => 'Area: ' . ($r->area ?? 0) . ' Ha',
+                    'status' => ucfirst($r->current_phase)
+                ];
+            }
+        }
+
+        return response()->json(['status' => 'success', 'data' => $data]);
+    }
+
+    // =========================================================================
+    // 2. DETAILED DATA TABLE VIEW (Full Page)
+    // =========================================================================
+    public function detailedDataTable(Request $request)
+    {
+        $companyId = session('user')->company_id ?? auth()->user()->company_id ?? 46;
+        $category = $request->get('category', 'criminal'); // Default to criminal
+        $search = $request->get('search');
+        $fromDate = $request->get('from_date');
+        $toDate = $request->get('to_date');
+        $subType = $request->get('sub_type'); // specific event type
+
+        $records = collect(); // Empty collection to start
+
+        // We route the query based on the Master Category because the tables are different
+        if (in_array($category, ['criminal', 'events', 'fire'])) {
+            $catMap = [
+                'criminal' => ['crimes', 'Criminal Activity'], 
+                'events' => ['events', 'Events & Monitoring'], 
+                'fire' => ['fire']
+            ];
+            
+            $query = \Illuminate\Support\Facades\DB::table('forest_reports')
+                ->where('company_id', $companyId)
+                ->whereIn('category', $catMap[$category] ?? [$category]);
+
+            if ($search) {
+                $query->where(function($q) use ($search) {
+                    $q->where('report_id', 'like', "%{$search}%")
+                      ->orWhere('report_type', 'like', "%{$search}%")
+                      ->orWhere('beat', 'like', "%{$search}%");
+                });
+            }
+            if ($subType) {
+                $query->where('report_type', $subType);
+            }
+            if ($fromDate) $query->whereDate('created_at', '>=', $fromDate);
+            if ($toDate) $query->whereDate('created_at', '<=', $toDate);
+
+            $records = $query->latest()->paginate(15);
+            $viewType = 'reports';
+
+        } elseif ($category === 'assets') {
+            $query = \App\Models\Asset::where('company_id', $companyId);
+            if ($search) $query->where('category', 'like', "%{$search}%");
+            if ($fromDate) $query->whereDate('created_at', '>=', $fromDate);
+            if ($toDate) $query->whereDate('created_at', '<=', $toDate);
+            
+            $records = $query->latest()->paginate(15);
+            $viewType = 'assets';
+
+        } elseif ($category === 'plantations') {
+            $query = \App\Models\Plantation::query();
+            if ($search) {
+                $query->where('code', 'like', "%{$search}%")
+                      ->orWhere('name', 'like', "%{$search}%")
+                      ->orWhere('plant_species', 'like', "%{$search}%");
+            }
+            if ($fromDate) $query->whereDate('created_at', '>=', $fromDate);
+            if ($toDate) $query->whereDate('created_at', '<=', $toDate);
+            
+            $records = $query->latest()->paginate(15);
+            $viewType = 'plantations';
+        }
+
+        return view('reports.detailed', compact('records', 'category', 'search', 'fromDate', 'toDate', 'subType', 'viewType'));
+    }
 }
+
+
