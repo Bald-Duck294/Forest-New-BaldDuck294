@@ -4,6 +4,7 @@
     $user = session('user');
     $company = session('company');
     $label = isset($company) && ($company->is_forest ?? 1) == 1 ? 'Beat' : 'Site';
+    // dump('hi');
 @endphp
 @extends('layouts.app')
 
@@ -13,9 +14,9 @@
 
     <style>
         /* =========================================
-                                                                   LOCAL COMPONENT STYLES
-                                                                   (Hooked to Global Sapphire Variables)
-                                                                ========================================= */
+                                                                       LOCAL COMPONENT STYLES
+                                                                       (Hooked to Global Sapphire Variables)
+                                                                    ========================================= */
 
         /* Cards */
         .dash-card {
@@ -258,27 +259,34 @@
 
                 {{-- Search & Actions --}}
                 <div class="d-flex flex-column flex-md-row align-items-md-center gap-2">
-                    {{-- Search Form --}}
-                    <form method="GET" class="d-flex gap-2 m-0">
-                        <input type="text" name="search" value="{{ request('search') }}" class="custom-input"
-                            placeholder="Search..." style="min-width: 200px;">
-                        <button type="submit" class="btn-sapphire"><i class="bi bi-search"></i></button>
-                        @if (request('search'))
-                            <a href="{{ url()->current() }}" class="btn-sapphire-outline px-2" title="Clear Search"><i
-                                    class="bi bi-x-lg"></i></a>
-                        @endif
-                    </form>
+                    {{-- AJAX Search Form --}}
+                    <div class="d-flex gap-2 m-0">
+                        <div class="position-relative grow">
+                            <i class="bi bi-search position-absolute"
+                                style="left: 12px; top: 10px; color: var(--text-muted);"></i>
+                            <input type="text" id="ajaxSearch" name="search" value="{{ request('search') }}"
+                                class="custom-input" placeholder="Search..." style="padding-left: 36px; min-width: 200px;">
+
+                            {{-- AJAX Clear/Reset Button --}}
+                            <button type="button" id="clearSearch" class="btn btn-link position-absolute p-0"
+                                style="right: 12px; top: 8px; color: var(--text-muted); display: none;"
+                                title="Clear Search">
+                                <i class="bi bi-x-circle-fill"></i>
+                            </button>
+                        </div>
+                    </div>
 
                     <div class="vr d-none d-md-block mx-1" style="color: var(--border-color);"></div>
 
                     {{-- Action Buttons --}}
                     @if (!isset($supervisor_id) && $user->role_id != '4' && $client_id !== 'playBackSites')
-                        <a href="{{ route('sites.site_create', $client_id) }}" class="btn-sapphire text-nowrap">
+                        <a href="{{ route('sites.site_create', is_numeric($client_id) ? $client_id : 0) }}"
+                            class="btn-sapphire text-nowrap">
                             <i class="bi bi-plus-lg"></i> Add {{ $label }}
                         </a>
                     @endif
                     @if ($client_id == 0 || $client_id != 'playBackSites')
-                        <a href="{{ route('sites.export', $client_id != 'playBackSites' ? $client_id : 0) }}"
+                        <a href="{{ route('sites.export', $client_id != 'playBackSites' && is_numeric($client_id) ? $client_id : 0) }}"
                             class="btn-sapphire-outline text-nowrap"
                             style="color: var(--sapphire-success); border-color: var(--sapphire-success);">
                             <i class="bi bi-download"></i> Export
@@ -288,166 +296,10 @@
 
             </div>
 
-            {{-- DATA TABLE --}}
-            <div class="table-responsive">
-                <table class="table dash-table align-middle">
-                    <thead>
-                        <tr>
-                            <th class="ps-4" style="width: 60px;">#</th>
-                            <th>
-                                <a href="{{ request()->fullUrlWithQuery(['sort' => 'name', 'dir' => request('dir') == 'asc' ? 'desc' : 'asc']) }}"
-                                    class="sort-link">
-                                    {{ $label }} Name <i class="bi bi-arrow-down-up"></i>
-                                </a>
-                            </th>
-                            <th>
-                                <a href="{{ request()->fullUrlWithQuery(['sort' => 'client', 'dir' => request('dir') == 'asc' ? 'desc' : 'asc']) }}"
-                                    class="sort-link">
-                                    Client <i class="bi bi-arrow-down-up"></i>
-                                </a>
-                            </th>
-
-                            @if ($client_id == 'playBackSites')
-                                <th>Action</th>
-                            @elseif ($client_id == 'daily-update')
-                                <th>Daily Update</th>
-                            @else
-                                <th>Management</th>
-                            @endif
-
-                            @if ($client_id != 'playBackSites' && $client_id != 'daily-update')
-                                <th class="text-end pe-4" style="width: 140px;">Actions</th>
-                            @endif
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @if (isset($Sites) && count($Sites) > 0)
-                            @php $sr = method_exists($Sites, 'currentPage') ? ($Sites->currentPage() - 1) * $Sites->perPage() + 1 : 1; @endphp
-
-                            @foreach ($Sites as $row)
-                                <tr>
-                                    <td class="ps-4 fw-semibold" style="color: var(--text-muted);">{{ $sr++ }}</td>
-
-                                    <td>
-                                        @php $viewId = isset($supervisor_id) ? 0 : $row->client_id; @endphp
-                                        <a href="{{ route('sites.site_view', [$viewId, $row->id]) }}"
-                                            class="site-name-link">
-                                            {{ ucfirst($row->name) }}
-                                        </a>
-                                    </td>
-
-                                    <td>{{ ucfirst($row->client_name ?? '—') }}</td>
-
-                                    <td>
-                                        @if ($client_id != 'playBackSites' && $client_id != 'daily-update')
-                                            <div class="d-flex flex-wrap gap-2">
-                                                <a href="{{ route('clients.getshifts', [$row->client_id, $row->id]) }}"
-                                                    class="badge-soft">
-                                                    <i class="bi bi-clock" style="color: var(--sapphire-primary);"></i>
-                                                    Shifts
-                                                </a>
-                                                <a href="{{ route('clients.getclientgeofences', [$row->client_id, $row->id]) }}"
-                                                    class="badge-soft">
-                                                    <i class="bi bi-geo-alt" style="color: var(--sapphire-success);"></i>
-                                                    Geofence
-                                                </a>
-                                                <a href="{{ route('clients.getclientguards', [$row->client_id, $row->id]) }}"
-                                                    class="badge-soft">
-                                                    <i class="bi bi-person" style="color: var(--sapphire-warning);"></i>
-                                                    Employee
-                                                </a>
-
-                                                @php
-                                                    $features = session('features');
-                                                    $hasTour = $features ? array_search('tour', $features) : false;
-                                                @endphp
-
-                                                @if ($hasTour !== false)
-                                                    <a href="{{ route('clients.gettours', $row->id) }}" class="badge-soft">
-                                                        <i class="bi bi-signpost-split"
-                                                            style="color: var(--sapphire-danger);"></i> Tour
-                                                    </a>
-                                                @endif
-                                            </div>
-                                        @elseif ($client_id == 'playBackSites')
-                                            <button type="button" class="btn-sapphire btn-sm"
-                                                onclick="playBackOfGuards('{{ $row->id }}')">
-                                                <i class="bi bi-play-fill"></i> Playback
-                                            </button>
-                                        @elseif ($client_id == 'daily-update')
-                                            <a href="{{ route('DailyUpdate', $row->id) }}"
-                                                class="btn-sapphire-outline btn-sm">
-                                                <i class="bi bi-eye"></i> View Updates
-                                            </a>
-                                        @endif
-                                    </td>
-
-                                    @if ($client_id != 'playBackSites' && $client_id != 'daily-update')
-                                        <td class="text-end pe-4">
-                                            <div class="d-flex justify-content-end gap-1">
-                                                <a href="{{ route('sites.site_view', [$row->client_id, $row->id]) }}"
-                                                    class="btn-icon-soft view" title="View">
-                                                    <i class="bi bi-eye-fill"></i>
-                                                </a>
-
-                                                @if ($user->role_id != '4')
-                                                    <a href="{{ route('sites.site_edit', [$row->client_id, $row->id]) }}"
-                                                        class="btn-icon-soft edit" title="Edit">
-                                                        <i class="bi bi-pencil-square"></i>
-                                                    </a>
-                                                    <button class="btn-icon-soft delete"
-                                                        onclick="deleteSite('{{ $row->client_id }}','{{ $row->id }}')"
-                                                        title="Delete">
-                                                        <i class="bi bi-trash-fill"></i>
-                                                    </button>
-                                                @endif
-                                            </div>
-                                        </td>
-                                    @endif
-                                </tr>
-                            @endforeach
-                        @else
-                            <tr>
-                                @php $colSpan = ($client_id != 'playBackSites' && $client_id != 'daily-update') ? 5 : 4; @endphp
-                                <td colspan="{{ $colSpan }}" class="text-center py-5">
-                                    <div class="py-4">
-                                        <i class="bi bi-geo-alt"
-                                            style="font-size: 3rem; color: var(--text-muted); opacity: 0.4;"></i>
-                                        <h5 class="fw-bold mt-3 mb-1" style="color: var(--text-main);">No
-                                            {{ strtolower($label) }}s found</h5>
-                                        <p style="color: var(--text-muted); font-size: 0.9rem;">
-                                            No {{ strtolower($label) }}s have been added for this client yet.
-                                        </p>
-
-                                        @if (!isset($supervisor_id) && $user->role_id != '4' && $client_id !== 'playBackSites')
-                                            <div class="mt-3">
-                                                <a href="{{ route('sites.site_create', $client_id) }}"
-                                                    class="btn-sapphire">
-                                                    <i class="bi bi-plus-lg"></i> Add {{ $label }}
-                                                </a>
-                                            </div>
-                                        @endif
-                                    </div>
-                                </td>
-                            </tr>
-                        @endif
-                    </tbody>
-                </table>
+            {{-- Table Container for AJAX Updates --}}
+            <div id="sitesTableContainer">
+                @include('partials.sites_table')
             </div>
-
-            {{-- PAGINATION --}}
-            @if (isset($Sites) && method_exists($Sites, 'links'))
-                <div class="p-3 d-flex flex-column flex-md-row justify-content-between align-items-center gap-3"
-                    style="border-top: 1px solid var(--border-color); background: var(--bg-body);">
-                    <small style="color: var(--text-muted);">
-                        Showing {{ $Sites->firstItem() ?? 0 }} to {{ $Sites->lastItem() ?? 0 }} of
-                        {{ $Sites->total() ?? 0 }} entries
-                    </small>
-                    <div class="m-0 p-0">
-                        {{ $Sites->appends(request()->query())->links('pagination::bootstrap-5') }}
-                    </div>
-                </div>
-            @endif
 
         </div>
     </div>
@@ -455,6 +307,89 @@
     @push('scripts')
         <script>
             document.addEventListener("DOMContentLoaded", function() {
+                let searchInput = document.getElementById('ajaxSearch');
+                let clearBtn = document.getElementById('clearSearch');
+                let tableContainer = document.getElementById('sitesTableContainer');
+                let currentSort = '{{ request('sort', 'name') }}';
+                let currentDir = '{{ request('dir', 'asc') }}';
+                let debounceTimeout = null;
+
+                // Sync clear button visibility
+                function toggleClearBtn() {
+                    if (searchInput.value.length > 0) {
+                        clearBtn.style.display = 'block';
+                    } else {
+                        clearBtn.style.display = 'none';
+                    }
+                }
+                toggleClearBtn();
+
+                // AJAX Fetch Function
+                window.fetchSites = function(page = 1) {
+                    let search = searchInput.value;
+                    let url = `{{ url()->current() }}?page=${page}&search=${search}&sort=${currentSort}&dir=${currentDir}`;
+
+                    tableContainer.style.opacity = '0.5';
+
+                    fetch(url, {
+                            headers: {
+                                'X-Requested-With': 'XMLHttpRequest'
+                            }
+                        })
+                        .then(response => response.text())
+                        .then(html => {
+                            tableContainer.innerHTML = html;
+                            tableContainer.style.opacity = '1';
+
+                            bindPagination();
+                        })
+                        .catch(error => {
+                            console.error('Error fetching sites:', error);
+                            tableContainer.style.opacity = '1';
+                        });
+                };
+
+                // Handle Pagination Clicks
+                function bindPagination() {
+                    let paginationLinks = document.querySelectorAll('.ajax-pagination a');
+                    paginationLinks.forEach(link => {
+                        link.addEventListener('click', function(e) {
+                            e.preventDefault();
+                            let pageUrl = new URL(this.href);
+                            let page = pageUrl.searchParams.get('page');
+                            fetchSites(page);
+                        });
+                    });
+                }
+                bindPagination();
+
+                // Handle Search Input (As you type)
+                searchInput.addEventListener('input', function() {
+                    toggleClearBtn();
+                    clearTimeout(debounceTimeout);
+                    debounceTimeout = setTimeout(() => {
+                        fetchSites(1);
+                    }, 400); // 400ms debounce
+                });
+
+                // Clear Search
+                window.clearSearch = function() {
+                    searchInput.value = '';
+                    toggleClearBtn();
+                    fetchSites(1);
+                };
+                clearBtn.addEventListener('click', clearSearch);
+
+                // Handle Column Sort
+                window.handleSort = function(column) {
+                    if (currentSort === column) {
+                        currentDir = currentDir === 'asc' ? 'desc' : 'asc';
+                    } else {
+                        currentSort = column;
+                        currentDir = 'asc';
+                    }
+                    fetchSites(1);
+                };
 
                 // Delete Function (Mapped to Safari/Sapphire styles)
                 window.deleteSite = function(client_id, id) {

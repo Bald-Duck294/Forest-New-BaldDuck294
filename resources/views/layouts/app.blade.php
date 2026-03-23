@@ -9,7 +9,6 @@
      <link rel="alternate icon" href="{{ asset('favicon.ico') }}">
 
      <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
-     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css">
      <link rel="stylesheet" href="{{ asset('css/sidebar.css') }}">
      <link rel="stylesheet" href="{{ asset('css/layout.css') }}">
      <link rel="stylesheet" href="{{ asset('css/patrol-map.css') }}">
@@ -17,7 +16,8 @@
      <link rel="stylesheet" href="{{ asset('css/global-filters.css') }}">
      <link rel="stylesheet" href="{{ asset('css/table-sort.css') }}">
      <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
-     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/line-awesome/1.3.0/line-awesome/css/line-awesome.min.css">
+     <link rel="stylesheet"
+         href="https://cdnjs.cloudflare.com/ajax/libs/line-awesome/1.3.0/line-awesome/css/line-awesome.min.css">
      <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 
      <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" defer></script>
@@ -25,7 +25,7 @@
      <script src="{{ asset('js/enhanced-table-sort.js') }}" defer></script>
      <script src="{{ asset('js/global-handlers.js') }}" defer></script>
      <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
-     <script src="https://unpkg.com/leaflet/dist/leaflet.js" defer></script>
+     {{-- <script src="https://unpkg.com/leaflet/dist/leaflet.js" defer></script> --}}
 
      <style>
          /* Mobile Overlay Backdrop */
@@ -82,7 +82,7 @@
          @include('layouts.sidebar')
      @endif
 
-    
+
 
      {{-- Main Content Area --}}
      <div class="content d-flex flex-column" id="mainContent">

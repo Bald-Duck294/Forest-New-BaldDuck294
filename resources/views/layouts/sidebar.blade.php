@@ -678,7 +678,7 @@
             <div class="sidebar-section-title">Reports & Analytics</div>
 
             {{-- Reports --}}
-            <a href="/reports/monthly" class="sidebar-link {{ request()->is('reports/monthly') ? 'active' : '' }}"
+            <a href="/report/view" class="sidebar-link {{ request()->is('report/view') ? 'active' : '' }}"
                 title="Reports">
                 <i class="bi bi-file-earmark-text"></i>
                 <span class="link-text">Reports</span>

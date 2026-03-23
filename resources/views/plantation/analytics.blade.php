@@ -2,6 +2,7 @@
     $hideGlobalFilters = true;
     $hideBackground = true;
     $user = session('user');
+    // dd($user);
 @endphp
 @extends('layouts.app')
 
@@ -11,9 +12,9 @@
 
     <style>
         /* =========================================
-                           LOCAL COMPONENT STYLES
-                           (Hooked to Global Sapphire Variables)
-                        ========================================= */
+                                           LOCAL COMPONENT STYLES
+                                           (Hooked to Global Sapphire Variables)
+                                        ========================================= */
 
         /* Custom Filter Buttons */
         .custom-filter-btn {

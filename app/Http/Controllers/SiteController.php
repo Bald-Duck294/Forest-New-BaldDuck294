@@ -84,63 +84,86 @@ class SiteController extends Controller
     }
     public function getSites(Request $request, $client_id)
     {
-        // dd($request);
         $user = session('user');
         $request->session()->forget('supervisor_id');
-        Log::info($user->name . ' view site list, User_id: ' . $user->id);
-        $admin = Users::where('id', $client_id)->first();
-        if ($user->role_id == 1 || $user->role_id == 8) {
-            if ($client_id != 0) {
-                $clientName = ClientDetails::where('id', $client_id)->first();
-                $Sites = SiteDetails::where('company_id', $user->company_id)->where('client_id', $client_id)->orderBy('name', 'asc')->get();
-                return view('sitelist')->with('admin', $admin)->with('Sites', $Sites)->with("client_id", $client_id)->with('clientName', $clientName);
-            } else {
+        
+        $search = $request->input('search');
+        $sort = $request->input('sort', 'name');
+        $dir = $request->input('dir', 'asc');
 
-                $Sites = SiteDetails::where('company_id', $user->company_id)->orderBy('name', 'asc')->get();
-                return view('sitelist')->with('admin', $admin)->with('Sites', $Sites)->with("client_id", $client_id);
+        Log::info($user->name . ' view site list, User_id: ' . $user->id . ' Client_ID: ' . $client_id);
+        
+        $query = SiteDetails::query();
+
+        // 1. Role-based filtering
+        if ($user->role_id == 1 || $user->role_id == 8) {
+            $query->where('company_id', $user->company_id);
+            if ($client_id != 0 && !is_string($client_id)) {
+                $query->where('client_id', $client_id);
             }
         } else if ($user->role_id == 2) {
-
-            $user_id = SiteAssign::where('user_id', $user->id)->where('role_id', 2)->first();
-            if ($client_id != 0) {
-                $clientName = ClientDetails::where('id', $client_id)->first();
-                $siteArray = json_decode($user_id['site_id'], true);
-                $Sites = SiteDetails::whereIn('id', $siteArray)->get();
-                return view('sitelist')->with('admin', $admin)->with('Sites', $Sites)->with("client_id", $client_id)->with('clientName', $clientName);
+            $user_assign = SiteAssign::where('user_id', $user->id)->where('role_id', 2)->first();
+            $allowedSiteIds = $user_assign ? json_decode($user_assign->site_id, true) : [];
+            
+            if ($client_id != 0 && !is_string($client_id)) {
+                $query->whereIn('id', $allowedSiteIds)->where('client_id', $client_id);
             } else {
-
-                if (!empty($user_id)) {
-                    $siteArray = json_decode($user_id['site_id'], true);
-
-                    $Sites = DB::table('site_details')->whereIn('id', $siteArray)->get();
-                    return view('sitelist')->with('admin', $admin)->with('Sites', $Sites)->with("client_id", $client_id);
-                } else {
-                    $implodeID = '0';
-                    $Sites = DB::table('site_details')->Where('id', '=', $implodeID)->get();
-                    return view('sitelist')->with('admin', $admin)->with('Sites', $Sites)->with("client_id", $client_id);
-                }
+                $query->whereIn('id', $allowedSiteIds);
             }
         } else if ($user->role_id == 4) {
-            $Sites = DB::table('site_details')->where('client_id', $user->client_id)->get();
-            return view('sitelist')->with('admin', $admin)->with('Sites', $Sites)->with("client_id", $client_id);
+            $query->where('client_id', $user->client_id);
         } else if ($user->role_id == 7) {
             $siteAssign = SiteAssign::where('user_id', $user->id)->first();
-            if ($client_id != 0 && gettype($client_id) != "string") {
-                // dd($client_id);
-                $clientName = ClientDetails::where('id', $client_id)->first();
-                $Sites = SiteDetails::where('company_id', $user->company_id)->whereIn('client_id', $client_id)
-                    ->orderBy('name', 'asc')->get();
-                // dd(count($Sites));
-                return view('sitelist')->with('admin', $admin)->with('Sites', $Sites)->with("client_id", $client_id)->with('clientName', $clientName);
+            $clientArray = $siteAssign ? json_decode($siteAssign->site_id, true) : [];
+            
+            if ($client_id != 0 && !is_string($client_id)) {
+                $query->where('company_id', $user->company_id)->whereIn('client_id', (array)$client_id);
             } else {
-                // dump(2);
-                // dd($client_id);
-                $clientArray = json_decode($siteAssign['site_id'], true);
-                $Sites = SiteDetails::where('company_id', $user->company_id)->whereIn('client_id', $clientArray)
-                    ->orderBy('name', 'asc')->get();
-                return view('sitelist')->with('admin', $admin)->with('Sites', $Sites)->with("client_id", $client_id);
+                $query->where('company_id', $user->company_id)->whereIn('client_id', (array)$clientArray);
             }
         }
+
+        // 2. Search filtering
+        if (!empty($search)) {
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'LIKE', "%{$search}%")
+                    ->orWhere('client_name', 'LIKE', "%{$search}%")
+                    ->orWhere('city', 'LIKE', "%{$search}%")
+                    ->orWhere('state', 'LIKE', "%{$search}%");
+            });
+        }
+
+        // 3. Sorting
+        $allowedSorts = ['name', 'client', 'id'];
+        if (in_array($sort, $allowedSorts)) {
+            $sortColumn = ($sort == 'client') ? 'client_name' : $sort;
+            $query->orderBy($sortColumn, $dir == 'asc' ? 'asc' : 'desc');
+        } else {
+            $query->orderBy('name', 'asc');
+        }
+
+        // 4. Pagination
+        $Sites = $query->paginate(10);
+        
+        // 5. Metadata for view
+        $admin = is_numeric($client_id) ? Users::where('id', $client_id)->first() : null;
+        $clientName = ($client_id != 0 && is_numeric($client_id)) ? ClientDetails::find($client_id) : null;
+
+        if ($request->ajax()) {
+            return view('partials.sites_table', [
+                'Sites' => $Sites,
+                'client_id' => $client_id,
+                'user' => $user,
+                'label' => (session('company')->is_forest ?? 1) == 1 ? 'Beat' : 'Site'
+            ])->render();
+        }
+
+        return view('sitelist')->with([
+            'admin' => $admin,
+            'Sites' => $Sites,
+            'client_id' => $client_id,
+            'clientName' => $clientName
+        ]);
     }
 
 
@@ -383,37 +406,67 @@ class SiteController extends Controller
 
     public function getSupervisorSites(Request $request, $supervisor_id)
     {
-        // dd($supervisor_id);
         $user = session('user');
         $request->session()->put('supervisor_id', $supervisor_id);
-        Log::info($user->name . 'get supervisor under sites, User_id: ' . $user->id);
+        
+        $search = $request->input('search');
+        $sort = $request->input('sort', 'name');
+        $dir = $request->input('dir', 'asc');
+
+        Log::info($user->name . ' view supervisor sites, User_id: ' . $user->id . ' Supervisor_ID: ' . $supervisor_id);
+        
         $admin = Users::where('id', $supervisor_id)->first();
-        //dd($admin->role_id);
+        $query = SiteDetails::query();
 
-        if ($admin->role_id == 7) {
-            //dd($admin->role_id);
-            $site_id = SiteAssign::where('user_id', $supervisor_id)->where('role_id', 7)->first();
-            // dd($site_id);
+        // 1. Supervisor-specific filtering logic
+        $site_id_record = SiteAssign::where('user_id', $supervisor_id)->whereIn('role_id', [2, 7])->first();
+        $siteIds = (isset($site_id_record->site_id)) ? json_decode($site_id_record->site_id, true) : [];
+
+        if ($admin && $admin->role_id == 7) {
+            // Sites for a client/role_id 7 supervisor are actually ClientDetails
+            // WARNING: The existing code used ClientDetails for this case (line 405)
+            // If the view expects SiteDetails, this might be tricky.
+            // Let's stick to consistent model-based query if possible.
+            $query = ClientDetails::whereIn('id', $siteIds);
         } else {
-            $site_id = SiteAssign::where('user_id', $supervisor_id)->where('role_id', 2)->first();
+            $query->whereIn('id', $siteIds);
         }
 
-        $Sites = '';
-        if ($admin->role_id == 7) {
-            if ($site_id) {
-                $siteArray = json_decode($site_id['site_id'], true);
-                $Sites = ClientDetails::whereIn('id', $siteArray)->get();
-            }
-        } else {
-            if ($site_id) {
-                $siteArray = json_decode($site_id['site_id'], true);
-                $Sites = SiteDetails::whereIn('id', $siteArray)->get();
-            }
+        // 2. Search filtering
+        if (!empty($search)) {
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'LIKE', "%{$search}%")
+                    ->orWhere('city', 'LIKE', "%{$search}%")
+                    ->orWhere('state', 'LIKE', "%{$search}%");
+            });
         }
 
-        // dd($Sites);
+        // 3. Sorting
+        $allowedSorts = ['name', 'id'];
+        if (in_array($sort, $allowedSorts)) {
+            $query->orderBy($sort, $dir == 'asc' ? 'asc' : 'desc');
+        } else {
+            $query->orderBy('name', 'asc');
+        }
 
-        return view('sitelist')->with('admin', $admin)->with('Sites', $Sites)->with("client_id", $supervisor_id)->with('supervisor_id', $supervisor_id);
+        // 4. Pagination
+        $Sites = $query->paginate(10);
+        
+        if ($request->ajax()) {
+            return view('partials.sites_table', [
+                'Sites' => $Sites,
+                'client_id' => $supervisor_id,
+                'user' => $user,
+                'label' => (session('company')->is_forest ?? 1) == 1 ? 'Beat' : 'Site'
+            ])->render();
+        }
+
+        return view('sitelist')->with([
+            'admin' => $admin,
+            'Sites' => $Sites,
+            'client_id' => $supervisor_id,
+            'supervisor_id' => $supervisor_id
+        ]);
     }
 
     public function site_view($client_id, $id)

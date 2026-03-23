@@ -67,23 +67,47 @@ class ClientDetailsController extends Controller
     //     return view('clientdetails')->with('clients', $records);
     // }
 
-    public function index()
+    public function index(Request $request)
     {
         $user = session('user');
+        $search = $request->input('search');
+        $sort = $request->input('sort', 'id');
+        $dir = $request->input('dir', 'desc');
+
+        $query = ClientDetails::where('company_id', $user->company_id);
 
         if ($user->role_id == 7) {
             $sites = SiteAssign::where('company_id', $user->company_id)->where('user_id', $user->id)->first();
             $sitesIds = json_decode($sites->site_id ?? '[]', true);
 
             if (!empty($sitesIds)) {
-                $records = ClientDetails::where('company_id', $user->company_id)->whereIn('id', $sitesIds)->paginate(10);
-            }
-            else {
-                $records = ClientDetails::where('company_id', $user->company_id)->paginate(10);
+                $query->whereIn('id', $sitesIds);
             }
         }
+
+        // Search logic
+        if (!empty($search)) {
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'LIKE', "%{$search}%")
+                    ->orWhere('city', 'LIKE', "%{$search}%")
+                    ->orWhere('state', 'LIKE', "%{$search}%");
+            });
+        }
+
+        // Sorting logic
+        $allowedSorts = ['name', 'state', 'city', 'isActive', 'id', 'status'];
+        if (in_array($sort, $allowedSorts)) {
+            $sortColumn = ($sort == 'status') ? 'isActive' : $sort;
+            $query->orderBy($sortColumn, $dir == 'asc' ? 'asc' : 'desc');
+        }
         else {
-            $records = ClientDetails::where('company_id', $user->company_id)->paginate(10);
+            $query->orderBy('id', 'desc');
+        }
+
+        $records = $query->paginate(10);
+
+        if ($request->ajax()) {
+            return view('partials.clients_table', ['clients' => $records])->render();
         }
 
         return view('clientdetails')->with('clients', $records);
@@ -209,6 +233,7 @@ class ClientDetailsController extends Controller
                     $name = explode(" ", $_POST['name']);
 
                     $company = CompanyDetails::where('id', $user->company_id)->first();
+                    // dd($company, "company", $user);
                     $new_user = new RegistrationData();
                     // dd($new_user, "new user");
                     $new_user->firstName = $name[0];

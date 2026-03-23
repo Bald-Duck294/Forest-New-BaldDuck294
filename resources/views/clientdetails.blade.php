@@ -2,6 +2,7 @@
     $hideGlobalFilters = true;
     $hideBackground = true;
     // $user = session('user');
+    // dump('testing');
 @endphp
 @extends('layouts.app')
 
@@ -11,22 +12,32 @@
 
     <style>
         /* =========================================
-                                                                       LOCAL COMPONENT STYLES
-                                                                       (Hooked to Global Sapphire Variables)
-                                                                    ========================================= */
+                           LOCAL COMPONENT STYLES
+                           (Hooked to Global Sapphire Variables)
+                        ========================================= */
+
+        /* Cards */
+        .dash-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02);
+            margin-top: 1rem;
+        }
 
         /* Action Buttons */
         .btn-sapphire {
             background-color: var(--sapphire-primary);
             color: #ffffff;
             border: none;
-            font-weight: 500;
+            font-weight: 600;
             padding: 8px 16px;
             border-radius: 8px;
             transition: all 0.2s ease;
             display: inline-flex;
             align-items: center;
             gap: 6px;
+            font-size: 0.85rem;
             text-decoration: none;
         }
 
@@ -40,13 +51,14 @@
             background-color: transparent;
             color: var(--text-main);
             border: 1px solid var(--border-color);
-            font-weight: 500;
+            font-weight: 600;
             padding: 8px 16px;
             border-radius: 8px;
             transition: all 0.2s ease;
             display: inline-flex;
             align-items: center;
             gap: 6px;
+            font-size: 0.85rem;
             text-decoration: none;
         }
 
@@ -54,6 +66,33 @@
             background-color: var(--table-hover);
             color: var(--sapphire-primary);
             border-color: var(--sapphire-primary);
+        }
+
+        /* Custom Search Input */
+        .custom-input {
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 8px 12px;
+            font-size: 0.85rem;
+            outline: none;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+            min-width: 220px;
+        }
+
+        .custom-input:focus {
+            border-color: var(--sapphire-primary);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .custom-input::placeholder {
+            color: var(--text-muted);
+            opacity: 0.7;
+        }
+
+        html[data-bs-theme="dark"] .custom-input {
+            color-scheme: dark;
         }
 
         /* Icon Action Buttons (View, Edit, Delete) */
@@ -69,6 +108,7 @@
             transition: all 0.2s ease;
             font-size: 1.1rem;
             text-decoration: none !important;
+            cursor: pointer;
         }
 
         .btn-icon-soft.view {
@@ -100,12 +140,13 @@
 
         /* Custom Switch Styling */
         .custom-switch .form-check-input {
-            width: 2.5em;
-            height: 1.25em;
+            width: 2.8em;
+            height: 1.4em;
             background-color: var(--border-color);
             border-color: var(--border-color);
             cursor: pointer;
             transition: background-color 0.2s ease, border-color 0.2s ease;
+            margin-top: 0;
         }
 
         .custom-switch .form-check-input:checked {
@@ -174,7 +215,8 @@
             transition: color 0.2s ease;
         }
 
-        .sort-link:hover {
+        .sort-link:hover,
+        .sort-link.active {
             color: var(--sapphire-primary);
         }
 
@@ -183,205 +225,69 @@
             opacity: 0.5;
         }
 
-        .sort-link:hover i {
-            opacity: 1;
-        }
-
-        /* Tables & Sorting */
-        .dash-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 0;
-        }
-
-        .dash-table th {
-            color: var(--text-muted);
-            font-weight: 600;
-            font-size: 0.85rem;
-            border-bottom: 1px solid var(--border-color);
-            padding: 1rem;
-            background-color: transparent !important;
-            white-space: nowrap;
-        }
-
-        .dash-table td {
-            color: var(--text-main);
-            font-weight: 500;
-            font-size: 0.9rem;
-            border-bottom: 1px dashed var(--border-color);
-            padding: 1rem;
-            vertical-align: middle;
-            background-color: transparent !important;
-        }
-
-        .dash-table tr:hover td {
-            background-color: var(--table-hover) !important;
-        }
-
-        .dash-table tr:last-child td {
-            border-bottom: none;
-        }
-
-        .sort-link {
-            color: var(--text-muted);
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            transition: color 0.2s ease;
-        }
-
-        .sort-link:hover {
-            color: var(--sapphire-primary);
-        }
-
-        .sort-link i {
-            font-size: 0.75rem;
-            opacity: 0.5;
-        }
-
-        .sort-link:hover i {
+        .sort-link:hover i,
+        .sort-link.active i {
             opacity: 1;
         }
     </style>
 
     <div class="container-fluid py-4">
 
-        {{-- HEADER --}}
-        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
-            <div>
-                <a href="javascript:history.back()" class="text-decoration-none mb-2 d-inline-block"
-                    style="color: var(--text-muted); font-size: 0.85rem; font-weight: 600;">
-                    <i class="bi bi-arrow-left me-1"></i> Go Back
-                </a>
-                <h3 class="fw-bold mb-1" style="color: var(--text-main);">Ranges</h3>
-                <p class="mb-0" style="color: var(--text-muted); font-size: 0.9rem;">
-                    Manage all assigned ranges, states, cities, and their operational status.
-                </p>
-            </div>
-
-            <div class="d-flex gap-2">
-                <a href="{{ route('clients.export') }}" class="btn-sapphire-outline shadow-sm">
-                    <i class="bi bi-download"></i> Export Data
-                </a>
-                <a href="{{ route('clients.create') }}" class="btn-sapphire shadow-sm">
-                    <i class="bi bi-plus-lg"></i> Add Range
-                </a>
-            </div>
-        </div>
-
-        {{-- MAIN TABLE CARD --}}
+        {{-- COMPACT HEADER & TABLE CARD --}}
         <div class="dash-card p-0 overflow-hidden">
-            <div class="table-responsive">
-                <table class="table dash-table mb-0 align-middle">
-                    <thead>
-                        <tr>
-                            <th class="ps-4" style="width: 70px;">#</th>
-                            <th>
-                                <a href="{{ request()->fullUrlWithQuery(['sort' => 'name', 'dir' => request('dir') == 'asc' ? 'desc' : 'asc']) }}"
-                                    class="sort-link">
-                                    Name <i class="bi bi-arrow-down-up"></i>
-                                </a>
-                            </th>
-                            <th>
-                                <a href="{{ request()->fullUrlWithQuery(['sort' => 'state', 'dir' => request('dir') == 'asc' ? 'desc' : 'asc']) }}"
-                                    class="sort-link">
-                                    State <i class="bi bi-arrow-down-up"></i>
-                                </a>
-                            </th>
-                            <th>
-                                <a href="{{ request()->fullUrlWithQuery(['sort' => 'city', 'dir' => request('dir') == 'asc' ? 'desc' : 'asc']) }}"
-                                    class="sort-link">
-                                    City <i class="bi bi-arrow-down-up"></i>
-                                </a>
-                            </th>
-                            <th class="text-center" style="width: 120px;">
-                                <a href="{{ request()->fullUrlWithQuery(['sort' => 'status', 'dir' => request('dir') == 'asc' ? 'desc' : 'asc']) }}"
-                                    class="sort-link justify-content-center">
-                                    Status <i class="bi bi-arrow-down-up"></i>
-                                </a>
-                            </th>
-                            <th class="text-center pe-4" style="width: 160px;">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @if ($clients && count($clients) > 0)
-                            @php $sr = ($clients->currentPage() - 1) * $clients->perPage() + 1; @endphp
-                            @foreach ($clients as $row)
-                                <tr>
-                                    <td class="ps-4 fw-semibold" style="color: var(--text-muted);">
-                                        {{ $sr++ }}
-                                    </td>
-                                    <td>
-                                        <a href="{{ route('clients.view', $row->id) }}" class="client-name-link">
-                                            {{ $row->name }}
-                                        </a>
-                                    </td>
-                                    <td style="color: var(--text-main);">
-                                        {{ $row->state ?: '-' }}
-                                    </td>
-                                    <td style="color: var(--text-main);">
-                                        {{ $row->city ?: '-' }}
-                                    </td>
-                                    <td class="text-center">
-                                        <div class="form-check form-switch custom-switch d-flex justify-content-center m-0">
-                                            <input class="form-check-input status-toggle shadow-sm" type="checkbox"
-                                                role="switch" id="statusSwitch{{ $row->id }}"
-                                                {{ $row->isActive == 1 ? 'checked' : '' }}
-                                                onchange="toggleActive('{{ $row->id }}', this, {{ $row->isActive == 1 ? 'true' : 'false' }})">
-                                        </div>
-                                    </td>
-                                    <td class="text-center pe-4">
-                                        <div class="d-flex justify-content-center gap-1">
-                                            <a href="{{ route('sites.getsites', $row->id) }}" class="btn-icon-soft view"
-                                                title="View Sites">
-                                                <i class="bi bi-eye-fill"></i>
-                                            </a>
-                                            <a href="{{ route('clients.editClient', $row->id) }}"
-                                                class="btn-icon-soft edit" title="Edit Range">
-                                                <i class="bi bi-pencil-square"></i>
-                                            </a>
-                                            <button type="button" onclick="deleteClient('{{ $row->id }}')"
-                                                class="btn-icon-soft delete" title="Delete Range">
-                                                <i class="bi bi-trash-fill"></i>
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            @endforeach
-                        @else
-                            <tr>
-                                <td colspan="6" class="text-center py-5">
-                                    <div class="py-4">
-                                        <i class="bi bi-buildings"
-                                            style="font-size: 3rem; color: var(--text-muted); opacity: 0.4;"></i>
-                                        <h5 class="fw-bold mt-3 mb-1" style="color: var(--text-main);">No ranges found</h5>
-                                        <p style="color: var(--text-muted); font-size: 0.9rem;">
-                                            There are no items found here. <a href="{{ route('clients.create') }}"
-                                                style="color: var(--sapphire-primary); font-weight: 600; text-decoration: none;">Add
-                                                your first one</a>.
-                                        </p>
-                                    </div>
-                                </td>
-                            </tr>
-                        @endif
-                    </tbody>
-                </table>
-            </div>
 
-            {{-- PAGINATION --}}
-            @if ($clients && count($clients) > 0)
-                <div class="p-3 d-flex justify-content-between align-items-center"
-                    style="border-top: 1px solid var(--border-color); background: var(--bg-body);">
-                    <small style="color: var(--text-muted);">
-                        Showing {{ $clients->firstItem() ?? 0 }} to {{ $clients->lastItem() ?? 0 }} of
-                        {{ $clients->total() ?? 0 }} entries
-                    </small>
-                    <div class="m-0 p-0">
-                        {{ $clients->links('pagination::bootstrap-5') }}
+            {{-- Top Controls Bar --}}
+            <div class="p-3 p-md-4 d-flex flex-column flex-xl-row justify-content-between align-items-xl-center gap-3 border-bottom"
+                style="border-color: var(--border-color) !important;">
+
+                {{-- Title & Back --}}
+                <div class="d-flex align-items-center gap-3">
+                    <a href="javascript:history.back()" class="btn-sapphire-outline px-2 py-1" title="Go Back">
+                        <i class="bi bi-arrow-left"></i>
+                    </a>
+                    <div>
+                        <h4 class="fw-bold mb-0" style="color: var(--text-main); line-height: 1.2;">Manage Ranges</h4>
+                        <p class="mb-0" style="color: var(--text-muted); font-size: 0.8rem;">Overview of all assigned
+                            ranges and operational status.</p>
                     </div>
                 </div>
-            @endif
+
+                {{-- Search & Actions --}}
+                <div class="d-flex flex-column flex-md-row gap-2">
+                    {{-- Search Form --}}
+                    <div class="d-flex gap-2 m-0">
+                        <div class="position-relative flex-grow-1">
+                            <i class="bi bi-search position-absolute"
+                                style="left: 12px; top: 10px; color: var(--text-muted);"></i>
+                            <input type="text" name="search" id="ajaxSearch" value="{{ request('search') }}"
+                                class="custom-input" style="padding-left: 36px;"
+                                placeholder="Search range, city, or state...">
+
+                            {{-- AJAX Clear/Reset Button --}}
+                            <button type="button" id="clearSearch" class="btn btn-link position-absolute p-0"
+                                style="right: 12px; top: 8px; color: var(--text-muted); display: none;"
+                                title="Clear Search">
+                                <i class="bi bi-x-circle-fill"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="vr d-none d-md-block mx-1" style="color: var(--border-color);"></div>
+
+                    <a href="{{ route('clients.export') }}" class="btn-sapphire-outline text-nowrap"
+                        style="color: var(--sapphire-success); border-color: var(--sapphire-success);">
+                        <i class="bi bi-download"></i> Export
+                    </a>
+                    <a href="{{ route('clients.create') }}" class="btn-sapphire text-nowrap">
+                        <i class="bi bi-plus-lg"></i> Add Range
+                    </a>
+                </div>
+            </div>
+
+            {{-- Table Container for AJAX Updates --}}
+            <div id="clientsTableContainer">
+                @include('partials.clients_table')
+            </div>
 
         </div>
     </div>
@@ -389,13 +295,98 @@
     @push('scripts')
         <script>
             document.addEventListener("DOMContentLoaded", function() {
+                let searchInput = document.getElementById('ajaxSearch');
+                let clearBtn = document.getElementById('clearSearch');
+                let tableContainer = document.getElementById('clientsTableContainer');
+                let currentSort = '{{ request('sort', 'id') }}';
+                let currentDir = '{{ request('dir', 'desc') }}';
+                let debounceTimeout = null;
+
+                // Sync clear button visibility
+                function toggleClearBtn() {
+                    if (searchInput.value.length > 0) {
+                        clearBtn.style.display = 'block';
+                    } else {
+                        clearBtn.style.display = 'none';
+                    }
+                }
+                toggleClearBtn();
+
+                // AJAX Fetch Function
+                window.fetchClients = function(page = 1) {
+                    let search = searchInput.value;
+                    let url =
+                        `{{ route('clients') }}?page=${page}&search=${search}&sort=${currentSort}&dir=${currentDir}`;
+
+                    // Show a subtle loading state instead of blanking
+                    tableContainer.style.opacity = '0.5';
+
+                    fetch(url, {
+                            headers: {
+                                'X-Requested-With': 'XMLHttpRequest'
+                            }
+                        })
+                        .then(response => response.text())
+                        .then(html => {
+                            tableContainer.innerHTML = html;
+                            tableContainer.style.opacity = '1';
+
+                            // Re-bind pagination clicks since they are now part of the new HTML
+                            bindPagination();
+                        })
+                        .catch(error => {
+                            console.error('Error fetching clients:', error);
+                            tableContainer.style.opacity = '1';
+                        });
+                };
+
+                // Handle Pagination Clicks
+                function bindPagination() {
+                    let paginationLinks = document.querySelectorAll('.ajax-pagination a');
+                    paginationLinks.forEach(link => {
+                        link.addEventListener('click', function(e) {
+                            e.preventDefault();
+                            let pageUrl = new URL(this.href);
+                            let page = pageUrl.searchParams.get('page');
+                            fetchClients(page);
+                        });
+                    });
+                }
+                bindPagination();
+
+                // Handle Search Input (As you type)
+                searchInput.addEventListener('input', function() {
+                    toggleClearBtn();
+                    clearTimeout(debounceTimeout);
+                    debounceTimeout = setTimeout(() => {
+                        fetchClients(1);
+                    }, 400); // 400ms debounce
+                });
+
+                // Clear Search
+                window.clearSearch = function() {
+                    searchInput.value = '';
+                    toggleClearBtn();
+                    fetchClients(1);
+                };
+                clearBtn.addEventListener('click', clearSearch);
+
+                // Handle Column Sort
+                window.handleSort = function(column) {
+                    if (currentSort === column) {
+                        currentDir = currentDir === 'asc' ? 'desc' : 'asc';
+                    } else {
+                        currentSort = column;
+                        currentDir = 'asc';
+                    }
+                    fetchClients(1);
+                };
 
                 // Delete Function
                 window.deleteClient = function(id) {
                     var title = 'Delete Confirmation';
                     var msg = 'Are you sure you want to delete this range?';
 
-                    // Check if SweetAlert is loaded
                     if (typeof Swal !== 'undefined') {
                         Swal.fire({
                             title: title,
@@ -423,10 +414,9 @@
                     }
                 };
 
-                // Toggle Status Function
+                // Toggle Status Function - Upgraded for better UX
                 window.toggleActive = function(id, element, currentlyActive) {
-                    // Instantly revert the toggle visually until user confirms
-                    element.checked = currentlyActive;
+                    event.preventDefault();
 
                     var action = currentlyActive ? 'deactivate' : 'activate';
                     var title = action === 'deactivate' ? 'Deactivation Confirmation' : 'Activation Confirmation';
@@ -455,6 +445,8 @@
                                     '{{ route('clients.inactive', ':id') }}' :
                                     '{{ route('clients.active', ':id') }}';
                                 window.location = url.replace(':id', id);
+                            } else {
+                                element.checked = currentlyActive;
                             }
                         });
                     } else {
@@ -463,6 +455,8 @@
                             var url = action === 'deactivate' ? '{{ route('clients.inactive', ':id') }}' :
                                 '{{ route('clients.active', ':id') }}';
                             window.location = url.replace(':id', id);
+                        } else {
+                            element.checked = currentlyActive;
                         }
                     }
                 };
