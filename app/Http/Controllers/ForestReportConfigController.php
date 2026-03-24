@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\ForestReportConfig;
+use App\Models\Plantation;
 use Illuminate\Support\Facades\DB;
 use App\Asset;
 use Carbon\Carbon;
@@ -639,7 +640,7 @@ public function reportsDashboard(Request $request)
         // =======================================================================
         // NEW: FETCH PLANTATION DATA (Respecting existing Range/Beat filters)
         // =======================================================================
-        $plantationQuery = \App\Models\Plantation::where('user_id', '!=', 0); // Base query
+        $plantationQuery = Plantation::where('user_id', '!=', 0); // Base query
         
         // Apply Range/Beat filters to Plantations if they exist
         if ($request->filled('range_id') && $request->range_id !== '0' && $request->range_id !== 'all') {
@@ -912,7 +913,7 @@ public function reportsDashboard(Request $request)
                 ];
             }
         } elseif ($type === 'assets') {
-            $records = \App\Models\Asset::where('company_id', $companyId)->latest()->limit(20)->get();
+            $records = Asset::where('company_id', $companyId)->latest()->limit(20)->get();
             foreach ($records as $r) {
                 $data[] = [
                     'id' => 'AST-'.$r->id,
@@ -923,7 +924,7 @@ public function reportsDashboard(Request $request)
                 ];
             }
         } elseif ($type === 'forestry') {
-            $records = \App\Models\Plantation::latest()->limit(20)->get();
+            $records = Plantation::latest()->limit(20)->get();
             foreach ($records as $r) {
                 $data[] = [
                     'id' => $r->code,
@@ -981,7 +982,7 @@ public function reportsDashboard(Request $request)
             $viewType = 'reports';
 
         } elseif ($category === 'assets') {
-            $query = \App\Models\Asset::where('company_id', $companyId);
+            $query = Asset::where('company_id', $companyId);
             if ($search) $query->where('category', 'like', "%{$search}%");
             if ($fromDate) $query->whereDate('created_at', '>=', $fromDate);
             if ($toDate) $query->whereDate('created_at', '<=', $toDate);
@@ -990,7 +991,7 @@ public function reportsDashboard(Request $request)
             $viewType = 'assets';
 
         } elseif ($category === 'plantations') {
-            $query = \App\Models\Plantation::query();
+            $query = Plantation::query();
             if ($search) {
                 $query->where('code', 'like', "%{$search}%")
                       ->orWhere('name', 'like', "%{$search}%")

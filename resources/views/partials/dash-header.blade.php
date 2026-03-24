@@ -10,7 +10,7 @@
             <option value="">All Ranges</option>
             @foreach ($ranges ?? [] as $id => $name)
                 <option value="{{ $id }}"
-                    {{ (string)request('range_id') == (string)$id ? 'selected' : '' }}>
+                    {{ (string) request('range_id') == (string) $id ? 'selected' : '' }}>
                     {{ $name }}
                 </option>
             @endforeach
@@ -32,7 +32,8 @@
             <i class="bi bi-arrow-repeat"></i> Sync
         </button>
 
-        <button onclick="resetFilters()" class="btn-soft-danger border" title="Reset Filters" style="padding: 0.5rem 1rem;">
+        <button onclick="resetFilters()" class="btn-soft-danger border" title="Reset Filters"
+            style="padding: 0.5rem 1rem;">
             <i class="bi bi-x-circle"></i> Reset
         </button>
     </div>

@@ -302,7 +302,7 @@ class LoginController extends Controller
                     $viewAllLog = ActivityLog::where('company_id', $user->company_id)->orderBy('id', 'desc')
                         ->get();
 
-                    return view('welcome')->with('viewAllLog', $viewAllLog)
+                    return view('dashboard.index')->with('viewAllLog', $viewAllLog)
                         ->with('geofences', $geofences)
                         ->with('guardLog', $guardLog)
                         ->with('formattedData', $formattedData)
@@ -488,7 +488,7 @@ class LoginController extends Controller
                         ->orderBy('id', 'desc')->take(5)->get();
                     $viewAllLog = ActivityLog::where('company_id', $user->company_id)->orderBy('id', 'desc')
                         ->get();
-                    return view('welcome')->with('viewAllLog', $viewAllLog)->with('guardLog', $guardLog)
+                    return view('dashboard.index')->with('viewAllLog', $viewAllLog)->with('guardLog', $guardLog)
                         ->with('formattedData', $formattedData)->with('siteDetails', $siteDetails)
                         ->with('sites', $sitess)->with('guards', $totalGuards)->with('guardonsite', $present)
                         ->with('incidence', $incidence)->with('noshow', $absent)->with('clients', $clients)
@@ -627,7 +627,7 @@ class LoginController extends Controller
                         ->selectRaw('users.*, users.id as id, site_assign.site_name')
                         ->select('count(*) as allcount')
                         ->count();
-                    return view('welcome')->with('sites', $sites)->with('incidence', $incidence)->with('user', $user)->with('todayPending', $todayPending)->with('todayResolved', $todayResolved)->with('todayIgnored', $todayIgnored)->with('pendingWithSupervisor', $pendingWithSupervisor)->with('resolve', $resolve)->with('ignore', $ignore)->with('escalateToAdmin', $escalateToAdmin)->with('pendingAdmin', $pendingAdmin)->with('escalateToClient', $escalateToClient)->with('date', $date)->with('todayPresent', $present)->with('todayLate', $late)->with('todayAbsent', $absent)->with('weeklyPresent', $weeklyPresent)->with('weeklyAbsent', $weeklyAbsent)->with('weeklyLate', $weeklyLate)->with('data', $data)->with('guardonsite', $present)->with('noshow', $absent)->with('late', $late)->with('u', $d);
+                    return view('dashboard.index')->with('sites', $sites)->with('incidence', $incidence)->with('user', $user)->with('todayPending', $todayPending)->with('todayResolved', $todayResolved)->with('todayIgnored', $todayIgnored)->with('pendingWithSupervisor', $pendingWithSupervisor)->with('resolve', $resolve)->with('ignore', $ignore)->with('escalateToAdmin', $escalateToAdmin)->with('pendingAdmin', $pendingAdmin)->with('escalateToClient', $escalateToClient)->with('date', $date)->with('todayPresent', $present)->with('todayLate', $late)->with('todayAbsent', $absent)->with('weeklyPresent', $weeklyPresent)->with('weeklyAbsent', $weeklyAbsent)->with('weeklyLate', $weeklyLate)->with('data', $data)->with('guardonsite', $present)->with('noshow', $absent)->with('late', $late)->with('u', $d);
                 }
                 if ($user->role_id == '7') {
                     $siteAssigned = SiteAssign::where('user_id', $user->id)->first();
@@ -868,7 +868,7 @@ class LoginController extends Controller
                     $viewAllLog = ActivityLog::where('company_id', $user->company_id)->whereIn('user_id', $userArray)->orderBy('id', 'desc')
                         ->get();
 
-                    return view('welcome')->with('viewAllLog', $viewAllLog)->with('geofences', $geofences)->with('guardLog', $guardLog)->with('formattedData', $formattedData)->with('siteDetails', $siteDetails)->with('sites', $sites)->with('guards', $totalGuards)->with('guardonsite', $guardonsite)->with('incidence', $incidence)->with('noshow', $absent)->with('notifications', $notifications)->with('clients', $clients)->with('users', $user)->with('supervisor', $supervisor)->with('userData', $user)->with('late', $late)->with('emergencyAttendance', $emergencyAttendance)->with('data', $data)->with('u', $d)->with('pendingWithSupervisor', $pendingWithSupervisor)->with('resolve', $resolve)->with('ignore', $ignore)->with('escalateToAdmin', $escalateToAdmin)->with('pendingAdmin', $pendingAdmin)->with('escalateToClient', $escalateToClient)->with('user', $user)->with('todayPending', $todayPending)->with('todayResolved', $todayResolved)->with('todayIgnored', $todayIgnored)->with('date', $date)->with('todayPresent', $present)->with('todayLate', $late)->with('todayAbsent', $absent)->with('weeklyPresent', $weeklyPresent)->with('weeklyAbsent', $weeklyAbsent)->with('weeklyLate', $weeklyLate);
+                    return view('dashboard.index')->with('viewAllLog', $viewAllLog)->with('geofences', $geofences)->with('guardLog', $guardLog)->with('formattedData', $formattedData)->with('siteDetails', $siteDetails)->with('sites', $sites)->with('guards', $totalGuards)->with('guardonsite', $guardonsite)->with('incidence', $incidence)->with('noshow', $absent)->with('notifications', $notifications)->with('clients', $clients)->with('users', $user)->with('supervisor', $supervisor)->with('userData', $user)->with('late', $late)->with('emergencyAttendance', $emergencyAttendance)->with('data', $data)->with('u', $d)->with('pendingWithSupervisor', $pendingWithSupervisor)->with('resolve', $resolve)->with('ignore', $ignore)->with('escalateToAdmin', $escalateToAdmin)->with('pendingAdmin', $pendingAdmin)->with('escalateToClient', $escalateToClient)->with('user', $user)->with('todayPending', $todayPending)->with('todayResolved', $todayResolved)->with('todayIgnored', $todayIgnored)->with('date', $date)->with('todayPresent', $present)->with('todayLate', $late)->with('todayAbsent', $absent)->with('weeklyPresent', $weeklyPresent)->with('weeklyAbsent', $weeklyAbsent)->with('weeklyLate', $weeklyLate);
                 } else {
 
                     return redirect()->back()->with('error', 'Invalid Credentials');
@@ -1170,7 +1170,7 @@ class LoginController extends Controller
                     ->where('company_id', $user->company_id)->where('dateFormat', $date)
                     ->where('statusFlag', 2)->count();
 
-                return view('welcome')->with('viewAllLog', $viewAllLog)->with('geofences', $geofences)
+                return view('dashboard.index')->with('viewAllLog', $viewAllLog)->with('geofences', $geofences)
                     ->with('guardLog', $guardLog)->with('formattedData', $formattedData)
                     ->with('siteDetails', $siteDetails)->with('sites', $sites)->with('guards', $totalGuards)
                     ->with('guardonsite', $guardonsite)->with('incidence', $incidence)->with('noshow', $absent)
@@ -1384,7 +1384,7 @@ class LoginController extends Controller
 
                 // dd($guardLog,$viewAllLog);
 
-                return view('welcome')->with('viewAllLog', $viewAllLog)
+                return view('dashboard.index')->with('viewAllLog', $viewAllLog)
                     ->with('guardLog', $guardLog)->with('formattedData', $formattedData)->with('siteDetails', $siteDetails)
                     ->with('sites', $sitess)->with('guards', $totalGuards)->with('guardonsite', $present)
                     ->with('incidence', $incidence)->with('noshow', $absent)->with('notifications', $notifications)
@@ -1545,7 +1545,7 @@ class LoginController extends Controller
                     ->select('count(*) as allcount')
                     ->count();
 
-                return view('welcome')->with('sites', $sites)->with('incidence', $incidence)->with('user', $user)
+                return view('dashboard.index')->with('sites', $sites)->with('incidence', $incidence)->with('user', $user)
                     ->with('todayPending', $todayPending)->with('todayResolved', $todayResolved)->with('todayIgnored', $todayIgnored)
                     ->with('pendingWithSupervisor', $pendingWithSupervisor)->with('resolve', $resolve)->with('ignore', $ignore)
                     ->with('escalateToAdmin', $escalateToAdmin)->with('pendingAdmin', $pendingAdmin)->with('escalateToClient', $escalateToClient)
@@ -1905,7 +1905,7 @@ class LoginController extends Controller
                 $viewAllLog = ActivityLog::where('company_id', $user->company_id)->where('user_id', $sitesLog->user_id)->orderBy('id', 'desc')
                     ->get();
 
-                return view('welcome')->with('viewAllLog', $viewAllLog)->with('geofences', $geofences)
+                return view('dashboard.index')->with('viewAllLog', $viewAllLog)->with('geofences', $geofences)
                     ->with('guardLog', $guardLog)->with('formattedData', $formattedData)->with('siteDetails', $siteDetails)
                     ->with('sites', $sites)->with('guards', $totalGuards)->with('guardonsite', $guardonsite)->with('incidence', $incidence)
                     ->with('noshow', $absent)->with('notifications', $notifications)->with('clients', $clients)->with('users', $user)
@@ -1929,7 +1929,7 @@ class LoginController extends Controller
 
                 $noshow = DB::table('users')->where('company_id', $user->company_id)->where('role_id', 3)->where('supervisor_id', '=', $user->supervisor_id)->whereNotIn('id', $attendance)->select('count(*) as allcount')->count();
                 $notifications = Notifications::where([['company_id', $user->company_id], ['supervisor_id', '=', $user->supervisor_id]])->select('count(*) as allcount')->count();
-                return view('welcome')->with('sites', $sites)->with('guards', $guards)->with('guardonsite', $guardonsite)
+                return view('dashboard.index')->with('sites', $sites)->with('guards', $guards)->with('guardonsite', $guardonsite)
                     ->with('incidence', $incidence)->with('noshow', $noshow)->with('notifications', $notifications)->with('userData', $userData);
             }
         }

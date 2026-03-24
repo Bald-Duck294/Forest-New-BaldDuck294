@@ -269,76 +269,85 @@
                         class="brand-accent">{{ $user?->company_name ?? ($company?->name ?? 'Patrol Analytics') }}</span>
                 @endif
                 <span class="separator">/</span>
-                {{-- <span class="current-page" id="dynamicPageTitle">@yield('title', 'Dashboard')</span> --}}
+                <span class="current-page" id="dynamicPageTitle">@yield('title', 'Dashboard')</span>
             </div>
         </div>
 
         {{-- Right: Utilities --}}
         <div class="nav-utils">
 
-            {{-- Search (Command Palette Trigger) --}}
-            <button class="nav-icon-btn" id="searchTrigger" title="Search (Ctrl+K)">
-                <i class="bi bi-search"></i>
-            </button>
-
-            {{-- Browser Fullscreen Toggle --}}
-            <button class="nav-icon-btn d-none d-md-flex" id="fullscreenToggle" title="Toggle Fullscreen">
-                <i class="bi bi-arrows-fullscreen" id="fullscreenIcon"></i>
-            </button>
-
-            {{-- Appearance & Settings Dropdown (Zen mode moved here to save space) --}}
-            <div class="dropdown">
-                <button class="nav-icon-btn" data-bs-toggle="dropdown" aria-expanded="false" title="Display Settings">
-                    <i class="bi bi-sliders2"></i>
+            {{-- 🟢 ADMIN ONLY FEATURES (Role 8) --}}
+            @if ($user?->role_id == 8)
+                {{-- Search (Command Palette Trigger) --}}
+                <button class="nav-icon-btn" id="searchTrigger" title="Search (Ctrl+K)">
+                    <i class="bi bi-search"></i>
                 </button>
-                <div class="dropdown-menu dropdown-menu-end sapphire-dropdown-menu">
 
-                    <div class="dropdown-section-title">Focus & Layout</div>
-                    <button class="sapphire-dropdown-item" id="zenModeToggle">
-                        <div class="d-flex align-items-center gap-2"><i class="bi bi-layout-sidebar-inset-reverse"></i>
-                            Zen Mode (Focus)</div>
-                    </button>
-                    <div class="my-2 border-bottom" style="border-color: var(--border-color);"></div>
+                {{-- Browser Fullscreen Toggle --}}
+                <button class="nav-icon-btn d-none d-md-flex" id="fullscreenToggle" title="Toggle Fullscreen">
+                    <i class="bi bi-arrows-fullscreen" id="fullscreenIcon"></i>
+                </button>
 
-                    <div class="dropdown-section-title">Header Style</div>
-                    <button class="sapphire-dropdown-item layout-option" data-layout="sticky"
-                        onclick="setHeaderLayout('sticky')">
-                        <div class="d-flex align-items-center gap-2"><i class="bi bi-layout-top"></i> Sticky Top</div>
-                        <i class="bi bi-check2 theme-check-icon"></i>
+                {{-- Appearance & Settings Dropdown --}}
+                <div class="dropdown">
+                    <button class="nav-icon-btn" data-bs-toggle="dropdown" aria-expanded="false"
+                        title="Display Settings">
+                        <i class="bi bi-sliders2"></i>
                     </button>
-                    <button class="sapphire-dropdown-item layout-option" data-layout="floating"
-                        onclick="setHeaderLayout('floating')">
-                        <div class="d-flex align-items-center gap-2"><i class="bi bi-capsule"></i> Floating Pill</div>
-                        <i class="bi bi-check2 theme-check-icon"></i>
-                    </button>
-                    <button class="sapphire-dropdown-item layout-option" data-layout="autohide"
-                        onclick="setHeaderLayout('autohide')">
-                        <div class="d-flex align-items-center gap-2"><i class="bi bi-arrows-collapse"></i> Auto-Hide
-                            Scroll</div>
-                        <i class="bi bi-check2 theme-check-icon"></i>
-                    </button>
-                    <button class="sapphire-dropdown-item layout-option" data-layout="minimal"
-                        onclick="setHeaderLayout('minimal')">
-                        <div class="d-flex align-items-center gap-2"><i class="bi bi-border-bottom"></i> Minimal Edge
-                        </div>
-                        <i class="bi bi-check2 theme-check-icon"></i>
-                    </button>
+                    <div class="dropdown-menu dropdown-menu-end sapphire-dropdown-menu">
+                        <div class="dropdown-section-title">Focus & Layout</div>
+                        <button class="sapphire-dropdown-item" id="zenModeToggle">
+                            <div class="d-flex align-items-center gap-2"><i
+                                    class="bi bi-layout-sidebar-inset-reverse"></i> Zen Mode (Focus)</div>
+                        </button>
+                        <div class="my-2 border-bottom" style="border-color: var(--border-color);"></div>
 
-                    <div class="my-2 border-bottom" style="border-color: var(--border-color);"></div>
+                        <div class="dropdown-section-title">Header Style</div>
+                        <button class="sapphire-dropdown-item layout-option" data-layout="sticky"
+                            onclick="setHeaderLayout('sticky')">
+                            <div class="d-flex align-items-center gap-2"><i class="bi bi-layout-top"></i> Sticky Top
+                            </div>
+                            <i class="bi bi-check2 theme-check-icon"></i>
+                        </button>
+                        <button class="sapphire-dropdown-item layout-option" data-layout="floating"
+                            onclick="setHeaderLayout('floating')">
+                            <div class="d-flex align-items-center gap-2"><i class="bi bi-capsule"></i> Floating Pill
+                            </div>
+                            <i class="bi bi-check2 theme-check-icon"></i>
+                        </button>
+                        <button class="sapphire-dropdown-item layout-option" data-layout="autohide"
+                            onclick="setHeaderLayout('autohide')">
+                            <div class="d-flex align-items-center gap-2"><i class="bi bi-arrows-collapse"></i> Auto-Hide
+                                Scroll</div>
+                            <i class="bi bi-check2 theme-check-icon"></i>
+                        </button>
+                        <button class="sapphire-dropdown-item layout-option" data-layout="minimal"
+                            onclick="setHeaderLayout('minimal')">
+                            <div class="d-flex align-items-center gap-2"><i class="bi bi-border-bottom"></i> Minimal
+                                Edge</div>
+                            <i class="bi bi-check2 theme-check-icon"></i>
+                        </button>
 
-                    <div class="dropdown-section-title">UI Density</div>
-                    <button class="sapphire-dropdown-item density-option" data-density="comfortable"
-                        onclick="setUIDensity('comfortable')">
-                        <div class="d-flex align-items-center gap-2"><i class="bi bi-view-list"></i> Comfortable</div>
-                        <i class="bi bi-check2 theme-check-icon"></i>
-                    </button>
-                    <button class="sapphire-dropdown-item density-option" data-density="compact"
-                        onclick="setUIDensity('compact')">
-                        <div class="d-flex align-items-center gap-2"><i class="bi bi-view-stacked"></i> Compact</div>
-                        <i class="bi bi-check2 theme-check-icon"></i>
-                    </button>
+                        <div class="my-2 border-bottom" style="border-color: var(--border-color);"></div>
+
+                        <div class="dropdown-section-title">UI Density</div>
+                        <button class="sapphire-dropdown-item density-option" data-density="comfortable"
+                            onclick="setUIDensity('comfortable')">
+                            <div class="d-flex align-items-center gap-2"><i class="bi bi-view-list"></i> Comfortable
+                            </div>
+                            <i class="bi bi-check2 theme-check-icon"></i>
+                        </button>
+                        <button class="sapphire-dropdown-item density-option" data-density="compact"
+                            onclick="setUIDensity('compact')">
+                            <div class="d-flex align-items-center gap-2"><i class="bi bi-view-stacked"></i> Compact
+                            </div>
+                            <i class="bi bi-check2 theme-check-icon"></i>
+                        </button>
+                    </div>
                 </div>
-            </div>
+            @endif
+            {{-- 🔴 END ADMIN ONLY FEATURES --}}
+
 
             {{-- Advanced Theme Toggle (Light/Dark/System) --}}
             <div class="dropdown">
@@ -422,114 +431,122 @@
 <script>
     document.addEventListener('DOMContentLoaded', () => {
 
-        /* =========================================================
-           1. COMMAND PALETTE (Ctrl+K Shortcut)
-        ========================================================= */
-        document.addEventListener('keydown', (e) => {
-            // Listen for Ctrl+K or Cmd+K
-            if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
-                e.preventDefault();
-                // Trigger your search modal/logic here
-                alert("Command Palette Opened! (Implement your search modal logic here)");
+        // Check if Admin scripts should be initialized
+        const isAdmin = {{ $user?->role_id == 8 ? 'true' : 'false' }};
+
+        if (isAdmin) {
+            /* =========================================================
+               1. COMMAND PALETTE (Ctrl+K Shortcut)
+            ========================================================= */
+            document.addEventListener('keydown', (e) => {
+                if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+                    e.preventDefault();
+                    alert("Command Palette Opened! (Implement your search modal logic here)");
+                }
+            });
+
+            const searchTrigger = document.getElementById('searchTrigger');
+            if (searchTrigger) {
+                searchTrigger.addEventListener('click', () => {
+                    alert("Command Palette Opened! (Implement your search modal logic here)");
+                });
             }
-        });
 
-        document.getElementById('searchTrigger').addEventListener('click', () => {
-            alert("Command Palette Opened! (Implement your search modal logic here)");
-        });
+            /* =========================================================
+               2. FULLSCREEN API LOGIC
+            ========================================================= */
+            const fullscreenBtn = document.getElementById('fullscreenToggle');
+            const fullscreenIcon = document.getElementById('fullscreenIcon');
 
-        /* =========================================================
-           2. FULLSCREEN API LOGIC
-        ========================================================= */
-        const fullscreenBtn = document.getElementById('fullscreenToggle');
-        const fullscreenIcon = document.getElementById('fullscreenIcon');
+            if (fullscreenBtn) {
+                fullscreenBtn.addEventListener('click', () => {
+                    if (!document.fullscreenElement) {
+                        document.documentElement.requestFullscreen().catch(err => console.log(err));
+                    } else {
+                        document.exitFullscreen();
+                    }
+                });
 
-        if (fullscreenBtn) {
-            fullscreenBtn.addEventListener('click', () => {
-                if (!document.fullscreenElement) {
-                    document.documentElement.requestFullscreen().catch(err => console.log(err));
+                document.addEventListener('fullscreenchange', () => {
+                    if (document.fullscreenElement) {
+                        fullscreenIcon.classList.replace('bi-arrows-fullscreen', 'bi-fullscreen-exit');
+                    } else {
+                        fullscreenIcon.classList.replace('bi-fullscreen-exit', 'bi-arrows-fullscreen');
+                    }
+                });
+            }
+
+            /* =========================================================
+               3. ZEN MODE (Focus Mode)
+            ========================================================= */
+            const zenToggle = document.getElementById('zenModeToggle');
+            const sidebar = document.getElementById('sidebar');
+
+            if (zenToggle) {
+                zenToggle.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+
+                    document.body.classList.toggle('zen-mode-active');
+                    if (document.body.classList.contains('zen-mode-active')) {
+                        if (sidebar) sidebar.style.transform = 'translateX(-100%)';
+                        document.querySelector('.content').style.marginLeft = '0';
+                    } else {
+                        if (sidebar) sidebar.style.transform = '';
+                        document.querySelector('.content').style.marginLeft = '';
+                    }
+                });
+            }
+
+            /* =========================================================
+               4. SMART HEADER LAYOUTS & AUTO-HIDE
+            ========================================================= */
+            const headerWrapper = document.getElementById('headerWrapper');
+            let lastScrollY = window.scrollY;
+            let isAutoHideEnabled = localStorage.getItem('header-layout') === 'autohide';
+
+            window.setHeaderLayout = function(layoutName) {
+                headerWrapper.classList.remove('layout-sticky', 'layout-floating', 'layout-autohide',
+                    'layout-minimal');
+                headerWrapper.classList.remove('header-hidden');
+                isAutoHideEnabled = false;
+
+                headerWrapper.classList.add(`layout-${layoutName}`);
+                if (layoutName === 'autohide') isAutoHideEnabled = true;
+
+                localStorage.setItem('header-layout', layoutName);
+                updateDropdownCheckmarks('.layout-option', layoutName);
+            };
+
+            window.addEventListener('scroll', () => {
+                if (!isAutoHideEnabled) return;
+                if (window.scrollY > lastScrollY && window.scrollY > 80) {
+                    headerWrapper.classList.add('header-hidden');
                 } else {
-                    document.exitFullscreen();
+                    headerWrapper.classList.remove('header-hidden');
                 }
+                lastScrollY = window.scrollY;
+            }, {
+                passive: true
             });
 
-            document.addEventListener('fullscreenchange', () => {
-                if (document.fullscreenElement) {
-                    fullscreenIcon.classList.replace('bi-arrows-fullscreen', 'bi-fullscreen-exit');
-                } else {
-                    fullscreenIcon.classList.replace('bi-fullscreen-exit', 'bi-arrows-fullscreen');
-                }
-            });
+            setHeaderLayout(localStorage.getItem('header-layout') || 'sticky');
+
+            /* =========================================================
+               5. UI DENSITY
+            ========================================================= */
+            window.setUIDensity = function(density) {
+                document.body.classList.remove('density-compact', 'density-comfortable');
+                document.body.classList.add(`density-${density}`);
+                localStorage.setItem('ui-density', density);
+                updateDropdownCheckmarks('.density-option', density);
+            };
+
+            setUIDensity(localStorage.getItem('ui-density') || 'comfortable');
         }
 
         /* =========================================================
-           3. ZEN MODE (Focus Mode)
-        ========================================================= */
-        const zenToggle = document.getElementById('zenModeToggle');
-        const sidebar = document.getElementById('sidebar');
-
-        zenToggle.addEventListener('click', (e) => {
-            e.preventDefault();
-            e.stopPropagation(); // Keep dropdown open if desired, or let it close naturally
-
-            document.body.classList.toggle('zen-mode-active');
-            if (document.body.classList.contains('zen-mode-active')) {
-                if (sidebar) sidebar.style.transform = 'translateX(-100%)';
-                document.querySelector('.content').style.marginLeft = '0';
-            } else {
-                if (sidebar) sidebar.style.transform = '';
-                document.querySelector('.content').style.marginLeft = '';
-            }
-        });
-
-        /* =========================================================
-           4. SMART HEADER LAYOUTS & AUTO-HIDE
-        ========================================================= */
-        const headerWrapper = document.getElementById('headerWrapper');
-        let lastScrollY = window.scrollY;
-        let isAutoHideEnabled = localStorage.getItem('header-layout') === 'autohide';
-
-        window.setHeaderLayout = function(layoutName) {
-            headerWrapper.classList.remove('layout-sticky', 'layout-floating', 'layout-autohide',
-                'layout-minimal');
-            headerWrapper.classList.remove('header-hidden');
-            isAutoHideEnabled = false;
-
-            headerWrapper.classList.add(`layout-${layoutName}`);
-            if (layoutName === 'autohide') isAutoHideEnabled = true;
-
-            localStorage.setItem('header-layout', layoutName);
-            updateDropdownCheckmarks('.layout-option', layoutName);
-        };
-
-        window.addEventListener('scroll', () => {
-            if (!isAutoHideEnabled) return;
-            if (window.scrollY > lastScrollY && window.scrollY > 80) {
-                headerWrapper.classList.add('header-hidden'); // Hide scrolling down
-            } else {
-                headerWrapper.classList.remove('header-hidden'); // Show scrolling up
-            }
-            lastScrollY = window.scrollY;
-        }, {
-            passive: true
-        });
-
-        setHeaderLayout(localStorage.getItem('header-layout') || 'sticky');
-
-        /* =========================================================
-           5. UI DENSITY
-        ========================================================= */
-        window.setUIDensity = function(density) {
-            document.body.classList.remove('density-compact', 'density-comfortable');
-            document.body.classList.add(`density-${density}`);
-            localStorage.setItem('ui-density', density);
-            updateDropdownCheckmarks('.density-option', density);
-        };
-
-        setUIDensity(localStorage.getItem('ui-density') || 'comfortable');
-
-        /* =========================================================
-           6. LIGHT / DARK / SYSTEM MODE LOGIC
+           6. LIGHT / DARK / SYSTEM MODE LOGIC (Available to All)
         ========================================================= */
         const htmlTag = document.documentElement;
         const headerThemeIcon = document.getElementById('headerThemeIcon');
@@ -537,15 +554,12 @@
         function applyTheme(theme) {
             let activeTheme = theme;
 
-            // If system, check OS preference
             if (theme === 'system') {
                 activeTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
             }
-
             htmlTag.setAttribute('data-bs-theme', activeTheme);
+            headerThemeIcon.classList.remove('bi-display', 'bi-moon-stars', 'bi-sun');
 
-            // Update the Top Level Icon
-            headerThemeIcon.className = 'bi'; // reset
             if (theme === 'system') {
                 headerThemeIcon.classList.add('bi-display');
             } else if (activeTheme === 'dark') {
@@ -554,7 +568,6 @@
                 headerThemeIcon.classList.add('bi-sun');
             }
 
-            // Update Checkmarks
             updateDropdownCheckmarks('.theme-option', theme);
             window.dispatchEvent(new Event('themeChanged'));
         }
@@ -564,22 +577,21 @@
             applyTheme(theme);
         };
 
-        // Listen for OS System Theme changes
         window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
             if (localStorage.getItem('app-theme-preference') === 'system') {
                 applyTheme('system');
             }
         });
 
-        // Initialize Theme
-        const savedThemePref = localStorage.getItem('app-theme-preference') || 'system';
+        const savedThemePref = localStorage.getItem('app-theme-preference') || 'light';
         applyTheme(savedThemePref);
 
-        /* Helper to update checkmarks in dropdowns */
         function updateDropdownCheckmarks(selectorClass, activeValue) {
             document.querySelectorAll(selectorClass).forEach(btn => {
-                if (btn.getAttribute('data-' + selectorClass.split('-')[0].replace('.', '')) ===
-                    activeValue) {
+                const dataAttr = selectorClass.replace('.', '') === 'theme-option' ? 'data-theme' :
+                    selectorClass.replace('.', '') === 'layout-option' ? 'data-layout' : 'data-density';
+
+                if (btn.getAttribute(dataAttr) === activeValue) {
                     btn.classList.add('active');
                 } else {
                     btn.classList.remove('active');

@@ -76,12 +76,12 @@ class AuthController extends Controller
 
         // Super Admin
         if ($user->isSuperAdmin()) {
-            return redirect()->route('analytics.executive');
+            return redirect()->route('report-configs.dashboard');
         }
 
         // Admin
         if ($user->isAdmin()) {
-            return redirect()->route('analytics.executive');
+            return redirect()->route('report-configs.dashboard');
         }
 
         // Supervisor

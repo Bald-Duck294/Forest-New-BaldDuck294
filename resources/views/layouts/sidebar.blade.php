@@ -552,7 +552,14 @@
             <div class="sidebar-section-title">Company Menu</div>
 
             {{-- Dashboard --}}
-            <a href="/home" class="sidebar-link {{ request()->is('home') ? 'active' : '' }}" title="Dashboard">
+            {{-- <a href="/home" class="sidebar-link {{ request()->is('home') ? 'active' : '' }}" title="Dashboard">
+                <i class="bi bi-speedometer2"></i>
+                <span class="link-text">Dashboard</span>
+            </a> --}}
+
+            {{-- Events --}}
+            <a href="{{ route('report-configs.dashboard') }}"
+                class="sidebar-link {{ request()->is('report-configs*') ? 'active' : '' }}">
                 <i class="bi bi-speedometer2"></i>
                 <span class="link-text">Dashboard</span>
             </a>
@@ -616,12 +623,7 @@
                 </div>
             </div>
 
-            {{-- Events --}}
-            <a href="{{ route('report-configs.dashboard') }}"
-                class="sidebar-link {{ request()->is('report-configs*') ? 'active' : '' }}">
-                <i class="bi bi-calendar-event"></i>
-                <span class="link-text">Events</span>
-            </a>
+
 
             {{-- Know Your Area --}}
             <a href="{{ route('know-your-area.normal') }}"

@@ -53,7 +53,7 @@ Route::get('/', function () {
         return redirect()->route('global.dashboard');
     }
 
-    return redirect()->route('dashboard');
+    return redirect()->route('report-configs.dashboard');
 });
 
 
@@ -529,7 +529,6 @@ Route::prefix('report-configs')
         Route::get('/reports-table', 'reportsTable')->name('table');
         Route::get('/reports/{id}', 'show')->name('show');
         Route::post('/reports/{id}/update-status', 'updateStatus')->name('updateStatus');
-        // 🔥 THIS WAS MISSING
         Route::get('/reports-dashboard', 'reportsDashboard')->name('dashboard');
     });
 

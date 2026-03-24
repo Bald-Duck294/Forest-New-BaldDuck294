@@ -1,5 +1,5 @@
  <!DOCTYPE html>
- <html>
+ <html lang="en" data-bs-theme="light">
 
  <head>
      <meta charset="UTF-8">
@@ -26,7 +26,32 @@
      <script src="{{ asset('js/global-handlers.js') }}" defer></script>
      <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
      {{-- <script src="https://unpkg.com/leaflet/dist/leaflet.js" defer></script> --}}
+     <script>
+         (function() {
+             try {
+                 // 1. Check local storage for saved theme
+                 let savedTheme = localStorage.getItem('app-theme-preference');
 
+                 // 2. If it's their very first time visiting, FORCE it to 'light'
+                 if (!savedTheme) {
+                     savedTheme = 'light';
+                     localStorage.setItem('app-theme-preference', savedTheme);
+                 }
+
+                 // 3. Resolve 'system' preference to actual light/dark
+                 let activeTheme = savedTheme;
+                 if (savedTheme === 'system') {
+                     activeTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+                 }
+
+                 // 4. Apply to the HTML tag IMMEDIATELY before the body renders
+                 document.documentElement.setAttribute('data-bs-theme', activeTheme);
+             } catch (e) {
+                 // Failsafe in case localStorage is blocked by browser settings
+                 document.documentElement.setAttribute('data-bs-theme', 'light');
+             }
+         })();
+     </script>
      <style>
          /* Mobile Overlay Backdrop */
          #sidebarBackdrop {
