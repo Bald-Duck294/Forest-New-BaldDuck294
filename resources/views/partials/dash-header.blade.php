@@ -1,83 +1,91 @@
-<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
-    <div>
-        <h4 class="fw-bold mb-1" style="color: var(--text-main);">Protection Analytics</h4>
-        <p class="mb-0" style="color: var(--text-muted); font-size: 0.85rem;">Real-time forest monitoring and incident
-            tracking.</p>
-    </div>
+<div class="d-flex flex-column mb-4 gap-3">
 
-    <div class="d-flex flex-wrap gap-2">
-        <select id="range_id" class="custom-input" style="width: auto; min-width: 150px;" onchange="filterBeats()">
-            <option value="">All Ranges</option>
-            @foreach ($ranges ?? [] as $id => $name)
-                <option value="{{ $id }}"
-                    {{ (string) request('range_id') == (string) $id ? 'selected' : '' }}>
-                    {{ $name }}
+    {{-- Top Row: Title & Filters (Used in Overall View) --}}
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-start" id="dynamic-header-top">
+
+        {{-- The Page Title Block --}}
+        <div id="page-title-block">
+            <h3 class="fw-bold mb-1" style="color: var(--text-main);">Protection Analytics</h3>
+            <p class="text-muted mb-0" style="font-size: 0.9rem;">Real-time forest monitoring and incident tracking.</p>
+        </div>
+
+        {{-- The Global Filters Container --}}
+        <div class="d-flex flex-wrap gap-2 align-items-center" id="global-filters-container">
+            <select id="range_id" class="custom-input" style="width: auto; min-width: 150px;" onchange="filterBeats()">
+                <option value="">All Ranges</option>
+                @foreach ($ranges ?? [] as $id => $name)
+                    <option value="{{ $id }}"
+                        {{ (string) request('range_id') == (string) $id ? 'selected' : '' }}>
+                        {{ $name }}
+                    </option>
+                @endforeach
+            </select>
+
+            <select id="site_id" class="custom-input" style="width: auto; min-width: 150px;" onchange="refreshData()">
+                <option value="">All Beats</option>
+            </select>
+
+            <select id="date_filter" class="custom-input" style="width: auto; min-width: 150px;"
+                onchange="refreshData()">
+                <option value="overall" {{ request('date_filter') == 'overall' ? 'selected' : '' }}>Overall Stats
                 </option>
-            @endforeach
-        </select>
+                <option value="today" {{ request('date_filter') == 'today' ? 'selected' : '' }}>Today</option>
+                <option value="week" {{ request('date_filter') == 'week' ? 'selected' : '' }}>This Week</option>
+                <option value="month" {{ request('date_filter') == 'month' ? 'selected' : '' }}>This Month</option>
+            </select>
 
-        <select id="site_id" class="custom-input" style="width: auto; min-width: 150px;" onchange="refreshData()">
-            <option value="">All Beats</option>
-            {{-- Populated by JS filterBeats() --}}
-        </select>
+            <button onclick="refreshData()" class="btn btn-primary d-flex align-items-center gap-2"
+                style="background-color: var(--sapphire-primary); border: none; font-size: 0.8rem; font-weight: 600; padding: 6px 14px; border-radius: 8px;">
+                <i class="bi bi-arrow-repeat"></i> Sync
+            </button>
 
-        <select id="date_filter" class="custom-input" style="width: auto; min-width: 150px;" onchange="refreshData()">
-            <option value="overall" {{ request('date_filter') == 'overall' ? 'selected' : '' }}>Overall Stats</option>
-            <option value="today" {{ request('date_filter') == 'today' ? 'selected' : '' }}>Today</option>
-            <option value="week" {{ request('date_filter') == 'week' ? 'selected' : '' }}>This Week</option>
-            <option value="month" {{ request('date_filter') == 'month' ? 'selected' : '' }}>This Month</option>
-        </select>
-
-        <button onclick="refreshData()" class="btn-sapphire" title="Sync Data">
-            <i class="bi bi-arrow-repeat"></i> Sync
-        </button>
-
-        <button onclick="resetFilters()" class="btn-soft-danger border" title="Reset Filters"
-            style="padding: 0.5rem 1rem;">
-            <i class="bi bi-x-circle"></i> Reset
-        </button>
+            <button onclick="resetFilters()" class="btn btn-light border d-flex align-items-center gap-2"
+                style="font-size: 0.8rem; font-weight: 600; padding: 6px 14px; border-radius: 8px;">
+                <i class="bi bi-x-circle text-danger"></i> Reset
+            </button>
+        </div>
     </div>
+
+    {{-- Bottom Row: View Toggle (Used as destination for filters in Analytical View) --}}
+    <div class="d-flex align-items-center" id="dynamic-header-bottom">
+        <div class="view-toggle shadow-sm" id="view-toggle-buttons">
+            <button id="view-overall" onclick="setViewMode('overall')"
+                class="{{ request('view', 'overall') == 'overall' ? 'active' : '' }}">
+                <i class="bi bi-map"></i> Overall View (Map)
+            </button>
+            <button id="view-analytical" onclick="setViewMode('analytical')"
+                class="{{ request('view') == 'analytical' ? 'active' : '' }}">
+                <i class="bi bi-graph-up"></i> Analytical View
+            </button>
+        </div>
+    </div>
+
 </div>
 
 <script>
-    // Store all beats in a JavaScript variable passed directly from Laravel
     const allBeats = @json($beats ?? []);
-
-    // Remember the currently selected beat from the URL (if any)
     const currentSelectedBeat = "{{ request('site_id') }}";
 
     function filterBeats() {
         const rangeSelect = document.getElementById('range_id');
         const beatSelect = document.getElementById('site_id');
-        const selectedRangeId = rangeSelect.value;
+        if (!rangeSelect || !beatSelect) return;
 
-        // Clear out the current Beats dropdown
+        const selectedRangeId = rangeSelect.value;
         beatSelect.innerHTML = '<option value="">All Beats</option>';
 
-        // Filter the beats. If a range is selected, only show beats belonging to that range (client_id)
-        // If "All Ranges" is selected, show all beats.
         const filteredBeats = selectedRangeId ?
             allBeats.filter(beat => beat.client_id == selectedRangeId) :
             allBeats;
 
-        // Populate the Beats dropdown with the filtered results
         filteredBeats.forEach(beat => {
             const option = document.createElement('option');
             option.value = beat.id;
             option.textContent = beat.name || 'Unnamed Beat';
-
-            // If this beat was the one the user previously searched for, keep it selected
-            if (beat.id == currentSelectedBeat) {
-                option.selected = true;
-            }
-
+            if (beat.id == currentSelectedBeat) option.selected = true;
             beatSelect.appendChild(option);
         });
     }
 
-    // Run this function once when the page loads so the Beats dropdown is correctly populated 
-    // based on whatever Range is currently selected in the URL
-    document.addEventListener('DOMContentLoaded', () => {
-        filterBeats();
-    });
+    document.addEventListener('DOMContentLoaded', () => filterBeats());
 </script>

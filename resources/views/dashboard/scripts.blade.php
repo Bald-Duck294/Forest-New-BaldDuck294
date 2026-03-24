@@ -1978,12 +1978,46 @@
         }
     }
 
+   
     // =================================================================
     // 5. NAVIGATION & ANALYTICAL VIEW
     // =================================================================
-    // =================================================================
-    // 5. NAVIGATION & ANALYTICAL VIEW
-    // =================================================================
+    // function setViewMode(mode) {
+    //     window.viewMode = mode;
+    //     const overallBtn = document.getElementById('view-overall');
+    //     const analyticalBtn = document.getElementById('view-analytical');
+
+    //     if (overallBtn) overallBtn.className = `view-toggle-btn ${mode === 'overall' ? 'active' : ''}`;
+    //     if (analyticalBtn) analyticalBtn.className = `view-toggle-btn ${mode === 'analytical' ? 'active' : ''}`;
+
+    //     const overallContainer = document.getElementById('overall-container');
+    //     const analyticalContainer = document.getElementById('analytical-container');
+    //     const kpiGrid = document.getElementById('main-kpi-grid');
+
+    //     if (mode === 'overall') {
+    //         if (overallContainer) overallContainer.classList.remove('d-none');
+    //         if (analyticalContainer) analyticalContainer.classList.add('d-none');
+    //         if (kpiGrid) {
+    //             kpiGrid.classList.remove('d-none');
+    //             kpiGrid.style.removeProperty('display'); // Removes the inline hide, lets CSS take over
+    //         }
+    //         if (typeof overallMap !== 'undefined' && overallMap) {
+    //             setTimeout(() => {
+    //                 google.maps.event.trigger(overallMap, "resize");
+    //             }, 200);
+    //         }
+    //     } else {
+    //         if (overallContainer) overallContainer.classList.add('d-none');
+    //         if (analyticalContainer) analyticalContainer.classList.remove('d-none');
+    //         if (kpiGrid) {
+    //             kpiGrid.classList.add('d-none');
+    //             // 🔥 FIX: Forces the grid to hide, overriding the CSS !important rule
+    //             kpiGrid.style.setProperty('display', 'none', 'important');
+    //         }
+    //         buildAnalyticalUI();
+    //     }
+    // }
+
     function setViewMode(mode) {
         window.viewMode = mode;
         const overallBtn = document.getElementById('view-overall');
@@ -1992,34 +2026,55 @@
         if (overallBtn) overallBtn.className = `view-toggle-btn ${mode === 'overall' ? 'active' : ''}`;
         if (analyticalBtn) analyticalBtn.className = `view-toggle-btn ${mode === 'analytical' ? 'active' : ''}`;
 
+        // Get Layout Containers
         const overallContainer = document.getElementById('overall-container');
         const analyticalContainer = document.getElementById('analytical-container');
         const kpiGrid = document.getElementById('main-kpi-grid');
+        
+        // Get Header Elements for DOM Shifting
+        const titleBlock = document.getElementById('page-title-block');
+        const filtersContainer = document.getElementById('global-filters-container');
+        const headerTopRow = document.getElementById('dynamic-header-top');
+        const headerBottomRow = document.getElementById('dynamic-header-bottom');
 
         if (mode === 'overall') {
+            // --- OVERALL VIEW STATE (Map) ---
+            if (titleBlock) titleBlock.style.display = 'block'; // Show "Protection Analytics"
+            if (headerTopRow && filtersContainer) headerTopRow.appendChild(filtersContainer); // Move filters back to top row
+            if (headerBottomRow) headerBottomRow.classList.remove('justify-content-between', 'w-100');
+
             if (overallContainer) overallContainer.classList.remove('d-none');
             if (analyticalContainer) analyticalContainer.classList.add('d-none');
             if (kpiGrid) {
                 kpiGrid.classList.remove('d-none');
-                kpiGrid.style.removeProperty('display'); // Removes the inline hide, lets CSS take over
+                kpiGrid.style.removeProperty('display'); // Show KPI cards
             }
+            
+            // Resize map to fix gray spaces
             if (typeof overallMap !== 'undefined' && overallMap) {
-                setTimeout(() => {
-                    google.maps.event.trigger(overallMap, "resize");
-                }, 200);
+                setTimeout(() => { google.maps.event.trigger(overallMap, "resize"); }, 200);
             }
+            
         } else {
+            // --- ANALYTICAL VIEW STATE (Charts) ---
+            if (titleBlock) titleBlock.style.display = 'none'; // Hide "Protection Analytics"
+            
+            // Move filters next to the View Toggle!
+            if (headerBottomRow && filtersContainer) {
+                headerBottomRow.classList.add('justify-content-between', 'w-100'); 
+                headerBottomRow.appendChild(filtersContainer); 
+            }
+
             if (overallContainer) overallContainer.classList.add('d-none');
             if (analyticalContainer) analyticalContainer.classList.remove('d-none');
             if (kpiGrid) {
                 kpiGrid.classList.add('d-none');
-                // 🔥 FIX: Forces the grid to hide, overriding the CSS !important rule
-                kpiGrid.style.setProperty('display', 'none', 'important');
+                kpiGrid.style.setProperty('display', 'none', 'important'); // Force hide KPI cards
             }
-            buildAnalyticalUI();
+            if(typeof buildAnalyticalUI === 'function') buildAnalyticalUI();
         }
     }
-
+        
     window.navigateTo = function(cat) {
         if (!cat) return;
         window.activeMainTab = cat;

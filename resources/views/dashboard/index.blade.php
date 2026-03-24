@@ -23,7 +23,7 @@
         @include('partials.dash-kpi-grid')
 
         {{-- 4. View Toggle --}}
-        @include('partials.dash-view-toggle')
+        {{-- @include('partials.dash-view-toggle') --}}
 
         {{-- 5. Dashboard Views --}}
         @include('overallDashboard.index')
