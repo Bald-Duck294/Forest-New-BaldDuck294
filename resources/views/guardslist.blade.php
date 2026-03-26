@@ -10,9 +10,9 @@
 
     <style>
         /* =========================================
-                                           LOCAL COMPONENT STYLES
-                                           (Hooked to Global Sapphire Variables)
-                                        ========================================= */
+                                                               LOCAL COMPONENT STYLES
+                                                               (Hooked to Global Sapphire Variables)
+                                                            ========================================= */
 
         /* Cards */
         .dash-card {
@@ -389,10 +389,12 @@
                                     </a>
                                 </td>
                                 <td>
-                                    @if ($row->role_id == 2)
+                                    @if ($row->role_id == 7)
                                         <span class="badge-soft badge-soft-success">Admin</span>
                                     @elseif($row->role_id == 3)
                                         <span class="badge-soft badge-soft-warning">Supervisor</span>
+                                    @elseif($row->role_id == 1)
+                                        <span class="badge-soft badge-soft-warning">SuperAdmin</span>
                                     @else
                                         <span class="badge-soft badge-soft-primary">Guard</span>
                                     @endif

@@ -34,6 +34,7 @@ use App\Http\Controllers\PatrolAnalysisController;
 use App\Http\Controllers\WebBoundaryController;
 use App\Http\Controllers\GuardReportController;
 use App\Http\Controllers\IncidenceController;
+use App\Http\Controllers\AjaxController;
 /* Auth Routes */
 
 Route::get('/login', [AuthController::class , 'showLoginForm'])->name('login');
@@ -813,3 +814,10 @@ Route::get('/api/kpi-quick-view', [App\Http\Controllers\ForestReportConfigContro
 
 // Detailed Data Table View
 Route::get('/reports/detailed', [App\Http\Controllers\ForestReportConfigController::class , 'detailedDataTable'])->name('reports.detailed');
+
+
+Route::prefix('ajax')->controller(AjaxController::class)->group(function () {
+    Route::get('/client-sites/{client}', 'clientSites');
+    Route::get('/client-users/{client}', 'clientUsers');
+    Route::get('/site-users/{site}', 'siteUsers');
+});

@@ -38,6 +38,8 @@
     // =================================================================
     // 2. CONFIGURATIONS
     // =================================================================
+
+
     const config = {
         categories: [{
                 id: 'criminal',
@@ -108,7 +110,10 @@
                         let dataObj = idx === 0 ? db.felling?.species_qty : idx === 1 ? db.felling
                             ?.species_vol : db.felling?.species_girth;
                         let lbls = Object.keys(dataObj || {});
-                        let vals = Object.values(dataObj || {});
+                        let vals = Object.values(dataObj || {}).map(
+                            Number); // Safely cast db data to numbers
+
+                        console.log(db.felling, "length");
                         if (!lbls.length) {
                             lbls = ['No Data'];
                             vals = [0];
@@ -173,10 +178,13 @@
                     toggles: [],
                     generator: (idx, db) => {
                         let lbls = Object.keys(db.felling?.ranges || {});
-                        let vals = Object.values(db.felling?.ranges || {});
+                        let vals = Object.values(db.felling?.ranges || {}).map(
+                            Number); // Safely cast db data to numbers
+
+                        // 🔥 Removed the hardcoded fallback data here 🔥
                         if (!lbls.length) {
-                            lbls = ['North Beat A', 'West Ridge', 'River Buffer', 'East Plateau'];
-                            vals = [31, 9, 6, 7];
+                            lbls = ['No Data'];
+                            vals = [0];
                         }
                         return {
                             labels: lbls,
@@ -191,7 +199,10 @@
                     options: {
                         indexAxis: 'y'
                     },
-                    calcPill: (data) => `Highest: ${Math.max(...data.datasets[0].data)}`
+                    calcPill: (data) => {
+                        let max = Math.max(...(data.datasets[0].data.length ? data.datasets[0].data : [0]));
+                        return `Highest: ${max}`;
+                    }
                 }
             ],
             'criminal.transport': [{
@@ -309,6 +320,9 @@
                     toggles: [],
                     generator: (idx, db) => {
                         let l = Object.keys(db.storage?.proportion || {});
+                        console.log(db.storage, "storage");
+
+
                         if (!l.length) return {
                             labels: ['No Data'],
                             datasets: [{
@@ -356,6 +370,7 @@
                     generator: (idx, db) => {
                         let l = Object.keys(db.storage?.proportion || {});
                         let v = Object.values(db.storage?.proportion || {}).map(Number);
+
                         if (!l.length || v.reduce((a, b) => a + b, 0) === 0) return {
                             labels: ['No Data'],
                             datasets: [{
@@ -1978,7 +1993,7 @@
         }
     }
 
-   
+
     // =================================================================
     // 5. NAVIGATION & ANALYTICAL VIEW
     // =================================================================
@@ -2022,7 +2037,7 @@
         window.viewMode = mode;
         const overallBtn = document.getElementById('view-overall');
         const analyticalBtn = document.getElementById('view-analytical');
-
+        console.log(window.viewMode, "view mode");
         if (overallBtn) overallBtn.className = `view-toggle-btn ${mode === 'overall' ? 'active' : ''}`;
         if (analyticalBtn) analyticalBtn.className = `view-toggle-btn ${mode === 'analytical' ? 'active' : ''}`;
 
@@ -2030,7 +2045,7 @@
         const overallContainer = document.getElementById('overall-container');
         const analyticalContainer = document.getElementById('analytical-container');
         const kpiGrid = document.getElementById('main-kpi-grid');
-        
+
         // Get Header Elements for DOM Shifting
         const titleBlock = document.getElementById('page-title-block');
         const filtersContainer = document.getElementById('global-filters-container');
@@ -2040,7 +2055,8 @@
         if (mode === 'overall') {
             // --- OVERALL VIEW STATE (Map) ---
             if (titleBlock) titleBlock.style.display = 'block'; // Show "Protection Analytics"
-            if (headerTopRow && filtersContainer) headerTopRow.appendChild(filtersContainer); // Move filters back to top row
+            if (headerTopRow && filtersContainer) headerTopRow.appendChild(
+                filtersContainer); // Move filters back to top row
             if (headerBottomRow) headerBottomRow.classList.remove('justify-content-between', 'w-100');
 
             if (overallContainer) overallContainer.classList.remove('d-none');
@@ -2049,20 +2065,22 @@
                 kpiGrid.classList.remove('d-none');
                 kpiGrid.style.removeProperty('display'); // Show KPI cards
             }
-            
+
             // Resize map to fix gray spaces
             if (typeof overallMap !== 'undefined' && overallMap) {
-                setTimeout(() => { google.maps.event.trigger(overallMap, "resize"); }, 200);
+                setTimeout(() => {
+                    google.maps.event.trigger(overallMap, "resize");
+                }, 200);
             }
-            
+
         } else {
             // --- ANALYTICAL VIEW STATE (Charts) ---
             if (titleBlock) titleBlock.style.display = 'none'; // Hide "Protection Analytics"
-            
+
             // Move filters next to the View Toggle!
             if (headerBottomRow && filtersContainer) {
-                headerBottomRow.classList.add('justify-content-between', 'w-100'); 
-                headerBottomRow.appendChild(filtersContainer); 
+                headerBottomRow.classList.add('justify-content-between', 'w-100');
+                headerBottomRow.appendChild(filtersContainer);
             }
 
             if (overallContainer) overallContainer.classList.add('d-none');
@@ -2071,10 +2089,10 @@
                 kpiGrid.classList.add('d-none');
                 kpiGrid.style.setProperty('display', 'none', 'important'); // Force hide KPI cards
             }
-            if(typeof buildAnalyticalUI === 'function') buildAnalyticalUI();
+            if (typeof buildAnalyticalUI === 'function') buildAnalyticalUI();
         }
     }
-        
+
     window.navigateTo = function(cat) {
         if (!cat) return;
         window.activeMainTab = cat;

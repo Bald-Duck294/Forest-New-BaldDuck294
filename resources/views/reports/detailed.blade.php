@@ -1,60 +1,207 @@
+@php
+    $hideGlobalFilters = true;
+    $hideBackground = true;
+    $user = session('user');
+@endphp
 @extends('layouts.app')
 
 @section('title', 'Detailed Data View')
 
 @section('content')
+
+    <style>
+        /* =========================================
+                               SAPPHIRE THEME - DETAILED VIEW
+                            ========================================= */
+        .detailed-header-btn {
+            background-color: var(--bg-card);
+            color: var(--text-main);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .detailed-header-btn:hover {
+            background-color: var(--sapphire-primary);
+            color: white;
+            border-color: var(--sapphire-primary);
+        }
+
+        /* Custom Nav Pills */
+        .sapphire-nav-pills {
+            display: flex;
+            gap: 8px;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 12px;
+            overflow-x: auto;
+            flex-wrap: nowrap;
+            scrollbar-width: none;
+            /* Firefox */
+        }
+
+        .sapphire-nav-pills::-webkit-scrollbar {
+            display: none;
+            /* Chrome */
+        }
+
+        .sapphire-nav-link {
+            color: var(--text-muted);
+            background-color: transparent;
+            border: 1px solid transparent;
+            padding: 8px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            white-space: nowrap;
+            transition: all 0.2s ease;
+        }
+
+        .sapphire-nav-link:hover {
+            color: var(--text-main);
+            background-color: var(--bg-card);
+        }
+
+        .sapphire-nav-link.active {
+            color: white;
+            background-color: var(--sapphire-primary);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25);
+        }
+
+        /* Filters */
+        .custom-filter-input {
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 10px 14px;
+            font-size: 0.85rem;
+            width: 100%;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+
+        .custom-filter-input:focus {
+            border-color: var(--sapphire-primary);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .input-group-text-sapphire {
+            background-color: var(--bg-body);
+            color: var(--text-muted);
+            border: 1px solid var(--border-color);
+            border-right: none;
+            border-radius: 8px 0 0 8px;
+        }
+
+        .search-input {
+            border-left: none;
+            border-radius: 0 8px 8px 0;
+        }
+
+        /* Table Adjustments */
+        .table-sapphire th {
+            color: var(--text-muted);
+            font-weight: 700;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 2px solid var(--border-color);
+            padding: 1rem;
+            background-color: var(--bg-card);
+        }
+
+        .table-sapphire td {
+            color: var(--text-main);
+            font-weight: 500;
+            font-size: 0.9rem;
+            border-bottom: 1px dashed var(--border-color);
+            padding: 1rem;
+            vertical-align: middle;
+            background-color: transparent;
+        }
+
+        .table-sapphire tr:hover td {
+            background-color: var(--table-hover);
+        }
+
+        .table-sapphire tr:last-child td {
+            border-bottom: none;
+        }
+
+        /* Soft Badges */
+        .badge-soft-pending {
+            background: rgba(245, 158, 11, 0.15);
+            color: var(--sapphire-warning);
+        }
+
+        .badge-soft-success {
+            background: rgba(16, 185, 129, 0.15);
+            color: var(--sapphire-success);
+        }
+
+        .badge-soft-info {
+            background: rgba(59, 130, 246, 0.15);
+            color: var(--sapphire-primary);
+        }
+
+        .badge-soft-neutral {
+            background: var(--bg-body);
+            color: var(--text-main);
+            border: 1px solid var(--border-color);
+        }
+    </style>
+
     <div class="container-fluid py-4">
 
+        {{-- Page Header --}}
         <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
             <div>
                 <h3 class="fw-bold mb-1" style="color: var(--text-main);">Detailed Data Records</h3>
                 <p class="mb-0 text-muted" style="font-size: 0.9rem;">View, filter, and export all system records.</p>
             </div>
-            <a href="{{ route('dashboard') }}" class="btn btn-light shadow-sm border">
+            <a href="{{ route('dashboard') }}"
+                class="btn detailed-header-btn shadow-sm d-flex align-items-center gap-2 px-4 py-2">
                 <i class="bi bi-arrow-left"></i> Back to Dashboard
             </a>
         </div>
 
-        <ul class="nav nav-pills mb-4" style="border-bottom: 2px solid var(--border-color);">
-            <li class="nav-item">
-                <a class="nav-link fw-bold px-4 {{ $category == 'criminal' ? 'active bg-danger' : 'text-muted' }}"
-                    href="?category=criminal">Criminal Activity</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link fw-bold px-4 {{ $category == 'events' ? 'active bg-success' : 'text-muted' }}"
-                    href="?category=events">Events & Monitoring</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link fw-bold px-4 {{ $category == 'fire' ? 'active bg-warning text-dark' : 'text-muted' }}"
-                    href="?category=fire">Fire Incidents</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link fw-bold px-4 {{ $category == 'assets' ? 'active bg-primary' : 'text-muted' }}"
-                    href="?category=assets">Assets & Tools</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link fw-bold px-4 {{ $category == 'plantations' ? 'active bg-success' : 'text-muted' }}"
-                    href="?category=plantations">Plantations</a>
-            </li>
-        </ul>
+        {{-- Master Category Tabs --}}
+        <nav class="sapphire-nav-pills mb-4">
+            <a class="sapphire-nav-link {{ $category == 'criminal' ? 'active' : '' }}" href="?category=criminal">
+                <i class="bi bi-hammer me-2"></i>Criminal Activity
+            </a>
+            <a class="sapphire-nav-link {{ $category == 'events' ? 'active' : '' }}" href="?category=events">
+                <i class="bi bi-eye me-2"></i>Events & Monitoring
+            </a>
+            <a class="sapphire-nav-link {{ $category == 'fire' ? 'active' : '' }}" href="?category=fire">
+                <i class="bi bi-fire me-2"></i>Fire Incidents
+            </a>
+            <a class="sapphire-nav-link {{ $category == 'assets' ? 'active' : '' }}" href="?category=assets">
+                <i class="bi bi-shield-check me-2"></i>Assets & Tools
+            </a>
+            <a class="sapphire-nav-link {{ $category == 'plantations' ? 'active' : '' }}" href="?category=plantations">
+                <i class="bi bi-tree me-2"></i>Plantations
+            </a>
+        </nav>
 
-        <div class="dash-card p-3 mb-4 rounded-3 shadow-sm border-0 bg-white">
+        {{-- Filters & Search Bar --}}
+        <div class="dash-card p-3 mb-4">
             <form method="GET" action="{{ route('reports.detailed') }}" class="row g-3 align-items-end">
                 <input type="hidden" name="category" value="{{ $category }}">
 
                 <div class="col-md-4">
-                    <label class="form-label text-muted small fw-bold">Search ID, Name, or Location</label>
+                    <label class="form-label text-muted small fw-bold mb-2">Search ID, Name, or Location</label>
                     <div class="input-group">
-                        <span class="input-group-text bg-light border-end-0"><i class="bi bi-search"></i></span>
-                        <input type="text" name="search" class="form-control border-start-0 bg-light"
-                            placeholder="Search..." value="{{ $search }}">
+                        <span class="input-group-text input-group-text-sapphire"><i class="bi bi-search"></i></span>
+                        <input type="text" name="search" class="custom-filter-input search-input"
+                            placeholder="Search records..." value="{{ $search }}">
                     </div>
                 </div>
 
                 @if (in_array($category, ['criminal', 'events']))
                     <div class="col-md-3">
-                        <label class="form-label text-muted small fw-bold">Specific Event Type</label>
-                        <select name="sub_type" class="form-select bg-light">
+                        <label class="form-label text-muted small fw-bold mb-2">Specific Event Type</label>
+                        <select name="sub_type" class="custom-filter-input" style="cursor: pointer;">
                             <option value="">All Types</option>
                             @if ($category == 'criminal')
                                 <option value="felling" {{ $subType == 'felling' ? 'selected' : '' }}>Illegal Felling
@@ -74,27 +221,29 @@
                 @endif
 
                 <div class="col-md-2">
-                    <label class="form-label text-muted small fw-bold">From Date</label>
-                    <input type="date" name="from_date" class="form-control bg-light" value="{{ $fromDate }}">
+                    <label class="form-label text-muted small fw-bold mb-2">From Date</label>
+                    <input type="date" name="from_date" class="custom-filter-input" value="{{ $fromDate }}">
                 </div>
+
                 <div class="col-md-2">
-                    <label class="form-label text-muted small fw-bold">To Date</label>
-                    <input type="date" name="to_date" class="form-control bg-light" value="{{ $toDate }}">
+                    <label class="form-label text-muted small fw-bold mb-2">To Date</label>
+                    <input type="date" name="to_date" class="custom-filter-input" value="{{ $toDate }}">
                 </div>
 
                 <div class="col-md-1">
                     <button type="submit" class="btn w-100 fw-bold"
-                        style="background-color: var(--sapphire-primary); color: white;">Filter</button>
+                        style="background-color: var(--sapphire-primary); color: white; padding: 10px; border-radius: 8px;">Filter</button>
                 </div>
             </form>
         </div>
 
-        <div class="dash-card bg-white rounded-3 shadow-sm border-0 overflow-hidden">
+        {{-- Data Table --}}
+        <div class="dash-card p-0 overflow-hidden">
             <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0">
-                    <thead class="table-light text-muted" style="font-size: 0.8rem; text-transform: uppercase;">
+                <table class="table table-sapphire mb-0">
+                    <thead>
                         <tr>
-                            <th class="ps-4 py-3">ID / Reference</th>
+                            <th class="ps-4">ID / Reference</th>
                             @if ($viewType == 'reports')
                                 <th>Report Type</th>
                                 <th>Beat / Range</th>
@@ -112,41 +261,51 @@
                             @endif
                         </tr>
                     </thead>
-                    <tbody style="font-size: 0.9rem;">
+                    <tbody>
                         @forelse($records as $row)
                             <tr>
                                 @if ($viewType == 'reports')
-                                    <td class="ps-4 fw-bold text-dark">{{ $row->report_id ?? 'RPT-' . $row->id }}</td>
+                                    <td class="ps-4 fw-bold" style="color: var(--sapphire-primary);">
+                                        {{ $row->report_id ?? 'RPT-' . $row->id }}</td>
                                     <td>
-                                        <span class="badge bg-light text-dark border"><i
+                                        <span class="badge badge-soft-neutral px-2 py-1"><i
                                                 class="bi bi-tag me-1"></i>{{ $row->report_type }}</span>
                                     </td>
-                                    <td class="text-muted">{{ $row->beat ?? ($row->range ?? 'Unknown') }}</td>
-                                    <td class="text-muted">
-                                        {{ \Carbon\Carbon::parse($row->created_at)->format('d M Y, h:i A') }}</td>
+                                    <td>{{ $row->beat ?? ($row->range ?? 'Unknown') }}</td>
+                                    <td>{{ \Carbon\Carbon::parse($row->created_at)->format('d M Y, h:i A') }}</td>
                                     <td class="text-end pe-4">
                                         <span
-                                            class="badge {{ $row->status == 'Pending' ? 'bg-warning text-dark' : 'bg-success' }}">{{ $row->status }}</span>
+                                            class="badge {{ $row->status == 'Pending' ? 'badge-soft-pending' : 'badge-soft-success' }} px-3 py-2 rounded-pill">
+                                            {{ $row->status }}
+                                        </span>
                                     </td>
                                 @elseif($viewType == 'assets')
-                                    <td class="ps-4 fw-bold text-dark">AST-{{ $row->id }}</td>
+                                    <td class="ps-4 fw-bold" style="color: var(--sapphire-primary);">
+                                        AST-{{ $row->id }}</td>
                                     <td>{{ $row->category ?? 'Equipment' }}</td>
-                                    <td>{{ $row->condition ?? 'N/A' }}</td>
+                                    <td>
+                                        <span
+                                            class="badge badge-soft-neutral px-2 py-1">{{ $row->condition ?? 'N/A' }}</span>
+                                    </td>
                                     <td>{{ \Carbon\Carbon::parse($row->created_at)->format('d M Y') }}</td>
                                 @elseif($viewType == 'plantations')
-                                    <td class="ps-4 fw-bold text-dark">{{ $row->code }}</td>
-                                    <td class="fw-semibold text-primary">{{ $row->name }}</td>
-                                    <td class="text-muted">{{ $row->plant_species ?? 'Mixed' }}</td>
-                                    <td class="text-muted">{{ $row->area ?? 0 }} Ha</td>
-                                    <td class="text-end pe-4"><span
-                                            class="badge bg-info text-dark">{{ ucfirst($row->current_phase) }}</span></td>
+                                    <td class="ps-4 fw-bold" style="color: var(--sapphire-primary);">{{ $row->code }}
+                                    </td>
+                                    <td class="fw-bold">{{ $row->name }}</td>
+                                    <td>{{ $row->plant_species ?? 'Mixed' }}</td>
+                                    <td>{{ $row->area ?? 0 }} Ha</td>
+                                    <td class="text-end pe-4">
+                                        <span
+                                            class="badge badge-soft-info px-3 py-2 rounded-pill">{{ ucfirst($row->current_phase) }}</span>
+                                    </td>
                                 @endif
                             </tr>
                         @empty
                             <tr>
                                 <td colspan="6" class="text-center py-5 text-muted">
-                                    <i class="bi bi-inbox fs-1 d-block mb-2"></i>
-                                    No records found matching your filters.
+                                    <i class="bi bi-inbox fs-1 d-block mb-3" style="opacity: 0.5;"></i>
+                                    <h5 class="fw-bold mb-1">No records found</h5>
+                                    <p class="mb-0 small">Try adjusting your filters or search query.</p>
                                 </td>
                             </tr>
                         @endforelse
@@ -154,9 +313,12 @@
                 </table>
             </div>
 
-            <div class="p-3 border-top border-slate-100 d-flex justify-content-center">
-                {{ $records->appends(request()->query())->links() }}
-            </div>
+            {{-- Pagination --}}
+            @if ($records->hasPages())
+                <div class="p-3 border-top" style="border-color: var(--border-color); background-color: var(--bg-body);">
+                    {{ $records->appends(request()->query())->links('pagination::bootstrap-5') }}
+                </div>
+            @endif
         </div>
 
     </div>

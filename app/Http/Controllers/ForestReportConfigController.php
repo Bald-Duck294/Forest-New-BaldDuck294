@@ -612,8 +612,8 @@ public function reportsDashboard(Request $request)
         $allReports = $query->get();
         $activePatrols = $patrolQuery->count();
         $totalOfficers = DB::table('users')->where('company_id', $companyId)->count();
-        $totalAssets = DB::table('forest_report_configs')->where('is_active', 1)->count();
-
+        $totalAssets = Asset::where('company_id', $companyId)->count();
+        //   dump($totalAssets ,"total assest");
         // 🔥 FETCH REAL RANGES & BEATS FOR DROPDOWNS
         $ranges = DB::table('client_details')->where('company_id', $companyId)->pluck('name', 'id');
         $beats  = DB::table('site_details')->where('company_id', $companyId)->select('id', 'name', 'client_id')->get();
@@ -687,7 +687,8 @@ public function reportsDashboard(Request $request)
             $type = strtolower(trim($r->report_type)); 
             
             // 🔥 Use IDs for the charts instead of names to match your new filtering logic
-            $rng = $r->client_id ?? 'Unknown'; 
+                $rng = $r->client_id ?? 'Unknown';
+            $range_name = $r->range ?? $r->beat;
             $date = \Carbon\Carbon::parse($r->created_at)->format('M d');
 
             if ($type === 'felling') {
@@ -697,7 +698,7 @@ public function reportsDashboard(Request $request)
                 $analytics['felling']['species_girth'][$sp] = ($analytics['felling']['species_girth'][$sp] ?? 0) + (float)($data['girth'] ?? 0);
                 $reason = $data['reason'] ?? 'Others'; 
                 $analytics['felling']['reasons'][$reason] = ($analytics['felling']['reasons'][$reason] ?? 0) + 1;
-                $analytics['felling']['ranges'][$rng] = ($analytics['felling']['ranges'][$rng] ?? 0) + 1;
+                $analytics['felling']['ranges'][$range_name] = ($analytics['felling']['ranges'][$range_name] ?? 0) + 1;
             } 
             elseif ($type === 'transport') {
                 $veh = $data['vehicle_type'] ?? 'Others' ;
@@ -896,7 +897,7 @@ public function reportsDashboard(Request $request)
                 'fire' => ['fire']
             ];
             
-            $records = \Illuminate\Support\Facades\DB::table('forest_reports')
+            $records = DB::table('forest_reports')
                 ->where('company_id', $companyId)
                 ->whereIn('category', $catMap[$type] ?? [$type])
                 ->latest()
@@ -907,13 +908,14 @@ public function reportsDashboard(Request $request)
                 $data[] = [
                     'id' => $r->report_id ?? 'RPT-'.$r->id,
                     'title' => $r->report_type,
-                    'date' => \Carbon\Carbon::parse($r->created_at)->format('d M Y, h:i A'),
+                    'date' => Carbon::parse($r->created_at)->format('d M Y, h:i A'),
                     'location' => $r->beat ?? $r->range ?? 'Unknown Location',
                     'status' => $r->status ?? 'Pending'
                 ];
             }
         } elseif ($type === 'assets') {
             $records = Asset::where('company_id', $companyId)->latest()->limit(20)->get();
+        //    dd($records , $companyId);
             foreach ($records as $r) {
                 $data[] = [
                     'id' => 'AST-'.$r->id,
@@ -988,6 +990,7 @@ public function reportsDashboard(Request $request)
             if ($toDate) $query->whereDate('created_at', '<=', $toDate);
             
             $records = $query->latest()->paginate(15);
+            dd($records , "records" , $companyId);
             $viewType = 'assets';
 
         } elseif ($category === 'plantations') {

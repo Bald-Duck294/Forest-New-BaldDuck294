@@ -12,7 +12,7 @@
         </div>
     </div>
 
-
+s
 
     <div class="d-flex flex-wrap gap-2">
         <select id="range_id" class="custom-input" style="width: auto; min-width: 150px;" onchange="filterBeats()">

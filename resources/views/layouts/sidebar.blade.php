@@ -564,6 +564,11 @@
                 <span class="link-text">Dashboard</span>
             </a>
 
+            <a href="{{ route('reports.detailed') }}"
+                class="sidebar-link {{ request()->is('report.detailed*') ? 'active' : '' }}">
+                <i class="bi bi-speedometer2"></i>
+                <span class="link-text">Dashboard List view</span>
+            </a>
             {{-- Clients / Ranges --}}
             <a href="{{ route('clients') }}" class="sidebar-link {{ request()->routeIs('clients*') ? 'active' : '' }}"
                 title="Clients">
