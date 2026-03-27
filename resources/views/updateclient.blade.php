@@ -33,7 +33,6 @@ $hideBackground = true;
         --bg-card: #1e293b;
         --bg-body: #0f172a;
         --bg-input: #0f172a;
-        /* Darker input background */
         --text-main: #f8fafc;
         --text-muted: #94a3b8;
         --btn-back-bg: #334155;
@@ -136,12 +135,6 @@ $hideBackground = true;
         outline: none !important;
     }
 
-    .custom-theme-wrapper select.form-control {
-        cursor: pointer;
-        -webkit-appearance: auto;
-        appearance: auto;
-    }
-
     /* Buttons */
     .custom-theme-wrapper .form-actions {
         margin-top: 32px;
@@ -224,12 +217,11 @@ $hideBackground = true;
             <a href="{{ route('clients') }}" class="btn-back" title="Go Back">
                 <i class="la la-arrow-left"></i>
             </a>
-            <h4>Add New Range</h4>
+            <h4>Edit Client</h4>
         </div>
 
         <div class="card-body">
-            <form method="post" action="{{ route('clients.createaction') }}" id="create_client_form"
-                autocomplete="off">
+            <form method="post" action="{{ url('clients/editaction/'.$id) }}" id="edit_client_form" autocomplete="off">
                 @csrf
 
                 <div class="row g-4">
@@ -237,7 +229,7 @@ $hideBackground = true;
                         <div class="form-group {{ $errors->has('name') ? 'has-error' : '' }} mb-0">
                             <label for="name">Name <span class="text-danger">*</span></label>
                             <input class="form-control" id="name" type="text" name="name"
-                                placeholder="Enter range name" value="{{ old('name') }}" required />
+                                placeholder="Enter range/client name" value="{{ old('name', $clients->name) }}" required />
                             <span class="text-danger small">{{ $errors->first('name') }}</span>
                         </div>
                     </div>
@@ -246,7 +238,7 @@ $hideBackground = true;
                         <div class="form-group {{ $errors->has('address') ? 'has-error' : '' }} mb-0">
                             <label for="address">Address <span class="text-danger">*</span></label>
                             <input class="form-control" id="address" name="address" type="text"
-                                placeholder="Enter full address" value="{{ old('address') }}" required />
+                                placeholder="Enter full address" value="{{ old('address', $clients->address) }}" required />
                             <span class="text-danger small">{{ $errors->first('address') }}</span>
                         </div>
                     </div>
@@ -255,7 +247,7 @@ $hideBackground = true;
                         <div class="form-group {{ $errors->has('state') ? 'has-error' : '' }} mb-0">
                             <label for="state">State <span class="text-danger">*</span></label>
                             <input class="form-control" id="state" name="state" type="text"
-                                placeholder="Enter state" value="{{ old('state') }}" required />
+                                placeholder="Enter state" value="{{ old('state', $clients->state) }}" required />
                             <span class="text-danger small">{{ $errors->first('state') }}</span>
                         </div>
                     </div>
@@ -264,7 +256,7 @@ $hideBackground = true;
                         <div class="form-group {{ $errors->has('city') ? 'has-error' : '' }} mb-0">
                             <label for="city">City <span class="text-danger">*</span></label>
                             <input class="form-control" id="city" name="city" type="text"
-                                placeholder="Enter city" value="{{ old('city') }}" required />
+                                placeholder="Enter city" value="{{ old('city', $clients->city) }}" required />
                             <span class="text-danger small">{{ $errors->first('city') }}</span>
                         </div>
                     </div>
@@ -273,7 +265,7 @@ $hideBackground = true;
                         <div class="form-group {{ $errors->has('pincode') ? 'has-error' : '' }} mb-0">
                             <label for="pincode">Pincode <span class="text-danger">*</span></label>
                             <input name="pincode" type="text" class="form-control numeric-only" id="pincode"
-                                placeholder="Enter 6-digit pincode" value="{{ old('pincode') }}" maxlength="6"
+                                placeholder="Enter 6-digit pincode" value="{{ old('pincode', $clients->pincode) }}" maxlength="6"
                                 inputmode="numeric" required>
                             <span class="text-danger small">{{ $errors->first('pincode') }}</span>
                         </div>
@@ -283,18 +275,17 @@ $hideBackground = true;
                         <div class="form-group {{ $errors->has('contactperson') ? 'has-error' : '' }} mb-0">
                             <label for="contactperson">Contact Person's Name <span class="text-danger">*</span></label>
                             <input name="contactperson" type="text" class="form-control" id="contactperson"
-                                placeholder="Enter contact person name" value="{{ old('contactperson') }}" required>
+                                placeholder="Enter contact person name" value="{{ old('contactperson', $clients->spokesperson) }}" required>
                             <span class="text-danger small">{{ $errors->first('contactperson') }}</span>
                         </div>
                     </div>
 
                     <div class="col-md-6">
                         <div class="form-group {{ $errors->has('contactnumber') ? 'has-error' : '' }} mb-0">
-                            <label for="contactnumber">Contact Person's Number <span
-                                    class="text-danger">*</span></label>
+                            <label for="contactnumber">Contact Person's Number <span class="text-danger">*</span></label>
                             <input name="contactnumber" type="text" class="form-control numeric-only"
                                 id="contactnumber" placeholder="Enter 10-digit number"
-                                value="{{ old('contactnumber') }}" maxlength="10" inputmode="numeric" required>
+                                value="{{ old('contactnumber', $clients->contact) }}" maxlength="10" inputmode="numeric" required>
                             <span class="text-danger small">{{ $errors->first('contactnumber') }}</span>
                         </div>
                     </div>
@@ -303,31 +294,27 @@ $hideBackground = true;
                         <div class="form-group {{ $errors->has('email') ? 'has-error' : '' }} mb-0">
                             <label for="email">Company Email <span class="text-danger">*</span></label>
                             <input name="email" type="email" class="form-control" id="email"
-                                placeholder="Enter email address" value="{{ old('email') }}" required>
+                                placeholder="Enter email address" value="{{ old('email', $clients->email) }}" required>
                             <span class="text-danger small">{{ $errors->first('email') }}</span>
                         </div>
                     </div>
 
                     <div class="col-md-6">
                         <div class="form-group {{ $errors->has('relationshipmanager') ? 'has-error' : '' }} mb-0">
-                            <label for="relationshipmanager">Relationship Manager <span
-                                    class="text-danger">*</span></label>
+                            <label for="relationshipmanager">Relationship Manager <span class="text-danger">*</span></label>
                             <input name="relationshipmanager" type="text" class="form-control"
                                 id="relationshipmanager" placeholder="Enter relationship manager name"
-                                value="{{ old('relationshipmanager') }}" required>
+                                value="{{ old('relationshipmanager', $clients->relationManager) }}" required>
                             <span class="text-danger small">{{ $errors->first('relationshipmanager') }}</span>
                         </div>
                     </div>
 
                     <div class="col-md-6">
-                        <div
-                            class="form-group {{ $errors->has('relationshipmanagercontact') ? 'has-error' : '' }} mb-0">
-                            <label for="relationshipmanagercontact">Relationship Manager Contact <span
-                                    class="text-danger">*</span></label>
+                        <div class="form-group {{ $errors->has('relationshipmanagercontact') ? 'has-error' : '' }} mb-0">
+                            <label for="relationshipmanagercontact">Relationship Manager Contact <span class="text-danger">*</span></label>
                             <input name="relationshipmanagercontact" type="text" class="form-control numeric-only"
                                 id="relationshipmanagercontact" placeholder="Enter 10-digit number"
-                                value="{{ old('relationshipmanagercontact') }}" maxlength="10" inputmode="numeric"
-                                required>
+                                value="{{ old('relationshipmanagercontact', $clients->relationManagerContact) }}" maxlength="10" inputmode="numeric" required>
                             <span class="text-danger small">{{ $errors->first('relationshipmanagercontact') }}</span>
                         </div>
                     </div>
@@ -335,7 +322,7 @@ $hideBackground = true;
 
                 <div class="form-actions">
                     <button type="submit" class="btn-primary-action">
-                        <i class="la la-check"></i> Save Range
+                        <i class="la la-check"></i> Update Client
                     </button>
                     <a href="{{ route('clients') }}" class="btn-cancel">Cancel</a>
                 </div>
@@ -346,20 +333,20 @@ $hideBackground = true;
 @endsection
 
 @push('scripts')
-    <script>
-        $(document).ready(function() {
-            // Strict numeric validation for fields with class "numeric-only"
-            $('.numeric-only').on('input', function() {
-                // Remove any non-numeric characters immediately on paste or type
-                this.value = this.value.replace(/[^0-9]/g, '');
-            });
-
-            // Prevent typing non-numbers entirely
-            $('.numeric-only').on('keypress', function(e) {
-                if (e.which < 48 || e.which > 57) {
-                    e.preventDefault();
-                }
-            });
+<script>
+    $(document).ready(function() {
+        // Strict numeric validation for fields with class "numeric-only"
+        $('.numeric-only').on('input', function() {
+            // Remove any non-numeric characters immediately on paste or type
+            this.value = this.value.replace(/[^0-9]/g, '');
         });
-    </script>
+
+        // Prevent typing non-numbers entirely
+        $('.numeric-only').on('keypress', function(e) {
+            if (e.which < 48 || e.which > 57) {
+                e.preventDefault();
+            }
+        });
+    });
+</script>
 @endpush

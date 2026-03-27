@@ -86,13 +86,13 @@ class SiteController extends Controller
     {
         $user = session('user');
         $request->session()->forget('supervisor_id');
-        
+
         $search = $request->input('search');
         $sort = $request->input('sort', 'name');
         $dir = $request->input('dir', 'asc');
 
         Log::info($user->name . ' view site list, User_id: ' . $user->id . ' Client_ID: ' . $client_id);
-        
+
         $query = SiteDetails::query();
 
         // 1. Role-based filtering
@@ -104,7 +104,7 @@ class SiteController extends Controller
         } else if ($user->role_id == 2) {
             $user_assign = SiteAssign::where('user_id', $user->id)->where('role_id', 2)->first();
             $allowedSiteIds = $user_assign ? json_decode($user_assign->site_id, true) : [];
-            
+
             if ($client_id != 0 && !is_string($client_id)) {
                 $query->whereIn('id', $allowedSiteIds)->where('client_id', $client_id);
             } else {
@@ -115,7 +115,7 @@ class SiteController extends Controller
         } else if ($user->role_id == 7) {
             $siteAssign = SiteAssign::where('user_id', $user->id)->first();
             $clientArray = $siteAssign ? json_decode($siteAssign->site_id, true) : [];
-            
+
             if ($client_id != 0 && !is_string($client_id)) {
                 $query->where('company_id', $user->company_id)->whereIn('client_id', (array)$client_id);
             } else {
@@ -144,7 +144,7 @@ class SiteController extends Controller
 
         // 4. Pagination
         $Sites = $query->paginate(10);
-        
+
         // 5. Metadata for view
         $admin = is_numeric($client_id) ? Users::where('id', $client_id)->first() : null;
         $clientName = ($client_id != 0 && is_numeric($client_id)) ? ClientDetails::find($client_id) : null;
@@ -171,218 +171,157 @@ class SiteController extends Controller
     {
         $user = session('user');
         Log::info($user->name . ' view site form, User_id: ' . $user->id);
+
+        // We don't fetch $states anymore because it's a text field now
         if ($client_id == 0) {
-            $states = DB::table('states')->get();
             $clients = ClientDetails::where('company_id', $user->company_id)->get();
-            return view('createsite')->with('states', $states)->with('id', $client_id)->with('clients', $clients);
+            return view('createsite')->with('id', $client_id)->with('clients', $clients);
         } else {
-            $states = DB::table('states')->get();
-            return view('createsite')->with('states', $states)->with('id', $client_id);
+            return view('createsite')->with('id', $client_id);
         }
     }
 
     public function site_createaction($client_id, Request $request)
     {
-        $state = DB::table('states')->where('code', $request->state)->first();
         $user = session('user');
 
-
-        ActivityLog::create([
-            'date_time' => date('Y-m-d H:i:s'),
-            'company_id' => $user->company_id,
-            'user_id' => $user->id,
-            'user_name' => $user->name,
-            'type' => "Create Site",
-            'message' => "New site '" . $_POST['name'] . "' created by " . $user->name,
+        // Validation
+        $validator = Validator::make($request->all(), [
+            'name'          => 'required',
+            'address'       => 'required|max:100',
+            'state'         => 'required', // String input
+            'city'          => 'required', // String input
+            'pincode'       => 'required|numeric|min:6',
+            'contactperson' => 'required',
+            'contactnumber' => 'required|min:10',
+            'email'         => 'required|email',
+            'latetime'      => 'required',
+            'site_type'     => 'required',
+            'sos'           => 'required',
+            'earlytime'     => 'required',
+            'client'        => $client_id == 0 ? 'required' : 'nullable',
         ]);
-        $new_site = new SiteDetails();
-        if ($client_id == 0) {
-            $validator = Validator::make($request->all(), [
-                'name' => 'required',
-                'address' => 'required|max:100',
-                'state' => 'required',
-                'city' => 'required',
-                'pincode' => 'required|numeric|min:6',
-                'contactperson' => 'required',
-                'contactnumber' => 'required|min:10',
-                'email' => 'required|email',
-                'latetime' => 'required',
-                'site_type' => 'required',
-                'client' => 'required',
-                'sos' => 'required',
-                'earlytime' => 'required',
 
-            ]);
-
-            if ($validator->fails()) {
-                return redirect()->route('sites.site_create', $client_id)
-                    ->withErrors($validator)
-                    ->withInput();
-            } else {
-                $clientName = ClientDetails::where('id', $request->client)->first();
-                // dd($clientName);
-                $new_site->name = $_POST['name'];
-                $new_site->address = $_POST['address'];
-                $new_site->state = $state->name;
-                $new_site->city = $_POST['city'];
-                $new_site->pincode = $_POST['pincode'];
-                $new_site->contactPerson = $_POST['contactperson'];
-                $new_site->mobile = $_POST['contactnumber'];
-                $new_site->email = $_POST['email'];
-                $new_site->lateTime = $_POST['latetime'];
-                $new_site->siteType = $_POST['site_type'];
-                $new_site->client_id = $_POST['client'];
-                $new_site->client_name = $clientName->name;
-                $new_site->company_id = $user->company_id;
-                $new_site->earlyTime = $request->earlytime;
-                $new_site->sosContact = $request->sos;
-                // $new_site->timestamp = date('Y-m-d H:i:s');
-                $new_site->save();
-            }
-        } else {
-            $validator = Validator::make($request->all(), [
-                'name' => 'required',
-                'address' => 'required|max:100',
-                'state' => 'required',
-                'city' => 'required',
-                'pincode' => 'required|numeric|min:6',
-                'contactperson' => 'required',
-                'contactnumber' => 'required|min:10',
-                'email' => 'required|email',
-                'latetime' => 'required',
-                'site_type' => 'required',
-                'sos' => 'required',
-                'earlytime' => 'required',
-            ]);
-
-            if ($validator->fails()) {
-                return redirect()->route('sites.site_create', $client_id)
-                    ->withErrors($validator)
-                    ->withInput();
-            } else {
-                $clientName = ClientDetails::where('id', $client_id)->first();
-
-                $new_site->name = $_POST['name'];
-                $new_site->address = $_POST['address'];
-                $new_site->state = $state->name;
-                $new_site->city = $_POST['city'];
-                $new_site->pincode = $_POST['pincode'];
-                $new_site->contactPerson = $_POST['contactperson'];
-                $new_site->mobile = $_POST['contactnumber'];
-                $new_site->email = $_POST['email'];
-                $new_site->lateTime = $_POST['latetime'];
-                $new_site->siteType = $_POST['site_type'];
-                $new_site->client_id = $client_id;
-                $new_site->client_name = $clientName->name;
-                $new_site->company_id = $user->company_id;
-                $new_site->earlyTime = $request->earlytime;
-                $new_site->sosContact = $request->sos;
-                // $new_site->timestamp = date('Y-m-d H:i:s');
-                $new_site->save();
-            }
+        if ($validator->fails()) {
+            return redirect()->route('sites.site_create', $client_id)
+                ->withErrors($validator)
+                ->withInput();
         }
 
-        return redirect()->route('sites.getsites', [$client_id])->with('success', 'site created successfully.');
+        // Determine Client ID
+        $final_client_id = ($client_id == 0) ? $request->client : $client_id;
+        $clientRecord = ClientDetails::find($final_client_id);
+
+        // Create Activity Log
+        ActivityLog::create([
+            'date_time'  => date('Y-m-d H:i:s'),
+            'company_id' => $user->company_id,
+            'user_id'    => $user->id,
+            'user_name'  => $user->name,
+            'type'       => "Create Site",
+            'message'    => "New site '" . $request->name . "' created by " . $user->name,
+        ]);
+
+        // Create New Site
+        $new_site = new SiteDetails();
+        $new_site->name          = $request->name;
+        $new_site->address       = $request->address;
+        $new_site->state         = $request->state; // Saves text directly
+        $new_site->city          = $request->city;  // Saves text directly
+        $new_site->pincode       = $request->pincode;
+        $new_site->contactPerson = $request->contactperson;
+        $new_site->mobile        = $request->contactnumber;
+        $new_site->email         = $request->email;
+        $new_site->lateTime      = $request->latetime;
+        $new_site->siteType      = $request->site_type;
+        $new_site->client_id     = $final_client_id;
+        $new_site->client_name   = $clientRecord->name ?? 'Unknown';
+        $new_site->company_id    = $user->company_id;
+        $new_site->earlyTime     = $request->earlytime;
+        $new_site->sosContact    = $request->sos;
+        $new_site->save();
+
+        return redirect()->route('sites.getsites', [$client_id])->with('success', 'Site created successfully.');
     }
 
     public function site_edit($client_id, $id)
     {
-        // dd($client_id, $id);
-
         $user = session('user');
         Log::info($user->name . ' view site update form, User_id: ' . $user->id);
 
-        $states = DB::table('states')->get();
-        // $admin = Users::where('id', $client_id)->first();
-        // dd($admin);
-        // if (isset($admin)) {
-        // if ($admin->role_id == 7) {
-
         $sites = SiteDetails::find($id);
-        $clients = ClientDetails::where('company_id', $user->company_id)->where('id', $sites->client_id)->get();
+
+        if (!$sites) {
+            return redirect()->back()->with('error', 'Site not found.');
+        }
+
+        $clients = ClientDetails::where('company_id', $user->company_id)
+            ->where('id', $sites->client_id)
+            ->get();
+
         $client_id = $sites->client_id;
-        // }
-        // } else {
-        //     $clients = ClientDetails::where('company_id', $user->company_id)->where('id', $client_id)->first();
-        //     $sites = SiteDetails::find($id);
-        // }
 
-        // dd($clients,$sites);
-        //$admin = Users::where('id', $client_id)->first();
-        //dd($admin,$clients);
-        //if ($user->role_id == 7) {
-        //$sites = ClientDetails::find($id);
-        //} else {
-
-        //}
-
-        return view('updatesite')->with('sites', $sites)->with('clients', $clients)->with('id', $id)->with('client_id', $client_id)->with('states', $states);
+        // We no longer pass $states because it's a text field now
+        return view('updatesite')
+            ->with('sites', $sites)
+            ->with('clients', $clients)
+            ->with('id', $id)
+            ->with('client_id', $client_id);
     }
 
     public function site_editaction(Request $request, $client_id, $id)
     {
         $user = session('user');
-        if ($client_id == 0) {
-            $client = $_POST['client'];
-        } else {
-            $client = $client_id;
-        }
-        $validator = Validator::make($request->all(), [
-            'name' => 'required',
-            'address' => 'required|max:100',
-            'state' => 'required',
-            'city' => 'required',
-            // 'pincode' => 'required|numeric|min:6',
-            // 'contactperson' => 'required',
-            // 'contactnumber' => 'required|min:10',
-            // 'email' => 'required|email',
-            'latetime' => 'required',
-            'site_type' => 'required',
-            // 'client' => 'required',
-            'sos' => 'required',
-            'earlytime' => 'required',
+        $client = ($client_id == 0) ? $request->client : $client_id;
+
+        $request->validate([
+            'name'          => 'required',
+            'address'       => 'required|max:100',
+            'state'         => 'required',
+            'city'          => 'required',
+            'pincode'       => 'required|numeric|min:6',
+            'contactperson' => 'required',
+            'contactnumber' => 'required|min:10',
+            'email'         => 'required|email',
+            'latetime'      => 'required',
+            'site_type'     => 'required',
+            'sos'           => 'required',
+            'earlytime'     => 'required',
         ]);
-        // dd($client);
 
-        if ($validator->fails()) {
-            // dd(1);
-            return redirect()->route('sites.site_edit', [$client_id, $id])
-                ->withErrors($validator)
-                ->withInput();
-        } else {
-            ActivityLog::create([
-                'date_time' => date('Y-m-d H:i:s'),
-                'company_id' => $user->company_id,
-                'user_id' => $user->id,
-                'user_name' => $user->name,
-                'type' => "Update Site",
-                'message' => "Site '" . $_POST['name'] . "' updated by " . $user->name,
-            ]);
-            SiteAssign::where('site_id', '=', $id)->update(['site_name' => $_POST['name']]);
-            $state = DB::table('states')->where('code', $_POST['state'])->first();
-            // $admin = Users::where('id', $client_id)->first();
-            // if ($user->role_id == 7) {
-            //     $site = ClientDetails::find($id);
-            // } else {
-            $site = SiteDetails::find($id);
-            // }
+        $site = SiteDetails::find($id);
+        if (!$site) return redirect()->back()->with('error', 'Site not found.');
 
-            $site->name = $_POST['name'];
-            $site->address = $_POST['address'];
-            $site->state = $state->name;
-            $site->city = $_POST['city'];
-            $site->pincode = $_POST['pincode'];
-            $site->contactPerson = $_POST['contactperson'];
-            $site->mobile = $_POST['contactnumber'];
-            $site->email = $_POST['email'];
-            $site->lateTime = $_POST['latetime'];
-            $site->siteType = $_POST['site_type'];
-            $site->client_id = $client;
-            //$site->timestamp = date('Y-m-d H:i:s');
-            $site->save();
-        }
+        // Log the update
+        ActivityLog::create([
+            'date_time'  => date('Y-m-d H:i:s'),
+            'company_id' => $user->company_id,
+            'user_id'    => $user->id,
+            'user_name'  => $user->name,
+            'type'       => "Update Site",
+            'message'    => "Site '" . $request->name . "' updated by " . $user->name,
+        ]);
 
-        return redirect()->route('sites.getsites', [$client_id])->with('success', 'site updated successfully.');
+        // Update SiteDetails
+        $site->name          = $request->name;
+        $site->address       = $request->address;
+        $site->state         = $request->state; // Text value
+        $site->city          = $request->city;  // Text value
+        $site->pincode       = $request->pincode;
+        $site->contactPerson = $request->contactperson;
+        $site->mobile        = $request->contactnumber;
+        $site->email         = $request->email;
+        $site->lateTime      = $request->latetime;
+        $site->siteType      = $request->site_type;
+        $site->client_id     = $client;
+        $site->earlyTime     = $request->earlytime;
+        $site->sosContact    = $request->sos;
+        $site->save();
+
+        // Sync the name in assignments
+        SiteAssign::where('site_id', $id)->update(['site_name' => $request->name]);
+
+        return redirect()->route('sites.getsites', [$client_id])->with('success', 'Site updated successfully.');
     }
 
     public function site_delete($client_id, $id)
@@ -408,13 +347,13 @@ class SiteController extends Controller
     {
         $user = session('user');
         $request->session()->put('supervisor_id', $supervisor_id);
-        
+
         $search = $request->input('search');
         $sort = $request->input('sort', 'name');
         $dir = $request->input('dir', 'asc');
 
         Log::info($user->name . ' view supervisor sites, User_id: ' . $user->id . ' Supervisor_ID: ' . $supervisor_id);
-        
+
         $admin = Users::where('id', $supervisor_id)->first();
         $query = SiteDetails::query();
 
@@ -451,7 +390,7 @@ class SiteController extends Controller
 
         // 4. Pagination
         $Sites = $query->paginate(10);
-        
+
         if ($request->ajax()) {
             return view('partials.sites_table', [
                 'Sites' => $Sites,
@@ -533,12 +472,12 @@ class SiteController extends Controller
         $user = session('user');
         $company = CompanyDetails::where('id', $user->company_id)->first();
         $companyName = $company ? $company->name : 'Unknown Company';
-        
+
         $clientName = '';
         if ($clientID != 0) {
             $client = ClientDetails::where('id', $clientID)->first();
             $clientName = $client ? $client->name : '';
-            
+
             if ($user->role_id == 1) {
                 $sites = SiteDetails::where('company_id', $user->company_id)->where('client_id', $clientID)->orderBy('name', 'asc')->get();
             } else if ($user->role_id == 2) {

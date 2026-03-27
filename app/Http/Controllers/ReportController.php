@@ -751,7 +751,7 @@ class ReportController extends Controller
         $supervisorId = $request->supervisorId;
         $flag = $request->xlsx;
 
-        // dd($data , "data");  
+        // dd($data , "data");
         $subType = "Supervisor Attendance Report";
 
         $variables = [
@@ -1432,13 +1432,13 @@ class ReportController extends Controller
             // dump('the role id is 2');
             $siteIds = $user->role_id == 2
                 ? SiteAssign::where('user_id', $user->id)
-                    ->pluck('site_id')
-                    ->map(function ($item) {
-                        return is_string($item) ? json_decode($item, true) : $item;
-                    })
-                    ->flatten()
-                    ->unique()
-                    ->values()
+                ->pluck('site_id')
+                ->map(function ($item) {
+                    return is_string($item) ? json_decode($item, true) : $item;
+                })
+                ->flatten()
+                ->unique()
+                ->values()
                 : collect();
             // dump($siteIds, "siteIds arr");
 
@@ -1524,23 +1524,23 @@ class ReportController extends Controller
             return $this->excel->download(
                 new
                     GuardAbsentExport(
-                    $groupedData,
-                    $subType,
-                    $site,
-                    $startDate,
-                    $endDate,
-                    'all guard',
-                    $daysCount,
-                    $type,
-                    $flag,
-                    $client,
-                    $companyName,
-                    $siteInfo['client']['name'],
-                    $siteInfo['name'],
-                    $geofences,
-                    $fileType,
-                    $this->generatedOn
-                ),
+                        $groupedData,
+                        $subType,
+                        $site,
+                        $startDate,
+                        $endDate,
+                        'all guard',
+                        $daysCount,
+                        $type,
+                        $flag,
+                        $client,
+                        $companyName,
+                        $siteInfo['client']['name'],
+                        $siteInfo['name'],
+                        $geofences,
+                        $fileType,
+                        $this->generatedOn
+                    ),
                 'working-summary-report.xlsx'
             );
         } else {
@@ -1797,7 +1797,7 @@ class ReportController extends Controller
 
 
     // guard attendance report
-    public function guardAttendanceReport($guardId, $fromDate, $toDate, )
+    public function guardAttendanceReport($guardId, $fromDate, $toDate,)
     {
         $user = session('user');
         $userinfo = SiteAssign::where('user_id', $guardId)->first();
@@ -2253,13 +2253,13 @@ class ReportController extends Controller
             // dump('the role id is 2');
             $siteIds = $user->role_id == 2
                 ? SiteAssign::where('user_id', $user->id)
-                    ->pluck('site_id')
-                    ->map(function ($item) {
-                        return is_string($item) ? json_decode($item, true) : $item;
-                    })
-                    ->flatten()
-                    ->unique()
-                    ->values()
+                ->pluck('site_id')
+                ->map(function ($item) {
+                    return is_string($item) ? json_decode($item, true) : $item;
+                })
+                ->flatten()
+                ->unique()
+                ->values()
                 : collect();
             // dump($siteIds, "siteIds arr");
 
@@ -3340,13 +3340,13 @@ class ReportController extends Controller
                 // dump('the role id is 2');
                 $siteIds = $user->role_id == 2
                     ? SiteAssign::where('user_id', $user->id)
-                        ->pluck('site_id')
-                        ->map(function ($item) {
-                            return is_string($item) ? json_decode($item, true) : $item;
-                        })
-                        ->flatten()
-                        ->unique()
-                        ->values()
+                    ->pluck('site_id')
+                    ->map(function ($item) {
+                        return is_string($item) ? json_decode($item, true) : $item;
+                    })
+                    ->flatten()
+                    ->unique()
+                    ->values()
                     : collect();
                 // dump($siteIds, "siteIds arr");
 
@@ -3513,13 +3513,13 @@ class ReportController extends Controller
 
         $siteIds = $user->role_id == 2
             ? SiteAssign::where('user_id', $user->id)
-                ->pluck('site_id')
-                ->map(function ($item) {
-                    return is_string($item) ? json_decode($item, true) : $item;
-                })
-                ->flatten()
-                ->unique()
-                ->values()
+            ->pluck('site_id')
+            ->map(function ($item) {
+                return is_string($item) ? json_decode($item, true) : $item;
+            })
+            ->flatten()
+            ->unique()
+            ->values()
             : collect();
 
         if ($roleId === 1) {
@@ -3605,8 +3605,7 @@ class ReportController extends Controller
             if ($geofences !== 'all' && $geofences !== null) {
                 // dump(10);
                 $siteQuery->where('site_id', $geofences);
-            }
-            ;
+            };
         }
 
         $site_UserIds = $siteQuery
@@ -3649,7 +3648,7 @@ class ReportController extends Controller
             'message' => "On site report downloaded by " . $user->name,
         ]);
 
-        // $excelData = 
+        // $excelData =
         // Generate and return the requested file format
         if ($request->xlsx) {
             return $this->excel->download(
@@ -3783,13 +3782,13 @@ class ReportController extends Controller
 
             $siteIds = $user->role_id == 2
                 ? SiteAssign::where('user_id', $user->id)
-                    ->pluck('site_id')
-                    ->map(function ($item) {
-                        return is_string($item) ? json_decode($item, true) : $item;
-                    })
-                    ->flatten()
-                    ->unique()
-                    ->values()
+                ->pluck('site_id')
+                ->map(function ($item) {
+                    return is_string($item) ? json_decode($item, true) : $item;
+                })
+                ->flatten()
+                ->unique()
+                ->values()
                 : collect();
             // dump($siteIds, "siteIds arr");
 
@@ -3899,7 +3898,7 @@ class ReportController extends Controller
 
 
 
-    public function downloadSelfTourDiaryReport(Request $request, )
+    public function downloadSelfTourDiaryReport(Request $request,)
     {
         // dd($subType , 'data');
         $user = session('user');
@@ -4483,5 +4482,30 @@ class ReportController extends Controller
             'filename' => basename($path),
             'fileurl' => url("storage/$path"),
         ]);
+    }
+
+    public function cameraTracking(Request $request)
+    {
+        $user = session('user');
+
+        // Log the activity (matching your other methods)
+        if ($user) {
+            ActivityLog::create([
+                'date_time' => date('Y-m-d H:i:s'),
+                'company_id' => $user->company_id,
+                'user_id' => $user->id,
+                'user_name' => $user->name,
+                'type' => "Camera Tracking View",
+                'message' => $user->name . " viewed Camera Tracking page",
+            ]);
+        }
+
+        // Fetch any data you need for the view here. For example:
+        // $clients = ClientDetails::where('company_id', $user->company_id)->get();
+        // $sites = SiteDetails::where('company_id', $user->company_id)->get();
+
+        // Return the view
+        // Make sure you create a blade file at resources/views/reports/cameraTracking.blade.php
+        return view('dum-reports.camera-tracking');
     }
 }

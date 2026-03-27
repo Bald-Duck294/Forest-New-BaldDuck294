@@ -25,6 +25,7 @@
      <script src="{{ asset('js/global-handlers.js') }}" defer></script>
      <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
      {{-- <script src="https://unpkg.com/leaflet/dist/leaflet.js" defer></script> --}}
+     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
      <script>
          (function() {
              try {
@@ -103,7 +104,7 @@
 
      {{-- Sidebar --}}
      @if (!isset($hideSidebar) || !$hideSidebar)
-         @include('layouts.sidebar')
+     @include('layouts.sidebar')
      @endif
 
 
@@ -113,16 +114,16 @@
 
          {{-- 1. Navbar --}}
          @if (!isset($hideNavbar) || !$hideNavbar)
-             <div class="w-100 sticky-top" style="z-index: 1020;">
-                 @include('layouts.navbar')
-             </div>
+         <div class="w-100 sticky-top" style="z-index: 1020;">
+             @include('layouts.navbar')
+         </div>
          @endif
 
          {{-- 2. Global Filters --}}
          @if (!isset($hideGlobalFilters) || !$hideGlobalFilters)
-             <div class="container-fluid px-2 px-md-4" style="position: relative; z-index: 15;">
-                 @include('partials.global-filters')
-             </div>
+         <div class="container-fluid px-2 px-md-4" style="position: relative; z-index: 15;">
+             @include('partials.global-filters')
+         </div>
          @endif
 
          {{-- 3. Main Page Content --}}

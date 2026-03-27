@@ -120,58 +120,50 @@
         transition: all 0.2s;
     }
 
-    .status-badge {
-        padding: 4px 10px;
-        border-radius: 6px;
-        font-size: 12px;
-        font-weight: 600;
-        display: inline-block;
+    .close-btn:hover {
+        background: #f1f5f9;
+        color: var(--text);
+    }
+
+    /* Clickable Status Badge */
+    .status-clickable {
         cursor: pointer;
+        transition: all 0.2s ease;
     }
-
-    .status-pending {
-        background: #fef3c7;
-        color: #92400e;
-    }
-
-    .status-approved {
-        background: #dcfce7;
-        color: #166534;
-    }
-
-    .status-rejected {
-        background: #fee2e2;
-        color: #991b1b;
+    .status-clickable:hover {
+        opacity: 0.8;
+        transform: scale(1.02);
     }
 </style>
 
-<div class="container py-4">
+<div class="container-fluid py-4">
     <div class="report-card">
+
         <div class="d-flex justify-content-between align-items-start mb-4">
             <div>
                 <h3 class="mb-1" style="font-weight: 700; color: var(--text);">Incidence Report</h3>
                 <p class="text-muted small mb-0">Record of all reported incidents and their status.</p>
             </div>
             <div class="d-flex gap-3 align-items-center">
-                <form method="post" action='{{ route("downloadIncidenceReport") }}' target="_blank"
-                    class="d-flex gap-2">
+                <form method="post" action='{{ route("downloadIncidenceReport") }}' target="_blank" class="d-flex gap-2 mb-0">
                     @csrf
-                    <input type="hidden" name="geofences" value={{$geofences}} />
-                    <input type="hidden" name="toDate" value={{$toDate}} />
-                    <input type="hidden" name="fromDate" value={{$fromDate}} />
-                    <input type="hidden" name="priority" value={{$priority}} />
-                    <input type="hidden" name="client" value={{$client}} />
-                    <input type="hidden" name="incidenceSubType" value={{$incidenceSubType}} />
-                    <input type="hidden" name="siteName" value={{$siteName}} />
+                    <input type="hidden" name="geofences" value="{{ $geofences }}" />
+                    <input type="hidden" name="toDate" value="{{ $toDate }}" />
+                    <input type="hidden" name="fromDate" value="{{ $fromDate }}" />
+                    <input type="hidden" name="priority" value="{{ $priority }}" />
+                    <input type="hidden" name="client" value="{{ $client }}" />
+                    <input type="hidden" name="incidenceSubType" value="{{ $incidenceSubType }}" />
+                    <input type="hidden" name="siteName" value="{{ $siteName }}" />
                     <input type="hidden" name="incidenceData" value="{{ json_encode($IncidenceDetails) }}" />
 
                     <button type="submit" class="btn-report btn-pdf" name="xlsx" value="pdf">
-                        <i class="la la-download"></i> PDF
+                        <i class="la la-file-pdf"></i> PDF
                     </button>
                     <button type="submit" class="btn-report btn-excel" name="xlsx" value="xlsx">
-                        <i class="la la-download"></i> Excel
+                        <i class="la la-file-excel"></i> Excel
                     </button>
                 </form>
+
                 <button type="button" class="close-btn" data-bs-dismiss="modal" aria-label="Close">
                     <i class="la la-times"></i>
                 </button>
@@ -181,52 +173,98 @@
         <div class="report-info-grid">
             <div class="info-item">
                 <div class="label">Organization</div>
-                <div class="value">{{$companyName }}</div>
+                <div class="value">{{ $companyName }}</div>
             </div>
             <div class="info-item">
                 <div class="label">Site</div>
-                <div class="value">{{$siteName}}</div>
+                <div class="value">{{ $siteName }}</div>
             </div>
             <div class="info-item">
                 <div class="label">Date Range</div>
-                <div class="value">{{date('d M Y', strtotime($fromDate))}} to {{date('d M Y', strtotime($toDate))}}</div>
+                <div class="value">{{ date('d M Y', strtotime($fromDate)) }} to {{ date('d M Y', strtotime($toDate)) }}</div>
             </div>
             <div class="info-item">
                 <div class="label">Generated On</div>
                 <div class="value">{{ date("d M Y") }}</div>
             </div>
         </div>
-                                            ?>
-                                                    <td>
-                                                        @if($url)
-                                                            <a href="{{$url}}" target="_blank">Location</a>
-                                                        @else
-                                                            NA
-                                                        @endif
-                                                    </td>
-                                                    <td>{{$item->remark}}</td>
-                                                    <td>{{ $item->supervisorRemark }}</td>
-                                                    @if($item->supervisorActionDateTime != '')
-                                                        <td>{{ date('d M Y g:i a', strtotime($item->supervisorActionDateTime))}}</td>
-                                                    @else
-                                                        <td align="center">-</td>
-                                                    @endif
-                                                    <td>{{ $item->adminRemark }}</td>
 
-                                                    @if($item->adminActionDateTime != null)
-                                                        <td>{{ date('d M Y g:i a', strtotime($item->adminActionDateTime))}}</td>
-                                                    @else
-                                                        <td align="center">-</td>
-                                                    @endif
+        <div class="table-responsive rounded border shadow-sm" style="max-height: 60vh; overflow-y: auto;">
+            <table class="table table-hover align-middle">
+                <thead class="sticky-header">
+                    <tr>
+                        <th>Sr. No.</th>
+                        <th>Location</th>
+                        <th class="text-start">Guard Remark</th>
+                        <th class="text-start">Supervisor Remark</th>
+                        <th>Supervisor Action</th>
+                        <th class="text-start">Admin Remark</th>
+                        <th>Admin Action</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse($IncidenceDetails as $index => $item)
+                        @php
+                            // Setup URL if applicable (adjust mapping to your actual DB column if needed)
+                            $url = $item->location_url ?? null;
+                        @endphp
+                        <tr>
+                            <td class="text-center fw-bold">{{ $index + 1 }}</td>
 
+                            <td class="text-center">
+                                @if($url)
+                                    <a href="{{ $url }}" target="_blank" class="badge bg-light text-primary border text-decoration-none px-2 py-1">
+                                        <i class="la la-map-marker"></i> Map
+                                    </a>
+                                @else
+                                    <span class="text-muted">-</span>
+                                @endif
+                            </td>
 
-                                                    <td><span onclick="IncidenceRead('{{$item->id}}','report')"
-                                                            style="color:#003add;">{{ $item->status }}</span></td>
-                                                </tr>
-                                                <?php    $srNo = $srNo + 1; ?>
-                        @endforeach
-                    </tbody>
-                </table>
-            </div>
+                            <td>{{ $item->remark ?? '-' }}</td>
+
+                            <td>{{ $item->supervisorRemark ?? '-' }}</td>
+
+                            <td class="text-center text-nowrap">
+                                @if(!empty($item->supervisorActionDateTime))
+                                    {{ date('d M Y g:i a', strtotime($item->supervisorActionDateTime)) }}
+                                @else
+                                    <span class="text-muted">-</span>
+                                @endif
+                            </td>
+
+                            <td>{{ $item->adminRemark ?? '-' }}</td>
+
+                            <td class="text-center text-nowrap">
+                                @if(!empty($item->adminActionDateTime))
+                                    {{ date('d M Y g:i a', strtotime($item->adminActionDateTime)) }}
+                                @else
+                                    <span class="text-muted">-</span>
+                                @endif
+                            </td>
+
+                            <td class="text-center">
+                                <span class="badge bg-primary px-3 py-2 rounded-pill status-clickable"
+                                      onclick="IncidenceRead('{{ $item->id }}','report')"
+                                      title="Click to view details">
+                                    {{ $item->status }}
+                                </span>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="8" class="text-center py-5 text-muted bg-light">
+                                <i class="la la-folder-open fs-1 d-block mb-2 text-secondary"></i>
+                                No incidence records found for this period.
+                            </td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
         </div>
-        @include('includes.report-footer')
+
+    </div>
+</div>
+
+@include('includes.report-footer')

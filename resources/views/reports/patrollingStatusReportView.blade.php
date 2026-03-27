@@ -1,149 +1,137 @@
 @php
-    // Expecting $patrols passed from controller (collection of PatrolSession)
-    //dump($patrols)
-    //dump($clientId , $org , $beatId , $employeeId , $reportTitle , "report title ")
+// Expecting $patrols passed from controller (collection of PatrolSession)
+//dump($patrols)
+//dump($clientId , $org , $beatId , $employeeId , $reportTitle , "report title ")
 @endphp
 
 @include('includes.report-header')
 
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-md-11">
-            <table class="table" style="background-color: #fcd7a9">
-                <thead>
-                    <tr>
-                        <th colspan="3" style="text-align: center;">Organization</th>
-                        <th colspan="3" style="text-align: center;">Report Type</th>
-                        <th colspan="3" style="text-align: center;">Generated On</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td colspan="3" style="text-align: center;">{{ $org ?? 'N/A' }}</td>
-                        <td colspan="3" style="text-align: center;">Patrol Sessions Report</td>
-                        <td colspan="3" style="text-align: center;">{{ date('d M Y') }}</td>
-                    </tr>
-                </tbody>
-            </table>
+<div class="container-fluid px-0">
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 p-3 bg-light border rounded shadow-sm">
+
+        <div class="report-meta">
+            <h5 class="mb-1 text-primary fw-bold">Patrol Sessions Report</h5>
+            <p class="mb-0 text-muted small">
+                <i class="la la-building me-1"></i><strong>Organization:</strong> {{ $org ?? 'N/A' }}
+                <span class="mx-2">|</span>
+                <i class="la la-calendar me-1"></i><strong>Generated On:</strong> {{ date('d M Y') }}
+            </p>
         </div>
 
-        <div class="col-md-1" style="text-align: center;margin-top: -10px;">
-            <div class="row">
-                <form method="post" action="{{ route('downloadPatrollingStatusReport') }}" target="_blank">
-                    @csrf
-                    <input type="hidden" name="patrols" value="{{ json_encode($patrols) }}" />
-                    <input type="hidden" name="client" value="{{ $clientId }}" />
-                    <input type="hidden" name="geofences" value="{{ $beatId }}" />
-                    <input type="hidden" name="subType" value="{{ $reportTitle }}" />
-                    <input type="hidden" name="guard" value="{{ $employeeId }}" />
-                    <input type="hidden" name="fromDate" value="{{ $startDate }}" />
-                    <input type="hidden" name="toDate" value="{{ $endDate }}" />
+        <div class="d-flex align-items-center gap-2 mt-2 mt-md-0">
+            <form method="post" action="{{ route('downloadPatrollingStatusReport') }}" target="_blank" class="d-flex gap-2 mb-0">
+                @csrf
+                <input type="hidden" name="patrols" value="{{ json_encode($patrols) }}" />
+                <input type="hidden" name="client" value="{{ $clientId }}" />
+                <input type="hidden" name="geofences" value="{{ $beatId }}" />
+                <input type="hidden" name="subType" value="{{ $reportTitle }}" />
+                <input type="hidden" name="guard" value="{{ $employeeId }}" />
+                <input type="hidden" name="fromDate" value="{{ $startDate }}" />
+                <input type="hidden" name="toDate" value="{{ $endDate }}" />
 
+                <button type="submit" class="btn btn-outline-danger btn-sm d-flex align-items-center" name="format" value="pdf">
+                    <i class="la la-file-pdf fs-5 me-1"></i> PDF
+                </button>
+                <button type="submit" class="btn btn-outline-success btn-sm d-flex align-items-center" name="format" value="xlsx">
+                    <i class="la la-file-excel fs-5 me-1"></i> Excel
+                </button>
+            </form>
 
-
-
-                    <div class="col-md-12" style="display: flex;justify-content: center;">
-                        <button type="button" class="close" data-bs-dismiss="modal" aria-hidden="true"
-                            style="border: 1px solid grey;padding: 3px 8px;border-radius: 50%;">×</button>
-                    </div>
-                    <div class="col-md-12" style="padding: 3px;display: flex;justify-content: center;">
-                        <button type="submit" class="btn btn-danger btn-border btn-round" name="format" value="pdf">
-                            <i class="la la-download" title="pdf"></i>PDF
-                        </button>
-                    </div>
-                    <div class="col-md-12" style="padding: 3px;display: flex;justify-content: center;">
-                        <button type="submit" class="btn btn-success btn-border btn-round" name="format" value="xlsx">
-                            <i class="la la-download" title="excel"></i>Excel
-                        </button>
-                    </div>
-                </form>
-            </div>
+            <button type="button" class="btn btn-secondary btn-sm d-flex align-items-center" data-bs-dismiss="modal" aria-hidden="true">
+                <i class="la la-times fs-5 me-1"></i> Close
+            </button>
         </div>
     </div>
 
-    <!-- Data Table -->
-    <div class="row">
-        <div class="col-md-12" style="overflow: auto; max-height: 70vh;">
-            <table class="table table-bordered table-striped">
-                <thead>
-                    <tr style="background-color: #d97979;">
-                        <th style="text-align: center; white-space: nowrap;">Sr. No.</th>
-                        <th style="text-align: center; white-space: nowrap;">User Name</th>
+    <div class="table-responsive shadow-sm border rounded" style="max-height: 70vh; overflow-y: auto;">
+        <table class="table table-hover table-striped table-bordered align-middle mb-0">
+            <thead class="bg-dark text-white sticky-top" style="z-index: 1;">
+                <tr>
+                    <th class="text-center text-nowrap text-white" style="background-color: #343a40;">Sr. No.</th>
+                    <th class="text-center text-nowrap text-white" style="background-color: #343a40;">User Name</th>
+                    @if($clientId == 'all')
+                        <th class="text-center text-nowrap text-white" style="background-color: #343a40;">Range</th>
+                    @endif
+                    <th class="text-center text-nowrap text-white" style="background-color: #343a40;">Beat Name</th>
+                    <th class="text-center text-nowrap text-white" style="background-color: #343a40;">Type</th>
+                    <th class="text-center text-nowrap text-white" style="background-color: #343a40;">Session</th>
+                    <th class="text-center text-nowrap text-white" style="background-color: #343a40;">Start Time</th>
+                    <th class="text-center text-nowrap text-white" style="background-color: #343a40;">End Time</th>
+                    <th class="text-center text-nowrap text-white" style="background-color: #343a40;">Start Location</th>
+                    <th class="text-center text-nowrap text-white" style="background-color: #343a40;">End Location</th>
+                    <th class="text-center text-nowrap text-white" style="background-color: #343a40;">Distance</th>
+                    <th class="text-center text-nowrap text-white" style="background-color: #343a40;">Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                @forelse ($patrols as $index => $item)
+                    <tr>
+                        <td class="text-center fw-bold">{{ $index + 1 }}</td>
+                        <td class="text-center">{{ $item->user->name ?? 'No User' }}</td>
+
                         @if($clientId == 'all')
-                            <th style="text-align: center; white-space: nowrap;">Range</th>
+                            <td class="text-center">
+                                {{ $item->site ? $item->site->client_name : 'N/A' }}
+                            </td>
                         @endif
 
-                        <th style="text-align: center; white-space: nowrap;">Beat Name</th>
-                        <th style="text-align: center; white-space: nowrap;">Type</th>
-                        <th style="text-align: center; white-space: nowrap;">Session</th>
-                        <th style="text-align: center; white-space: nowrap;">Start Time</th>
-                        <th style="text-align: center; white-space: nowrap;">End Time</th>
-                        <th style="text-align: center; white-space: nowrap;">Start Location</th>
-                        <th style="text-align: center; white-space: nowrap;">End Location</th>
-                        <th style="text-align: center; white-space: nowrap;">Distance</th>
-                        <th style="text-align: center; white-space: nowrap;">Status</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach ($patrols as $index => $item)
-                        <tr>
-                            <td align="center">{{ $index + 1 }}</td>
-                            <td align="center">{{ $item->user->name ?? 'no user' }}</td>
+                        <td class="text-center">{{ $item->display_site ?? 'No Site' }}</td>
+                        <td class="text-center">
+                            <span class="badge bg-secondary">{{ $item->type }}</span>
+                        </td>
+                        <td class="text-center">{{ $item->session }}</td>
 
-                            @if($clientId == 'all')
-                                <td style="border: 1px solid black;">
-                                    {{ ($item->site !== null) ? $item->site->client_name : 'N/A' }}
-                                </td>
+                        <td class="text-center text-nowrap">
+                            {{ date('d-m-Y h:i A', strtotime($item->started_at)) }}
+                        </td>
+
+                        <td class="text-center text-nowrap">
+                            @if ($item->ended_at)
+                                {{ date('d-m-Y h:i A', strtotime($item->ended_at)) }}
+                            @else
+                                <span class="text-muted">-</span>
                             @endif
-                            <td align="center">{{ $item->display_site ?? 'no site'}}</td>
-                            <td align="center">{{ $item->type }}</td>
-                            <td align="center">{{ $item->session }}</td>
+                        </td>
 
-                            <td align="center">
-                                {{ date('d-m-Y h:i a', strtotime($item->started_at)) }}
-                            </td>
+                        <td class="text-center text-nowrap">
+                            <a href="http://maps.google.com/maps?q={{ $item->start_lat }},{{ $item->start_lng }}"
+                               target="_blank" class="text-decoration-none">
+                               <i class="la la-map-marker text-danger"></i> {{ $item->start_lat }}, {{ $item->start_lng }}
+                            </a>
+                        </td>
 
-                            <td align="center">
-                                @if ($item->ended_at)
-                                    {{ date('d-m-Y h:i a', strtotime($item->ended_at)) }}
-                                @else
-                                    NA
-                                @endif
-                            </td>
-
-                            <td align="center">
-                                <a href="https://maps.google.com/?q={{ $item->start_lat }},{{ $item->start_lng }}"
-                                    target="_blank">
-                                    {{ $item->start_lat }}, {{ $item->start_lng }}
+                        <td class="text-center text-nowrap">
+                            @if ($item->end_lat && $item->end_lng)
+                                <a href="http://maps.google.com/maps?q={{ $item->end_lat }},{{ $item->end_lng }}"
+                                   target="_blank" class="text-decoration-none">
+                                   <i class="la la-map-marker text-danger"></i> {{ $item->end_lat }}, {{ $item->end_lng }}
                                 </a>
-                            </td>
+                            @else
+                                <span class="text-muted">-</span>
+                            @endif
+                        </td>
 
-                            <td align="center">
-                                @if ($item->end_lat && $item->end_lng)
-                                    <a href="https://maps.google.com/?q={{ $item->end_lat }},{{ $item->end_lng }}"
-                                        target="_blank">
-                                        {{ $item->end_lat }}, {{ $item->end_lng }}
-                                    </a>
-                                @else
-                                    -
-                                @endif
-                            </td>
+                        <td class="text-center fw-bold text-nowrap">
+                            {{ $item->distance !== null ? round($item->distance / 1000, 2) . ' km' : '-' }}
+                        </td>
 
-
-                            <td align="center" style="font-weight: bold;">
-                                {{ $item->distance !== null ? round($item->distance / 1000, 2) . ' km' : '-' }}
-                            </td>
-
-                            <td align=" center"
-                                style="font-weight: bold;
-                                                                                        color: {{ $item->ended_at ? 'green' : 'orangered' }};">
-                                {{ $item->ended_at ? 'Completed' : 'Ongoing' }}
-                            </td>
-
-                        </tr>
-                    @endforeach
-                </tbody>
-            </table>
-        </div>
+                        <td class="text-center">
+                            @if($item->ended_at)
+                                <span class="badge bg-success px-3 py-2 rounded-pill">Completed</span>
+                            @else
+                                <span class="badge bg-warning text-dark px-3 py-2 rounded-pill">Ongoing</span>
+                            @endif
+                        </td>
+                    </tr>
+                @empty
+                    <tr>
+                        <td colspan="{{ $clientId == 'all' ? 12 : 11 }}" class="text-center py-5 text-muted bg-white">
+                            <i class="la la-folder-open fs-1 d-block mb-2 text-secondary"></i>
+                            No patrol sessions found for this period.
+                        </td>
+                    </tr>
+                @endforelse
+            </tbody>
+        </table>
     </div>
 </div>
