@@ -172,12 +172,24 @@ class SiteController extends Controller
         $user = session('user');
         Log::info($user->name . ' view site form, User_id: ' . $user->id);
 
-        // We don't fetch $states anymore because it's a text field now
+        // Fetch states from DB
+        $states = DB::table('states')->orderBy('name', 'Asc')->get();
+        $cities = [];
+
+        // Fetch cities if the page reloaded due to a validation error
+        if (old('state')) {
+            $currentState = old('state');
+            $s = DB::table('states')->where('name', $currentState)->orWhere('code', $currentState)->first();
+            if ($s) {
+                $cities = DB::table('cities')->where('state_code', $s->code)->orderBy('name', 'Asc')->get();
+            }
+        }
+
         if ($client_id == 0) {
             $clients = ClientDetails::where('company_id', $user->company_id)->get();
-            return view('createsite')->with('id', $client_id)->with('clients', $clients);
+            return view('createsite')->with('id', $client_id)->with('clients', $clients)->with('states', $states)->with('cities', $cities);
         } else {
-            return view('createsite')->with('id', $client_id);
+            return view('createsite')->with('id', $client_id)->with('states', $states)->with('cities', $cities);
         }
     }
 
@@ -261,12 +273,26 @@ class SiteController extends Controller
 
         $client_id = $sites->client_id;
 
-        // We no longer pass $states because it's a text field now
+        // Fetch states and prep cities
+        $states = DB::table('states')->orderBy('name', 'Asc')->get();
+        $cities = [];
+        $currentState = old('state', $sites->state);
+
+        // Fetch cities for the saved state or old input
+        if ($currentState) {
+            $s = DB::table('states')->where('name', $currentState)->orWhere('code', $currentState)->first();
+            if ($s) {
+                $cities = DB::table('cities')->where('state_code', $s->code)->orderBy('name', 'Asc')->get();
+            }
+        }
+
         return view('updatesite')
             ->with('sites', $sites)
             ->with('clients', $clients)
             ->with('id', $id)
-            ->with('client_id', $client_id);
+            ->with('client_id', $client_id)
+            ->with('states', $states)
+            ->with('cities', $cities);
     }
 
     public function site_editaction(Request $request, $client_id, $id)
