@@ -195,7 +195,6 @@ $label = session('company') && (session('company')->is_forest ?? 1) == 1 ? 'Beat
         <div class="card-body">
             <form method="post" action="{{ route('sites.site_editaction', ['client_id' => $client_id, 'id' => $id]) }}" id="update_site_form" autocomplete="off">
                 @csrf
-                {{-- Note: If your route uses PUT, add @method('PUT') here --}}
 
                 <div class="row g-4">
                     <div class="col-md-6">
@@ -234,13 +233,16 @@ $label = session('company') && (session('company')->is_forest ?? 1) == 1 ? 'Beat
                     <div class="col-md-6">
                         <div class="form-group {{ $errors->has('state') ? 'has-error' : '' }} mb-0">
                             <label for="state">State <span class="text-danger">*</span></label>
-                            <input type="text"
-                                class="form-control"
-                                id="state"
-                                name="state"
-                                value="{{ old('state', $sites->state) }}"
-                                placeholder="Enter state name"
-                                required>
+                            <select class="form-control" id="state" name="state" required>
+                                <option value="" disabled>Select state</option>
+                                @if(isset($states))
+                                @foreach($states as $state)
+                                <option value="{{ $state->name }}" data-code="{{ $state->code }}" {{ old('state', $sites->state) == $state->name ? 'selected' : '' }}>
+                                    {{ $state->name }}
+                                </option>
+                                @endforeach
+                                @endif
+                            </select>
                             <span class="text-danger small">{{ $errors->first('state') }}</span>
                         </div>
                     </div>
@@ -248,13 +250,18 @@ $label = session('company') && (session('company')->is_forest ?? 1) == 1 ? 'Beat
                     <div class="col-md-6">
                         <div class="form-group {{ $errors->has('city') ? 'has-error' : '' }} mb-0">
                             <label for="city">City <span class="text-danger">*</span></label>
-                            <input type="text"
-                                class="form-control"
-                                id="city"
-                                name="city"
-                                value="{{ old('city', $sites->city) }}"
-                                placeholder="Enter city name"
-                                required>
+                            <select class="form-control" id="city" name="city" required>
+                                <option value="" disabled selected>Select city</option>
+                                @if(isset($cities) && count($cities) > 0)
+                                @foreach($cities as $c)
+                                <option value="{{ $c->name }}" {{ old('city', $sites->city) == $c->name ? 'selected' : '' }}>
+                                    {{ $c->name }}
+                                </option>
+                                @endforeach
+                                @elseif($sites->city)
+                                <option value="{{ $sites->city }}" selected>{{ $sites->city }}</option>
+                                @endif
+                            </select>
                             <span class="text-danger small">{{ $errors->first('city') }}</span>
                         </div>
                     </div>
@@ -273,7 +280,7 @@ $label = session('company') && (session('company')->is_forest ?? 1) == 1 ? 'Beat
                         <div class="form-group {{ $errors->has('contactperson') ? 'has-error' : '' }} mb-0">
                             <label for="contactperson">Contact Person <span class="text-danger">*</span></label>
                             <input name="contactperson" type="text" class="form-control" id="contactperson"
-                                value="{{ old('contactperson', $sites->contact_person) }}" placeholder="Enter contact person name" required>
+                                value="{{ old('contactperson', $sites->contactPerson) }}" placeholder="Enter contact person name" required>
                             <span class="text-danger small">{{ $errors->first('contactperson') }}</span>
                         </div>
                     </div>
@@ -282,7 +289,7 @@ $label = session('company') && (session('company')->is_forest ?? 1) == 1 ? 'Beat
                         <div class="form-group {{ $errors->has('contactnumber') ? 'has-error' : '' }} mb-0">
                             <label for="contactnumber">Contact Number <span class="text-danger">*</span></label>
                             <input name="contactnumber" type="text" class="form-control numeric-only"
-                                id="contactnumber" value="{{ old('contactnumber', $sites->contact_number) }}"
+                                id="contactnumber" value="{{ old('contactnumber', $sites->mobile) }}"
                                 placeholder="Enter 10-digit number" maxlength="10" inputmode="numeric" required>
                             <span class="text-danger small">{{ $errors->first('contactnumber') }}</span>
                         </div>
@@ -301,7 +308,7 @@ $label = session('company') && (session('company')->is_forest ?? 1) == 1 ? 'Beat
                         <div class="form-group {{ $errors->has('sos') ? 'has-error' : '' }} mb-0">
                             <label for="sos">SOS Number <span class="text-danger">*</span></label>
                             <input name="sos" type="text" class="form-control numeric-only" id="sos"
-                                value="{{ old('sos', $sites->sos_number) }}" placeholder="Enter 10-digit SOS number" maxlength="10"
+                                value="{{ old('sos', $sites->sosContact) }}" placeholder="Enter 10-digit SOS number" maxlength="10"
                                 inputmode="numeric" required>
                             <span class="text-danger small">{{ $errors->first('sos') }}</span>
                         </div>
@@ -310,9 +317,8 @@ $label = session('company') && (session('company')->is_forest ?? 1) == 1 ? 'Beat
                     <div class="col-md-6">
                         <div class="form-group {{ $errors->has('earlytime') ? 'has-error' : '' }} mb-0">
                             <label for="earlytime">Early Cut-off (minutes) <span class="text-danger">*</span></label>
-                            <input name="earlytime" type="number" class="form-control numeric-only" id="earlytime"
-                                value="{{ old('earlytime', $sites->early_cutoff) }}" placeholder="e.g. 15" min="0"
-                                inputmode="numeric" required>
+                            <input name="earlytime" type="number" class="form-control" id="earlytime"
+                                value="{{ old('earlytime', $sites->earlyTime) }}" placeholder="e.g. 15" required>
                             <span class="text-danger small">{{ $errors->first('earlytime') }}</span>
                         </div>
                     </div>
@@ -320,9 +326,8 @@ $label = session('company') && (session('company')->is_forest ?? 1) == 1 ? 'Beat
                     <div class="col-md-6">
                         <div class="form-group {{ $errors->has('latetime') ? 'has-error' : '' }} mb-0">
                             <label for="latetime">Late Cut-off (minutes) <span class="text-danger">*</span></label>
-                            <input name="latetime" type="number" class="form-control numeric-only" id="latetime"
-                                value="{{ old('latetime', $sites->late_cutoff) }}" placeholder="e.g. 15" min="0"
-                                inputmode="numeric" required>
+                            <input name="latetime" type="number" class="form-control" id="latetime"
+                                value="{{ old('latetime', $sites->lateTime) }}" placeholder="e.g. 15" required>
                             <span class="text-danger small">{{ $errors->first('latetime') }}</span>
                         </div>
                     </div>
@@ -332,9 +337,9 @@ $label = session('company') && (session('company')->is_forest ?? 1) == 1 ? 'Beat
                             <label for="site_type">Type <span class="text-danger">*</span></label>
                             <select class="form-control" name="site_type" id="site_type" required>
                                 <option value="" disabled>-- Select Type --</option>
-                                <option value="residential" {{ old('site_type', $sites->type) == 'residential' ? 'selected' : '' }}>Residential</option>
-                                <option value="commersial" {{ old('site_type', $sites->type) == 'commersial' ? 'selected' : '' }}>Commercial</option>
-                                <option value="government" {{ old('site_type', $sites->type) == 'government' ? 'selected' : '' }}>Government</option>
+                                <option value="residential" {{ old('site_type', $sites->siteType) == 'residential' ? 'selected' : '' }}>Residential</option>
+                                <option value="commersial" {{ old('site_type', $sites->siteType) == 'commersial' ? 'selected' : '' }}>Commercial</option>
+                                <option value="government" {{ old('site_type', $sites->siteType) == 'government' ? 'selected' : '' }}>Government</option>
                             </select>
                             <span class="text-danger small">{{ $errors->first('site_type') }}</span>
                         </div>
@@ -356,16 +361,40 @@ $label = session('company') && (session('company')->is_forest ?? 1) == 1 ? 'Beat
 @push('scripts')
 <script>
     $(document).ready(function() {
-        // Strict numeric validation for fields with class "numeric-only"
+        // Strict numeric validation
         $('.numeric-only').on('input', function() {
             this.value = this.value.replace(/[^0-9]/g, '');
         });
 
-        // Prevent typing non-numbers
         $('.numeric-only').on('keypress', function(e) {
             if (e.which < 48 || e.which > 57) {
                 e.preventDefault();
             }
+        });
+
+        // AJAX Dependent Dropdown
+        $('#state').on('change', function() {
+            let code = $(this).find(':selected').data('code');
+            if (!code) return;
+
+            var url = '{{ route("clients.getCity", ":id") }}';
+            url = url.replace(':id', code);
+
+            $.ajax({
+                type: 'GET',
+                url: url,
+                success: function(response) {
+                    var res = typeof response === 'string' ? JSON.parse(response) : response;
+                    $('#city').empty();
+                    $('#city').append('<option value="" disabled selected>Select city</option>');
+                    res.forEach(element => {
+                        $('#city').append(`<option value="${element.name}">${element.name}</option>`);
+                    });
+                },
+                error: function(xhr, status, error) {
+                    console.error("Error fetching cities:", error);
+                }
+            });
         });
     });
 </script>

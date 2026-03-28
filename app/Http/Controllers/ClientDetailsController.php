@@ -149,18 +149,51 @@ class ClientDetailsController extends Controller
         $user = session('user');
         if ($user) {
             Log::channel('create')->info($user->name . ' view client create form');
-            // Removed the $states query since we use a text input now
-            return view('createclient');
+
+            $states = DB::table('states')->orderBy('name', 'Asc')->get();
+            $cities = [];
+
+            // Fetch cities if page reloads due to validation failure
+            if (old('state')) {
+                $currentState = old('state');
+                // Find the state by its name to get the code
+                $s = DB::table('states')->where('name', $currentState)->orWhere('code', $currentState)->first();
+                if ($s) {
+                    $cities = DB::table('cities')->where('state_code', $s->code)->orderBy('name', 'Asc')->get();
+                }
+            }
+
+            return view('createclient')->with('states', $states)->with('cities', $cities);
         }
     }
-
     //get city using ajax
     public function getCity($id)
     {
         $user = session('user');
-        return json_encode(DB::table('cities')->where('state_code', $id)->orderBy('name', 'Asc')->get());
+
+        // 1. Check if the frontend sent a numeric ID (like 21) instead of a code (like 'MH')
+        if (is_numeric($id)) {
+            // Find the state by its ID to get its 2-letter code
+            $state = DB::table('states')->where('id', $id)->first();
+
+            // If the state is found, overwrite the $id variable with the actual code (e.g., 'MH')
+            if ($state) {
+                $id = $state->code;
+            }
+        }
+
+        // 2. Now query the cities table using the correct string code
+        $cities = DB::table('cities')
+            ->where('state_code', $id)
+            ->orderBy('name', 'Asc')
+            ->get();
+
+        // 3. Return as a proper JSON response
+        return response()->json($cities);
     }
 
+    // save client data in database
+    // save client data in database
     // save client data in database
     public function create_action(Request $request)
     {
@@ -200,16 +233,14 @@ class ClientDetailsController extends Controller
             } else {
 
                 $number = $request->contactnumber;
+
+                // Explicitly send a red error message to the contact number field if it exists
                 if (ClientDetails::where('contact', $number)->exists()) {
-                    $rules = array('contactnumber' => 'unique:users,contact');
-                    $input['contactnumber'] = $request->contactnumber;
-                    $validator = Validator::make($input, $rules);
                     return redirect('clients/create')
-                        ->withErrors($validator)
+                        ->withErrors(['contactnumber' => 'This Contact Number is already registered to another client.'])
                         ->withInput();
                 } else {
 
-                    // Fixed: Removed the $getstate lookup and assigned $_POST['state'] directly
                     $new_client = new ClientDetails();
 
                     $new_client->name = $_POST['name'];
@@ -223,11 +254,9 @@ class ClientDetailsController extends Controller
                     $new_client->relationManager = $_POST['relationshipmanager'];
                     $new_client->relationManagerContact = $_POST['relationshipmanagercontact'];
                     $new_client->company_id = $user->company_id;
-                    //$new_client->timestamp = date('Y-m-d H:i:s');
                     $new_client->save();
 
                     $name = explode(" ", $_POST['name']);
-
                     $company = CompanyDetails::where('id', $user->company_id)->first();
 
                     $new_user = new RegistrationData();
@@ -236,8 +265,11 @@ class ClientDetailsController extends Controller
                         $new_user->lastName = $name[1];
                     }
                     $new_user->mobile = $_POST['contactnumber'];
-                    $new_user->company_id = $company->id;
-                    $new_user->company_name = $company->name;
+
+                    // FIXED NULL ERROR: Use $user->company_id directly, and add a fallback for the name
+                    $new_user->company_id = $user->company_id;
+                    $new_user->company_name = $company ? $company->name : 'Unknown Company';
+
                     $new_user->email = $_POST['email'];
                     $new_user->role_id = "4";
                     $new_user->save();
@@ -258,19 +290,36 @@ class ClientDetailsController extends Controller
     }
 
     //client edit form
+    //client edit form
     public function editClient($id)
     {
         $user = session('user');
         if ($user) {
             Log::channel('create')->info($user->name . ' view client edit form');
 
-            // Note: I removed the $states = DB::table('states')->get(); query
-            // since you no longer need a dropdown list of states for the view!
+            $states = DB::table('states')->orderBy('name', 'Asc')->get();
             $clients = ClientDetails::find($id);
-            return view('updateclient')->with('clients', $clients)->with('id', $id);
+
+            $cities = [];
+            $currentState = old('state', $clients->state);
+
+            // Fetch cities for the saved state or old input
+            if ($currentState) {
+                $s = DB::table('states')->where('name', $currentState)->orWhere('code', $currentState)->first();
+                if ($s) {
+                    $cities = DB::table('cities')->where('state_code', $s->code)->orderBy('name', 'Asc')->get();
+                }
+            }
+
+            return view('updateclient')
+                ->with('clients', $clients)
+                ->with('id', $id)
+                ->with('states', $states)
+                ->with('cities', $cities);
         }
     }
 
+    //save updated data in database
     //save updated data in database
     public function editaction($id, Request $request)
     {
@@ -284,13 +333,11 @@ class ClientDetailsController extends Controller
                 'pincode' => 'required|numeric|min:6',
                 'contactperson' => 'required',
                 'contactnumber' => 'required|min:10',
-                //'email' => 'required|email',
                 'relationshipmanager' => 'required',
                 'relationshipmanagercontact' => 'required'
             ]);
 
             if ($validator->fails()) {
-
                 return redirect()->route('clients.editClient', $id)
                     ->withErrors($validator)
                     ->withInput();
@@ -299,11 +346,10 @@ class ClientDetailsController extends Controller
                 $client = ClientDetails::find($id);
                 $new_user = RegistrationData::where('mobile', $client->contact)->first();
 
-                if (false) {
-                    // if (ClientDetails::where('contact', $_POST['contactnumber'])->where('id', '!=', $id)->exists()) {
-
+                // Check for duplicate contact number excluding the current client's contact
+                if (ClientDetails::where('contact', $request->contactnumber)->where('id', '!=', $id)->exists()) {
                     return redirect()->route('clients.editClient', $id)
-                        ->withErrors($validator)
+                        ->withErrors(['contactnumber' => 'This Contact Number is already registered to another client.'])
                         ->withInput();
                 } else {
                     $name = explode(" ", $_POST['name']);
@@ -316,8 +362,11 @@ class ClientDetailsController extends Controller
                             $new_user->lastName = $name[1];
                         }
                         $new_user->mobile = $_POST['contactnumber'];
-                        $new_user->company_id = $company->id;
-                        $new_user->company_name = $company->name;
+
+                        // FIXED NULL ERROR: Use $user->company_id directly, and add a fallback for the name
+                        $new_user->company_id = $user->company_id;
+                        $new_user->company_name = $company ? $company->name : 'Unknown Company';
+
                         $new_user->email = $_POST['email'];
                         $new_user->role_id = "4";
                         $new_user->save();
@@ -325,7 +374,7 @@ class ClientDetailsController extends Controller
 
                     $client->name = $_POST['name'];
                     $client->address = $_POST['address'];
-                    $client->state = $_POST['state']; // Fixed: Now pulling directly from the form input
+                    $client->state = $_POST['state'];
                     $client->city = $_POST['city'];
                     $client->pincode = $_POST['pincode'];
                     $client->spokesperson = $_POST['contactperson'];

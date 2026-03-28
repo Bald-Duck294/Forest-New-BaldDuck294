@@ -272,8 +272,16 @@ $label = session('company') && (session('company')->is_forest ?? 1) == 1 ? 'Beat
                     <div class="col-md-6">
                         <div class="form-group {{ $errors->has('state') ? 'has-error' : '' }} mb-0">
                             <label for="state">State <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="state" name="state"
-                                value="{{ old('state') }}" placeholder="Enter state name" required>
+                            <select class="form-control" id="state" name="state" required>
+                                <option value="" disabled selected>Select state</option>
+                                @if(isset($states))
+                                @foreach($states as $state)
+                                <option value="{{ $state->name }}" data-code="{{ $state->code }}" {{ old('state') == $state->name ? 'selected' : '' }}>
+                                    {{ $state->name }}
+                                </option>
+                                @endforeach
+                                @endif
+                            </select>
                             <span class="text-danger small">{{ $errors->first('state') }}</span>
                         </div>
                     </div>
@@ -281,8 +289,16 @@ $label = session('company') && (session('company')->is_forest ?? 1) == 1 ? 'Beat
                     <div class="col-md-6">
                         <div class="form-group {{ $errors->has('city') ? 'has-error' : '' }} mb-0">
                             <label for="city">City <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="city" name="city"
-                                value="{{ old('city') }}" placeholder="Enter city name" required>
+                            <select class="form-control" id="city" name="city" required>
+                                <option value="" disabled selected>Select city</option>
+                                @if(isset($cities) && count($cities) > 0)
+                                @foreach($cities as $c)
+                                <option value="{{ $c->name }}" {{ old('city') == $c->name ? 'selected' : '' }}>
+                                    {{ $c->name }}
+                                </option>
+                                @endforeach
+                                @endif
+                            </select>
                             <span class="text-danger small">{{ $errors->first('city') }}</span>
                         </div>
                     </div>
@@ -397,6 +413,35 @@ $label = session('company') && (session('company')->is_forest ?? 1) == 1 ? 'Beat
             if (e.which < 48 || e.which > 57) {
                 e.preventDefault();
             }
+        });
+
+        // --- AJAX Dependent Dropdown ---
+        $('#state').on('change', function() {
+            // Grab the secret 2-letter code from the data-code attribute
+            let code = $(this).find(':selected').data('code');
+            if (!code) return;
+
+            // Reusing the exact same route we built for the client form!
+            var url = '{{ route("clients.getCity", ":id") }}';
+            url = url.replace(':id', code);
+
+            $.ajax({
+                type: 'GET',
+                url: url,
+                success: function(response) {
+                    var res = typeof response === 'string' ? JSON.parse(response) : response;
+
+                    $('#city').empty();
+                    $('#city').append('<option value="" disabled selected>Select city</option>');
+
+                    res.forEach(element => {
+                        $('#city').append(`<option value="${element.name}">${element.name}</option>`);
+                    });
+                },
+                error: function(xhr, status, error) {
+                    console.error("Error fetching cities:", error);
+                }
+            });
         });
     });
 </script>
