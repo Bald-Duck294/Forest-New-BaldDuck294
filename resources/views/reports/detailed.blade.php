@@ -11,8 +11,8 @@
 
     <style>
         /* =========================================
-                               SAPPHIRE THEME - DETAILED VIEW
-                            ========================================= */
+                   SAPPHIRE THEME - DETAILED VIEW
+                ========================================= */
         .detailed-header-btn {
             background-color: var(--bg-card);
             color: var(--text-main);
@@ -36,12 +36,10 @@
             overflow-x: auto;
             flex-wrap: nowrap;
             scrollbar-width: none;
-            /* Firefox */
         }
 
         .sapphire-nav-pills::-webkit-scrollbar {
             display: none;
-            /* Chrome */
         }
 
         .sapphire-nav-link {
@@ -167,6 +165,9 @@
 
         {{-- Master Category Tabs --}}
         <nav class="sapphire-nav-pills mb-4">
+            <a class="sapphire-nav-link {{ $category == 'onduty' ? 'active' : '' }}" href="?category=onduty">
+                <i class="bi bi-people me-2"></i>On Duty
+            </a>
             <a class="sapphire-nav-link {{ $category == 'criminal' ? 'active' : '' }}" href="?category=criminal">
                 <i class="bi bi-hammer me-2"></i>Criminal Activity
             </a>
@@ -210,11 +211,16 @@
                                 <option value="encroachment" {{ $subType == 'encroachment' ? 'selected' : '' }}>
                                     Encroachment</option>
                                 <option value="mining" {{ $subType == 'mining' ? 'selected' : '' }}>Mining</option>
+                                <option value="storage" {{ $subType == 'storage' ? 'selected' : '' }}>Storage</option>
+                                <option value="transport" {{ $subType == 'transport' ? 'selected' : '' }}>Transport
+                                </option>
                             @elseif($category == 'events')
                                 <option value="sighting" {{ $subType == 'sighting' ? 'selected' : '' }}>Animal Sighting
                                 </option>
                                 <option value="water_status" {{ $subType == 'water_status' ? 'selected' : '' }}>Water
                                     Status</option>
+                                <option value="compensation" {{ $subType == 'compensation' ? 'selected' : '' }}>
+                                    Compensation</option>
                             @endif
                         </select>
                     </div>
@@ -243,21 +249,28 @@
                 <table class="table table-sapphire mb-0">
                     <thead>
                         <tr>
-                            <th class="ps-4">ID / Reference</th>
                             @if ($viewType == 'reports')
+                                <th class="ps-4">Report ID</th>
                                 <th>Report Type</th>
                                 <th>Beat / Range</th>
                                 <th>Date / Time</th>
                                 <th class="text-end pe-4">Status</th>
                             @elseif($viewType == 'assets')
+                                <th class="ps-4">Asset ID</th>
                                 <th>Category</th>
                                 <th>Condition</th>
                                 <th>Date Added</th>
                             @elseif($viewType == 'plantations')
+                                <th class="ps-4">Code</th>
                                 <th>Plantation Name</th>
                                 <th>Species</th>
                                 <th>Area (Ha)</th>
                                 <th class="text-end pe-4">Phase</th>
+                            @elseif($viewType == 'onduty')
+                                <th class="ps-4">Officer Name</th>
+                                <th>Phone Number</th>
+                                <th>Assigned Site</th>
+                                <th class="text-end pe-4">Status</th>
                             @endif
                         </tr>
                     </thead>
@@ -267,10 +280,8 @@
                                 @if ($viewType == 'reports')
                                     <td class="ps-4 fw-bold" style="color: var(--sapphire-primary);">
                                         {{ $row->report_id ?? 'RPT-' . $row->id }}</td>
-                                    <td>
-                                        <span class="badge badge-soft-neutral px-2 py-1"><i
-                                                class="bi bi-tag me-1"></i>{{ $row->report_type }}</span>
-                                    </td>
+                                    <td><span class="badge badge-soft-neutral px-2 py-1"><i
+                                                class="bi bi-tag me-1"></i>{{ $row->report_type }}</span></td>
                                     <td>{{ $row->beat ?? ($row->range ?? 'Unknown') }}</td>
                                     <td>{{ \Carbon\Carbon::parse($row->created_at)->format('d M Y, h:i A') }}</td>
                                     <td class="text-end pe-4">
@@ -283,8 +294,7 @@
                                     <td class="ps-4 fw-bold" style="color: var(--sapphire-primary);">
                                         AST-{{ $row->id }}</td>
                                     <td>{{ $row->category ?? 'Equipment' }}</td>
-                                    <td>
-                                        <span
+                                    <td><span
                                             class="badge badge-soft-neutral px-2 py-1">{{ $row->condition ?? 'N/A' }}</span>
                                     </td>
                                     <td>{{ \Carbon\Carbon::parse($row->created_at)->format('d M Y') }}</td>
@@ -294,10 +304,17 @@
                                     <td class="fw-bold">{{ $row->name }}</td>
                                     <td>{{ $row->plant_species ?? 'Mixed' }}</td>
                                     <td>{{ $row->area ?? 0 }} Ha</td>
-                                    <td class="text-end pe-4">
-                                        <span
+                                    <td class="text-end pe-4"><span
                                             class="badge badge-soft-info px-3 py-2 rounded-pill">{{ ucfirst($row->current_phase) }}</span>
                                     </td>
+                                @elseif($viewType == 'onduty')
+                                    <td class="ps-4 fw-bold" style="color: var(--sapphire-primary);">{{ $row->name }}
+                                    </td>
+                                    <td>{{ $row->contact ?? 'N/A' }}</td>
+                                    <td><i class="bi bi-geo-alt me-1 text-muted"></i>
+                                        {{ $row->site_name ?? 'Floating/Unassigned' }}</td>
+                                    <td class="text-end pe-4"><span
+                                            class="badge badge-soft-success px-3 py-2 rounded-pill">Present</span></td>
                                 @endif
                             </tr>
                         @empty

@@ -12,9 +12,9 @@
 
     <style>
         /* =========================================
-                           LOCAL COMPONENT STYLES
-                           (Hooked to Global Sapphire Variables)
-                        ========================================= */
+                               LOCAL COMPONENT STYLES
+                               (Hooked to Global Sapphire Variables)
+                            ========================================= */
 
         /* Cards */
         .dash-card {

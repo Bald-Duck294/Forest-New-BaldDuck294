@@ -52,7 +52,6 @@
         }
     }
 </style>
-
 <div id="main-kpi-grid" class="row g-3 mb-4 kpi-7-grid">
     @php
         $items = [
@@ -62,15 +61,16 @@
                 'val' => $kpis['officers'] ?? 0,
                 'icon' => 'bi-people',
                 'color' => 'badge-soft-primary',
-                'trend' => 'Registered Staff',
+                'url' => url('/reports/detailed?category=onduty'), // Redirect URL added
             ],
+            // Find this block in your $items array:
             [
                 'id' => 'patrol',
                 'label' => 'Patrol Status',
                 'val' => $kpis['patrols'] ?? 0,
                 'icon' => 'bi-map',
                 'color' => 'badge-soft-info',
-                'trend' => 'Active Reports',
+                'url' => url('/patrolling'),
             ],
             [
                 'id' => 'criminal',
@@ -118,7 +118,9 @@
     @foreach ($items as $item)
         <div class="col-6 col-md-4 col-kpi">
             <div class="dash-card hover-lift h-100 p-3"
-                @isset($item['nav']) onclick="navigateTo('{{ $item['nav'] }}')" style="cursor: pointer;" @endisset>
+                @if (isset($item['url'])) onclick="window.location.href='{{ $item['url'] }}'" style="cursor: pointer;"
+                @elseif(isset($item['nav'])) 
+                    onclick="navigateTo('{{ $item['nav'] }}')" style="cursor: pointer;" @endif>
 
                 <div class="d-flex justify-content-between align-items-start mb-2">
                     <div style="min-width: 0;">
@@ -136,13 +138,18 @@
                 <div class="mt-auto pt-2">
                     <p class="mb-0 text-truncate"
                         style="font-size: 0.65rem; font-weight: 600; color: var(--text-muted);">
-                        @isset($item['nav'])
+
+                        @if (isset($item['url']))
+                            <span style="color: var(--sapphire-primary);">View List <i
+                                    class="bi bi-arrow-right ms-1"></i></span>
+                        @elseif(isset($item['nav']))
                             <span style="color: var(--sapphire-primary);">View Analytics <i
                                     class="bi bi-arrow-right ms-1"></i></span>
                         @else
                             <i class="bi bi-check2-circle me-1" style="color: var(--sapphire-success);"></i>
                             {{ explode(' ', trim($item['trend']))[0] }}
-                        @endisset
+                        @endif
+
                     </p>
                 </div>
             </div>
