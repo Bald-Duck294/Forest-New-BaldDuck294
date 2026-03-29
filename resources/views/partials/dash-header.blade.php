@@ -80,20 +80,32 @@
             <option value="">All Beats</option>
         </select>
 
-        <select id="date_filter" class="custom-input" style="width: auto; min-width: 150px;"
-            onchange="refreshData()">
-            <option value="overall" {{ request('date_filter') == 'overall' ? 'selected' : '' }}>Overall Stats</option>
+
+        <select id="date_filter" class="custom-input" style="width: auto; min-width: 130px;"
+            onchange="toggleCustomDates()">
+            <option value="overall" {{ request('date_filter') == 'overall' ? 'selected' : '' }}>Overall Stats
+            </option>
             <option value="today" {{ request('date_filter') == 'today' ? 'selected' : '' }}>Today</option>
             <option value="week" {{ request('date_filter') == 'week' ? 'selected' : '' }}>This Week</option>
             <option value="month" {{ request('date_filter') == 'month' ? 'selected' : '' }}>This Month</option>
+            <option value="custom" {{ request('date_filter') == 'custom' ? 'selected' : '' }}>Custom Range</option>
         </select>
 
-        <button onclick="refreshData()" class="btn btn-primary d-flex align-items-center gap-2 shadow-sm"
-            style="background-color: var(--sapphire-primary, #0d6efd); border: none; font-size: 0.8rem; font-weight: 600; padding: 6px 14px; border-radius: 8px;">
+        <div id="custom-date-inputs"
+            class="custom-date-container {{ request('date_filter') == 'custom' ? '' : 'd-none' }}">
+            <input type="date" id="from_date" class="custom-input" title="From Date"
+                value="{{ request('from_date') }}">
+            <span class="text-muted small">to</span>
+            <input type="date" id="to_date" class="custom-input" title="To Date"
+                value="{{ request('to_date') }}">
+        </div>
+
+        <button type="button" onclick="forceSyncDashboard()" class="btn btn-primary d-flex align-items-center gap-2"
+            style="background-color: var(--sapphire-primary); border: none; font-size: 0.8rem; font-weight: 600; padding: 6px 14px; border-radius: 8px;">
             <i class="bi bi-arrow-repeat"></i> Sync
         </button>
 
-        <button onclick="resetFilters()" class="btn btn-light border d-flex align-items-center gap-2 shadow-sm"
+        <button type="button" onclick="resetFilters()" class="btn btn-light border d-flex align-items-center gap-2"
             style="font-size: 0.8rem; font-weight: 600; padding: 6px 14px; border-radius: 8px;">
             <i class="bi bi-x-circle text-danger"></i> Reset
         </button>
@@ -103,6 +115,25 @@
 <script>
     const allBeats = @json($beats ?? []);
     const currentSelectedBeat = "{{ request('site_id') }}";
+
+    function toggleCustomDates() {
+        const filter = document.getElementById('date_filter').value;
+        const customContainer = document.getElementById('custom-date-inputs');
+
+        if (filter === 'custom') {
+            customContainer.classList.remove('d-none');
+        } else {
+            customContainer.classList.add('d-none');
+            // Clear out the dates when hiding them
+            document.getElementById('from_date').value = '';
+            document.getElementById('to_date').value = '';
+        }
+
+        // If they switch back to week/month/today, auto-refresh to apply it immediately
+        if (filter !== 'custom') {
+            refreshData();
+        }
+    }
 
     function filterBeats() {
         const rangeSelect = document.getElementById('range_id');
@@ -125,5 +156,50 @@
         });
     }
 
-    document.addEventListener('DOMContentLoaded', () => filterBeats());
+    function forceSyncDashboard() {
+    
+        console.log("--- Sync Button Clicked ---");
+
+        let url = new URL(window.location.href.split('#')[0]);
+
+        let rangeId = document.getElementById('range_id')?.value || '';
+        let siteId = document.getElementById('site_id')?.value || '';
+        let dateFilter = document.getElementById('date_filter')?.value || 'overall';
+
+        url.searchParams.set('range_id', rangeId);
+        url.searchParams.set('site_id', siteId);
+        url.searchParams.set('date_filter', dateFilter);
+
+        if (dateFilter === 'custom') {
+            let fromDate = document.getElementById('from_date')?.value;
+            let toDate = document.getElementById('to_date')?.value;
+
+            if (fromDate) url.searchParams.set('from_date', fromDate);
+            else url.searchParams.delete('from_date');
+
+            if (toDate) url.searchParams.set('to_date', toDate);
+            else url.searchParams.delete('to_date');
+        }
+
+        console.log("Final URL:", url.toString());
+
+        // 🛑 LEAVE THIS COMMENTED OUT UNTIL YOU SEE THE ALERT 🛑
+        window.location.href = url.toString();
+    }
+
+    function resetFilters() {
+        let url = new URL(window.location.href.split('?')[0]); // Strip all query params
+
+        // Preserve the view mode if they are in analytical mode
+        if (new URLSearchParams(window.location.search).has('view')) {
+            url.searchParams.set('view', new URLSearchParams(window.location.search).get('view'));
+        }
+
+        window.location.href = url.toString();
+    }
+
+    // Run this on page load to initialize the beat dropdown correctly
+    document.addEventListener('DOMContentLoaded', () => {
+        filterBeats();
+    });
 </script>

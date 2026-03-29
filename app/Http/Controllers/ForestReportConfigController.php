@@ -564,22 +564,23 @@ class ForestReportConfigController extends Controller
         // =======================================================================
         $query = DB::table('forest_reports')->where('company_id', $companyId);
         $assetQuery = Asset::where('company_id', $companyId);
-        $patrolQuery = DB::table('forest_reports')->where('company_id', $companyId)->where('created_at', '>=', now()->subDay());
+        $patrolQuery = DB::table('forest_reports')->where('company_id', $companyId);
+        $plantationQuery = Plantation::where('user_id', '!=', 0);
 
         // --- A. Range/Beat Filters (Now using IDs) ---
         // Ensure "0" or "all" values from dropdowns don't break the query
         if ($request->filled('range_id') && $request->range_id !== '0' && $request->range_id !== 'all') {
             $query->where('client_id', $request->range_id);
             $patrolQuery->where('client_id', $request->range_id);
-            // WARNING: Ensure your 'assets' table has a 'client_id' column, otherwise comment this out:
-            // $assetQuery->where('client_id', $request->range_id);
+            $plantationQuery->whereHas('site', function ($q) use ($request) {
+                $q->where('client_id', $request->range_id);
+            });
         }
 
         if ($request->filled('site_id') && $request->site_id !== '0' && $request->site_id !== 'all') {
-
             $query->where('site_id', $request->site_id);
             $patrolQuery->where('site_id', $request->site_id);
-            // $assetQuery->where('site_id', $request->site_id);
+            $plantationQuery->where('site_id', $request->site_id);
         }
 
         // --- B. Date Filters (Applied to both Reports and Assets) ---
@@ -589,12 +590,18 @@ class ForestReportConfigController extends Controller
             if ($dateFilter === 'today') {
                 $query->whereDate('created_at', Carbon::today());
                 $assetQuery->whereDate('created_at', Carbon::today());
+                $patrolQuery->whereDate('created_at', Carbon::today());
+                $plantationQuery->whereDate('created_at', Carbon::today());
             } elseif ($dateFilter === 'week') {
                 $query->where('created_at', '>=', Carbon::now()->subWeek());
                 $assetQuery->where('created_at', '>=', Carbon::now()->subWeek());
+                $patrolQuery->where('created_at', '>=', Carbon::now()->subWeek());
+                $plantationQuery->where('created_at', '>=', Carbon::now()->subWeek());
             } elseif ($dateFilter === 'month') {
                 $query->where('created_at', '>=', Carbon::now()->subMonth());
                 $assetQuery->where('created_at', '>=', Carbon::now()->subMonth());
+                $patrolQuery->where('created_at', '>=', Carbon::now()->subMonth());
+                $plantationQuery->where('created_at', '>=', Carbon::now()->subMonth());
             }
         }
 
@@ -602,21 +609,29 @@ class ForestReportConfigController extends Controller
         if ($request->filled('from_date')) {
             $query->whereDate('created_at', '>=', $request->from_date);
             $assetQuery->whereDate('created_at', '>=', $request->from_date);
+            $patrolQuery->whereDate('created_at', '>=', $request->from_date);
+            $plantationQuery->whereDate('created_at', '>=', $request->from_date);
         }
         if ($request->filled('to_date')) {
             $query->whereDate('created_at', '<=', $request->to_date);
             $assetQuery->whereDate('created_at', '<=', $request->to_date);
+            $patrolQuery->whereDate('created_at', '<=', $request->to_date);
+            $plantationQuery->whereDate('created_at', '<=', $request->to_date);
         }
 
         // =======================================================================
         // 2. FETCH FILTERED DATA
         // =======================================================================
         $allReports = $query->get();
-        $activePatrols = $patrolQuery->count();
+        $allPlantations = $plantationQuery->get();
+
+        // 🔥 FIX: Use clone so you count the filtered data without wiping the query for later use
+        $activePatrols = (clone $patrolQuery)->count();
+        $totalAssets = (clone $assetQuery)->count();
+
+        // Users usually ignore date filters unless you are specifically filtering for "officers hired this week"
         $totalOfficers = DB::table('users')->where('company_id', $companyId)->count();
-        $totalAssets = Asset::where('company_id', $companyId)->count();
-        //   dump($totalAssets ,"total assest");
-        // 🔥 FETCH REAL RANGES & BEATS FOR DROPDOWNS
+
         $ranges = DB::table('client_details')->where('company_id', $companyId)->pluck('name', 'id');
         $beats  = DB::table('site_details')->where('company_id', $companyId)->select('id', 'name', 'client_id')->get();
 
@@ -1045,7 +1060,7 @@ class ForestReportConfigController extends Controller
                 'fire' => ['fire']
             ];
 
-            $query = \Illuminate\Support\Facades\DB::table('forest_reports')
+            $query = \Illuminate\Support\Facades\DB::table('forest_reports') // <-- Declared here
                 ->where('company_id', $companyId)
                 ->whereIn('category', $catMap[$category] ?? [$category]);
             // 1. FOREST REPORTS (Criminal, Events, Fire)
