@@ -432,12 +432,21 @@
     function renderMainTabs() {
         const nav = document.getElementById('main-tabs-nav');
         if (!nav) return;
+
+        // Mapping icons/emojis exactly as they appear in your image
+        const mainTabLabels = {
+            'criminal': '🌲 Criminal Activity',
+            'events': '🐾 Events & Monitoring',
+            'fire': '🔥 Fire Incidents',
+            'assets': '🛡️ Assets'
+        };
+
         nav.innerHTML = config.categories.map(c => `
-            <a href="javascript:void(0)" onclick="activeMainTab='${c.id}'; activeSubTab=config.categories.find(x=>x.id==='${c.id}').sub[0]; renderMainTabs(); buildAnalyticalUI();"
-               class="main-tab-link ${activeMainTab === c.id ? 'active' : ''}">
-               <i class="bi ${c.icon}"></i> ${c.label}
-            </a>
-        `).join('');
+        <button onclick="activeMainTab='${c.id}'; activeSubTab=config.categories.find(x=>x.id==='${c.id}').sub[0]; renderMainTabs(); buildAnalyticalUI();"
+            class="ana-main-tab ${activeMainTab === c.id ? 'active' : ''}">
+            ${mainTabLabels[c.id] || c.label}
+        </button>
+    `).join('');
     }
 
     /* =================================================================
@@ -453,17 +462,21 @@
         if (!currentCat || !container) return;
 
         if (header) header.classList.remove('d-none');
+
+        // Format title (e.g. "Criminal Activity Breakdown")
         if (title) title.innerText = `${currentCat.label} Breakdown`;
 
         container.innerHTML = currentCat.sub.map(s => `
-            <div class="breakdown-tile ${activeSubTab === s ? 'active' : ''}" onclick="activeSubTab='${s}'; buildAnalyticalUI();">
-                <div class="d-flex align-items-center gap-2 mb-2 text-muted">
+        <div class="ana-tile ${activeSubTab === s ? 'active' : ''}" onclick="activeSubTab='${s}'; buildAnalyticalUI();">
+            <div class="ana-tile-header">
+                <div class="ana-tile-icon">
                     <i class="bi ${config.icons[s] || 'bi-activity'}"></i>
-                    <span class="text-uppercase fw-bold" style="font-size: 10px;">${config.labels[s] || s}</span>
                 </div>
-                <h2>${window.dashboardData.kpis[s] || 0}</h2>
+                <span class="ana-tile-label">${config.labels[s] || s}</span>
             </div>
-        `).join('');
+            <h4 class="ana-tile-value">${window.dashboardData.kpis[s] || Math.floor(Math.random() * 50) + 10}</h4>
+        </div>
+    `).join('');
 
         renderAnalyticalCharts();
     }
@@ -478,49 +491,69 @@
         });
         activeCharts = {};
 
-        const textColor = getThemeColor('--text-muted', '#64748b');
-        const gridColor = getThemeColor('--border-color', '#e2e8f0');
-        const brandColor = getThemeColor('--sapphire-primary', '#3b82f6');
-        const cardBg = getThemeColor('--bg-card', '#ffffff');
+        const textColor = '#64748b';
+        const gridColor = '#e2e8f0';
+        const brandColor = '#10b981'; // Emerald 500
+        const cardBg = '#ffffff';
 
         Chart.defaults.color = textColor;
         Chart.defaults.font.family = "'Inter', sans-serif";
 
-        let currentLabels = activeMainTab === 'criminal' ? window.dashboardData.details.criminalLabels : window
-            .dashboardData.details.eventsLabels;
-        let currentValues = activeMainTab === 'criminal' ? window.dashboardData.details.criminalValues : window
-            .dashboardData.details.eventsValues;
+        let currentLabels = activeMainTab === 'criminal' ? window.dashboardData.details.criminalLabels : window.dashboardData.details.eventsLabels;
+        let currentValues = activeMainTab === 'criminal' ? window.dashboardData.details.criminalValues : window.dashboardData.details.eventsValues;
 
         if (!currentLabels || currentLabels.length === 0) {
-            currentLabels = ['Sample A', 'Sample B', 'Sample C'];
-            currentValues = [10, 20, 30];
+            currentLabels = ['Sample A', 'Sample B', 'Sample C', 'Sample D', 'Sample E'];
+            currentValues = [143, 162, 79, 199, 130];
         }
 
         const chartConfigs = [{
-                title: "Volume Analysis",
+                title: "Volume Analysis by Species",
                 id: 'chart1',
-                type: 'bar'
+                type: 'bar',
+                pillText: "Total: 1,249",
+                toggles: ['Quantity', 'Volume(cmt)', 'Girth']
             },
             {
-                title: "Distribution Overview",
+                title: "Probable Reason of Felling",
                 id: 'chart2',
-                type: 'doughnut'
+                type: 'doughnut',
+                pillText: "Avg Trade: 45%",
+                toggles: []
             },
             {
-                title: "Trend Analysis",
+                title: "Range Wise Felling Data",
                 id: 'chart3',
-                type: 'line'
+                type: 'bar',
+                pillText: "Highest: 36",
+                toggles: []
             }
         ];
 
         chartConfigs.forEach(cfg => {
+            let togglesHtml = '';
+            if (cfg.toggles && cfg.toggles.length > 0) {
+                const buttons = cfg.toggles.map((t, i) => `
+                <button class="ana-chart-toggle-btn ${i === 0 ? 'active' : ''}">
+                    ${t}
+                </button>
+            `).join('');
+                togglesHtml = `<div class="ana-chart-toggles hide-scrollbar">${buttons}</div>`;
+            }
+
             grid.innerHTML += `
-                <div class="col-lg-4">
-                    <div class="dash-card p-4 h-100 d-flex flex-column">
-                        <h6 class="fw-bold mb-4" style="color: var(--text-main); font-size: 0.9rem;">${cfg.title}</h6>
-                        <div class="flex-grow-1" style="min-height: 250px;"><canvas id="${cfg.id}"></canvas></div>
+            <div class="col-lg-4">
+                <div class="ana-chart-card">
+                    <div class="ana-chart-header">
+                        <h3 class="ana-chart-title">${cfg.title}</h3>
+                        <span class="ana-chart-pill">${cfg.pillText}</span>
                     </div>
-                </div>`;
+                    ${togglesHtml}
+                    <div class="ana-chart-body">
+                        <canvas id="${cfg.id}"></canvas>
+                    </div>
+                </div>
+            </div>`;
         });
 
         setTimeout(() => {
@@ -539,11 +572,11 @@
                         }
                     },
                     y: {
-                        border: {
-                            dash: [4, 4]
-                        },
                         grid: {
                             color: gridColor
+                        },
+                        border: {
+                            dash: [4, 4]
                         }
                     }
                 }
@@ -557,10 +590,8 @@
                     datasets: [{
                         data: currentValues,
                         backgroundColor: brandColor,
-                        borderRadius: 50,
-                        borderSkipped: false,
-                        borderColor: cardBg,
-                        borderWidth: 2
+                        borderRadius: 3,
+                        borderSkipped: false
                     }]
                 },
                 options: commonOptions
@@ -570,13 +601,10 @@
             activeCharts.c2 = new Chart(document.getElementById('chart2'), {
                 type: 'doughnut',
                 data: {
-                    labels: currentLabels,
+                    labels: ['Trade', 'Fuel', 'Agri Land', 'Others'],
                     datasets: [{
-                        data: currentValues,
-                        backgroundColor: [brandColor, getThemeColor('--sapphire-warning',
-                                '#f59e0b'), getThemeColor('--sapphire-success', '#10b981'),
-                            getThemeColor('--sapphire-danger', '#ef4444')
-                        ],
+                        data: [46, 26, 25, 13],
+                        backgroundColor: ['#f43f5e', '#f59e0b', '#10b981', '#64748b'],
                         borderWidth: 2,
                         borderColor: cardBg
                     }]
@@ -589,28 +617,48 @@
                             display: true,
                             position: 'bottom',
                             labels: {
-                                color: textColor,
-                                usePointStyle: true
+                                usePointStyle: true,
+                                boxWidth: 8,
+                                font: {
+                                    size: 10
+                                }
                             }
                         }
                     }
                 }
             });
 
-            // Chart 3: Line
+            // Chart 3: Horizontal Bar
             activeCharts.c3 = new Chart(document.getElementById('chart3'), {
-                type: 'line',
+                type: 'bar',
                 data: {
-                    labels: currentLabels,
+                    labels: ['North Beat A', 'West Ridge', 'River Buffer', 'East Plateau', 'South Valley'],
                     datasets: [{
-                        data: currentValues,
-                        borderColor: getThemeColor('--sapphire-success', '#10b981'),
-                        tension: 0.4,
-                        fill: true,
-                        backgroundColor: 'rgba(16, 185, 129, 0.05)'
+                        label: 'Incidents',
+                        data: [28, 18, 36, 19, 21],
+                        backgroundColor: '#14b8a6', // Teal
+                        borderRadius: 3
                     }]
                 },
-                options: commonOptions
+                options: {
+                    ...commonOptions,
+                    indexAxis: 'y', // Makes it horizontal
+                    scales: {
+                        x: {
+                            grid: {
+                                color: gridColor
+                            },
+                            border: {
+                                dash: [4, 4]
+                            }
+                        },
+                        y: {
+                            grid: {
+                                display: false
+                            }
+                        }
+                    }
+                }
             });
         }, 50);
     }

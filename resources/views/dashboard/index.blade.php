@@ -5,7 +5,7 @@
 @endphp
 @extends('layouts.app')
 
-@section('title', 'ForestFix Analytics')
+
 
 @push('styles')
     @include('dashboard.styles')
