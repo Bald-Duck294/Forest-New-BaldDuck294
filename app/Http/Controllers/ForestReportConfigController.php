@@ -8,7 +8,7 @@ use App\Models\Plantation;
 use Illuminate\Support\Facades\DB;
 use App\Asset;
 use Carbon\Carbon;
-
+use App\Users;
 class ForestReportConfigController extends Controller
 {
     /**
@@ -622,25 +622,41 @@ class ForestReportConfigController extends Controller
         // =======================================================================
         // 3. KPI CALCULATIONS (Using the filtered $allReports collection)
         // =======================================================================
+        // $stats = (object)[
+        //     'criminal_count' => $allReports->whereIn('category', ['crimes', 'Criminal Activity'])->count(),
+        //     'events_count'   => $allReports->whereIn('category', ['events', 'Events & Monitoring'])->count(),
+        //     'fire_count'     => $allReports->whereIn('category', ['fire', 'Fire Incident'])->count(),
+        //     'felling'        => $allReports->where('report_type', 'felling')->count(),
+        //     'transport'      => $allReports->where('report_type', 'transport')->count(),
+        //     'storage'        => $allReports->where('report_type', 'storage')->count(),
+        //     'poaching'       => $allReports->where('report_type', 'poaching')->count(),
+        //     'encroachment'   => $allReports->where('report_type', 'encroachment')->count(),
+        //     'mining'         => $allReports->where('report_type', 'mining')->count(),
+        //     'wildlife'       => $allReports->where('report_type', 'sighting')->count(),
+        //     'water'          => $allReports->where('report_type', 'water_status')->count(),
+        //     'compensation'   => $allReports->where('report_type', 'compensation')->count(),
+        // ];
+
         $stats = (object)[
-            'criminal_count' => $allReports->filter(fn($r) => in_array(strtolower(trim($r->category ?? '')), ['crimes', 'criminal activity']))->count(),
-            'events_count'   => $allReports->filter(fn($r) => in_array(strtolower(trim($r->category ?? '')), ['events', 'events & monitoring']))->count(),
-            'fire_count'     => $allReports->filter(fn($r) => in_array(strtolower(trim($r->category ?? '')), ['fire', 'fire incidents']))->count(),
+    // Make the main criminal count the actual SUM of all these sub-types so it never lies
+    'criminal_count' => $allReports->whereIn('report_type', ['felling', 'illegal_felling', 'transport', 'storage', 'poaching', 'encroachment', 'mining'])->count(),
 
-            // Safely parse strings to lowercase to ensure an exact match with DB values
-            'felling'      => $allReports->filter(fn($r) => strtolower(trim($r->report_type ?? '')) === 'felling')->count(),
-            'transport'    => $allReports->filter(fn($r) => strtolower(trim($r->report_type ?? '')) === 'transport')->count(),
-            'storage'      => $allReports->filter(fn($r) => strtolower(trim($r->report_type ?? '')) === 'timber storage')->count(),
-            'poaching'     => $allReports->filter(fn($r) => strtolower(trim($r->report_type ?? '')) === 'poaching')->count(),
-            'encroachment' => $allReports->filter(fn($r) => strtolower(trim($r->report_type ?? '')) === 'encroachment')->count(),
-            'mining'       => $allReports->filter(fn($r) => strtolower(trim($r->report_type ?? '')) === 'mining')->count(),
+    'events_count'   => $allReports->whereIn('category', ['events', 'Events & Monitoring', 'Wildlife Sighting', 'Water Body', 'Public Grievance'])->count(),
+    'fire_count'     => $allReports->whereIn('category', ['fire', 'Fire Incident'])->count(),
 
-            // Note: In your analytics loop, Wildlife maps to 'sighting', not 'wildlife'
-            'wildlife'     => $allReports->filter(fn($r) => strtolower(trim($r->report_type ?? '')) === 'sighting')->count(),
-            'water'        => $allReports->filter(fn($r) => strtolower(trim($r->report_type ?? '')) === 'water source')->count(),
-            'compensation' => $allReports->filter(fn($r) => strtolower(trim($r->report_type ?? '')) === 'compensation')->count(),
-        ];
+    // Use whereIn to catch both 'felling' and 'illegal_felling'
+    'felling'        => $allReports->whereIn('report_type', ['felling', 'illegal_felling'])->count(),
+    'transport'      => $allReports->where('report_type', 'transport')->count(),
+    'storage'        => $allReports->where('report_type', 'storage')->count(),
+    'poaching'       => $allReports->where('report_type', 'poaching')->count(),
+    'encroachment'   => $allReports->where('report_type', 'encroachment')->count(),
+    'mining'         => $allReports->where('report_type', 'mining')->count(),
+    'wildlife'       => $allReports->where('report_type', 'sighting')->count(),
+    'water'          => $allReports->where('report_type', 'water_status')->count(),
+    'compensation'   => $allReports->where('report_type', 'compensation')->count(),
+];
 
+    //    dump($stats , "stats");
         // =======================================================================
         // NEW: FETCH PLANTATION DATA (Respecting existing Range/Beat filters)
         // =======================================================================
@@ -740,8 +756,8 @@ class ForestReportConfigController extends Controller
                 $area = (float)($data['area_hectare'] ?? 0);
                 $occ = (int)($data['occupants'] ?? 0);
                 $analytics['encroachment']['types'][$encType] = ($analytics['encroachment']['types'][$encType] ?? 0) + 1;
-                $analytics['encroachment']['area_by_range'][$rng] = ($analytics['encroachment']['area_by_range'][$rng] ?? 0) + $area;
-                $analytics['encroachment']['occupants_by_range'][$rng] = ($analytics['encroachment']['occupants_by_range'][$rng] ?? 0) + $occ;
+                $analytics['encroachment']['area_by_range'][$range_name] = ($analytics['encroachment']['area_by_range'][$range_name] ?? 0) + $area;
+                $analytics['encroachment']['occupants_by_range'][$range_name] = ($analytics['encroachment']['occupants_by_range'][$range_name] ?? 0) + $occ;
                 $analytics['encroachment']['trend'][$date] = ($analytics['encroachment']['trend'][$date] ?? 0) + $area;
             } elseif ($type === 'mining') {
                 $minType = $data['mineral_type'] ?? 'Unknown';
@@ -749,8 +765,9 @@ class ForestReportConfigController extends Controller
                 $vol = (float)($data['volume_cum'] ?? 0);
                 $analytics['mining']['minerals'][$minType] = ($analytics['mining']['minerals'][$minType] ?? 0) + 1;
                 $analytics['mining']['methods'][$method] = ($analytics['mining']['methods'][$method] ?? 0) + $vol;
-                $analytics['mining']['volume_by_range'][$rng] = ($analytics['mining']['volume_by_range'][$rng] ?? 0) + $vol;
-            } elseif ($type === 'sighting') {
+                $analytics['mining']['volume_by_range'][$range_name] = ($analytics['mining']['volume_by_range'][$range_name] ?? 0) + $vol;
+            }
+            elseif ($type === 'sighting') {
                 $sp = $data['species'] ?? 'Unknown';
                 $sType = $data['sighting_type'] ?? 'Unknown';
                 $gender = $data['gender'] ?? 'Unknown';
@@ -778,15 +795,15 @@ class ForestReportConfigController extends Controller
                 $raw_resp = $data['response_time'] ?? 0;
                 $respTime = is_numeric($raw_resp) ? (float)$raw_resp : 0;
 
-                $analytics['fire']['ranges_incidents'][$rng] = ($analytics['fire']['ranges_incidents'][$rng] ?? 0) + 1;
-                $analytics['fire']['ranges_area'][$rng] = ($analytics['fire']['ranges_area'][$rng] ?? 0) + $area;
+                $analytics['fire']['ranges_incidents'][$range_name] = ($analytics['fire']['ranges_incidents'][$range_name] ?? 0) + 1;
+                $analytics['fire']['ranges_area'][$range_name] = ($analytics['fire']['ranges_area'][$range_name] ?? 0) + $area;
                 $analytics['fire']['causes'][$cause] = ($analytics['fire']['causes'][$cause] ?? 0) + 1;
                 $analytics['fire']['trend_incidents'][$date] = ($analytics['fire']['trend_incidents'][$date] ?? 0) + 1;
                 $analytics['fire']['trend_area'][$date] = ($analytics['fire']['trend_area'][$date] ?? 0) + $area;
 
                 if ($respTime > 0) {
-                    $analytics['fire']['ranges_resp_time'][$rng] = ($analytics['fire']['ranges_resp_time'][$rng] ?? 0) + $respTime;
-                    $analytics['fire']['ranges_resp_count'][$rng] = ($analytics['fire']['ranges_resp_count'][$rng] ?? 0) + 1;
+                    $analytics['fire']['ranges_resp_time'][$range_name] = ($analytics['fire']['ranges_resp_time'][$range_name] ?? 0) + $respTime;
+                    $analytics['fire']['ranges_resp_count'][$range_name] = ($analytics['fire']['ranges_resp_count'][$range_name] ?? 0) + 1;
                 }
             }
         }
@@ -941,16 +958,84 @@ class ForestReportConfigController extends Controller
     // =========================================================================
     // 2. DETAILED DATA TABLE VIEW (Full Page)
     // =========================================================================
-    public function detailedDataTable(Request $request)
-    {
-        $companyId = session('user')->company_id ?? auth()->user()->company_id ?? 46;
-        $category = $request->get('category', 'criminal'); // Default to criminal
-        $search = $request->get('search');
-        $fromDate = $request->get('from_date');
-        $toDate = $request->get('to_date');
-        $subType = $request->get('sub_type'); // specific event type
+    // public function detailedDataTable(Request $request)
+    // {
+    //     $companyId = session('user')->company_id ?? auth()->user()->company_id ?? 46;
+    //     $category = $request->get('category', 'criminal'); // Default to criminal
+    //     $search = $request->get('search');
+    //     $fromDate = $request->get('from_date');
+    //     $toDate = $request->get('to_date');
+    //     $subType = $request->get('sub_type'); // specific event type
 
-        $records = collect(); // Empty collection to start
+    //     $records = collect(); // Empty collection to start
+
+    //     // We route the query based on the Master Category because the tables are different
+    //     if (in_array($category, ['criminal', 'events', 'fire'])) {
+    //         $catMap = [
+    //             'criminal' => ['crimes', 'Criminal Activity'],
+    //             'events' => ['events', 'Events & Monitoring'],
+    //             'fire' => ['fire']
+    //         ];
+
+    //         $query = \Illuminate\Support\Facades\DB::table('forest_reports')
+    //             ->where('company_id', $companyId)
+    //             ->whereIn('category', $catMap[$category] ?? [$category]);
+
+    //         if ($search) {
+    //             $query->where(function($q) use ($search) {
+    //                 $q->where('report_id', 'like', "%{$search}%")
+    //                   ->orWhere('report_type', 'like', "%{$search}%")
+    //                   ->orWhere('beat', 'like', "%{$search}%");
+    //             });
+    //         }
+    //         if ($subType) {
+    //             $query->where('report_type', $subType);
+    //         }
+    //         if ($fromDate) $query->whereDate('created_at', '>=', $fromDate);
+    //         if ($toDate) $query->whereDate('created_at', '<=', $toDate);
+
+    //         $records = $query->latest()->paginate(15);
+    //         $viewType = 'reports';
+
+    //     } elseif ($category === 'assets') {
+    //         $query = Asset::where('company_id', $companyId);
+    //         if ($search) $query->where('category', 'like', "%{$search}%");
+    //         if ($fromDate) $query->whereDate('created_at', '>=', $fromDate);
+    //         if ($toDate) $query->whereDate('created_at', '<=', $toDate);
+
+    //         $records = $query->latest()->paginate(15);
+    //         dd($records , "records" , $companyId);
+    //         $viewType = 'assets';
+
+    //     } elseif ($category === 'plantations') {
+    //         $query = Plantation::query();
+    //         if ($search) {
+    //             $query->where('code', 'like', "%{$search}%")
+    //                   ->orWhere('name', 'like', "%{$search}%")
+    //                   ->orWhere('plant_species', 'like', "%{$search}%");
+    //         }
+    //         if ($fromDate) $query->whereDate('created_at', '>=', $fromDate);
+    //         if ($toDate) $query->whereDate('created_at', '<=', $toDate);
+
+    //         $records = $query->latest()->paginate(15);
+    //         $viewType = 'plantations';
+    //     }
+
+    //     return view('reports.detailed', compact('records', 'category', 'search', 'fromDate', 'toDate', 'subType', 'viewType'));
+    // }
+
+
+    public function detailedDataTable(Request $request)
+{
+    $companyId = session('user')->company_id ?? auth()->user()->company_id ?? 46;
+    $category = $request->get('category', 'criminal'); // Default to criminal
+    $search = $request->get('search');
+    $fromDate = $request->get('from_date');
+    $toDate = $request->get('to_date');
+    $subType = $request->get('sub_type'); // specific event type
+
+    $records = collect(); // Empty collection to start
+    $viewType = $category; // By default, viewType matches category
 
         // We route the query based on the Master Category because the tables are different
         if (in_array($category, ['criminal', 'events', 'fire'])) {
@@ -963,45 +1048,110 @@ class ForestReportConfigController extends Controller
             $query = \Illuminate\Support\Facades\DB::table('forest_reports')
                 ->where('company_id', $companyId)
                 ->whereIn('category', $catMap[$category] ?? [$category]);
+    // 1. FOREST REPORTS (Criminal, Events, Fire)
+    if (in_array($category, ['criminal', 'events', 'fire'])) {
+        $catMap = [
+            'criminal' => ['crimes', 'Criminal Activity'],
+            'events'   => ['events', 'Events & Monitoring', 'Wildlife Sighting', 'Water Body', 'Public Grievance'],
+            'fire'     => ['fire', 'Fire Incident']
+        ];
 
-            if ($search) {
-                $query->where(function ($q) use ($search) {
-                    $q->where('report_id', 'like', "%{$search}%")
-                        ->orWhere('report_type', 'like', "%{$search}%")
-                        ->orWhere('beat', 'like', "%{$search}%");
-                });
-            }
-            if ($subType) {
-                $query->where('report_type', $subType);
-            }
-            if ($fromDate) $query->whereDate('created_at', '>=', $fromDate);
-            if ($toDate) $query->whereDate('created_at', '<=', $toDate);
+        $query = \Illuminate\Support\Facades\DB::table('forest_reports')
+            ->where('company_id', $companyId)
+            ->whereIn('category', $catMap[$category] ?? [$category]);
 
-            $records = $query->latest()->paginate(15);
-            $viewType = 'reports';
-        } elseif ($category === 'assets') {
-            $query = Asset::where('company_id', $companyId);
-            if ($search) $query->where('category', 'like', "%{$search}%");
-            if ($fromDate) $query->whereDate('created_at', '>=', $fromDate);
-            if ($toDate) $query->whereDate('created_at', '<=', $toDate);
+        if ($search) {
+            $query->where(function($q) use ($search) {
+                $q->where('report_id', 'like', "%{$search}%")
+                  ->orWhere('report_type', 'like', "%{$search}%")
+                  ->orWhere('beat', 'like', "%{$search}%");
+            });
+        }
+        if ($subType) $query->where('report_type', $subType);
+        if ($fromDate) $query->whereDate('created_at', '>=', $fromDate);
+        if ($toDate) $query->whereDate('created_at', '<=', $toDate);
 
-            $records = $query->latest()->paginate(15);
-            dd($records, "records", $companyId);
-            $viewType = 'assets';
-        } elseif ($category === 'plantations') {
-            $query = Plantation::query();
-            if ($search) {
-                $query->where('code', 'like', "%{$search}%")
-                    ->orWhere('name', 'like', "%{$search}%")
-                    ->orWhere('plant_species', 'like', "%{$search}%");
-            }
-            if ($fromDate) $query->whereDate('created_at', '>=', $fromDate);
-            if ($toDate) $query->whereDate('created_at', '<=', $toDate);
+        $records = $query->latest()->paginate(15);
+        $viewType = 'reports';
 
-            $records = $query->latest()->paginate(15);
-            $viewType = 'plantations';
+    }
+    // 2. ASSETS
+    elseif ($category === 'assets') {
+        $query = \App\Models\Asset::where('company_id', $companyId);
+        if ($search) $query->where('category', 'like', "%{$search}%");
+        if ($fromDate) $query->whereDate('created_at', '>=', $fromDate);
+        if ($toDate) $query->whereDate('created_at', '<=', $toDate);
+
+        $records = $query->latest()->paginate(15);
+    }
+    // 3. PLANTATIONS
+    elseif ($category === 'plantations') {
+        $query = \App\Models\Plantation::query();
+        if ($search) {
+            $query->where('code', 'like', "%{$search}%")
+                  ->orWhere('name', 'like', "%{$search}%")
+                  ->orWhere('plant_species', 'like', "%{$search}%");
+        }
+        if ($fromDate) $query->whereDate('created_at', '>=', $fromDate);
+        if ($toDate) $query->whereDate('created_at', '<=', $toDate);
+
+        $records = $query->latest()->paginate(15);
+    }
+   // 4. ON DUTY OFFICERS (Using your attendance logic)
+    elseif ($category === 'onduty') {
+        // If no date is selected, default to today to only show CURRENTLY on-duty staff
+        $targetDate = $fromDate ? $fromDate : date('Y-m-d');
+
+        // Find users who have checked in on the target date
+        $checkInUserIds = \Illuminate\Support\Facades\DB::table('attendance')
+            ->where('company_id', $companyId)
+            ->where('dateFormat', $targetDate)
+            ->pluck('user_id')
+            ->toArray();
+
+        // Use 'contact' instead of 'phone' based on your Prisma schema
+        $query = Users::leftJoin('site_assign', 'users.id', '=', 'site_assign.user_id')
+            ->where('users.company_id', $companyId)
+            ->whereIn('users.id', $checkInUserIds)
+            ->select('users.id', 'users.name', 'users.contact', 'site_assign.site_name');
+
+        if ($search) {
+            $query->where(function($q) use ($search) {
+                $q->where('users.name', 'like', "%{$search}%")
+                  ->orWhere('site_assign.site_name', 'like', "%{$search}%");
+            });
         }
 
-        return view('reports.detailed', compact('records', 'category', 'search', 'fromDate', 'toDate', 'subType', 'viewType'));
+        // Group by ALL selected columns to satisfy strict mode
+        $records = $query->groupBy('users.id', 'users.name', 'users.contact', 'site_assign.site_name')->paginate(15);
     }
+
+  // 5. PATROLS
+    elseif ($category === 'patrol') {
+
+        // 🔥 Change this if your actual database table is named something else (e.g., 'patrol_sessions')
+        $tableName = 'patrolling';
+
+        $query = \Illuminate\Support\Facades\DB::table($tableName)
+            ->leftJoin('users', "{$tableName}.user_id", '=', 'users.id')
+            ->leftJoin('site_details', "{$tableName}.site_id", '=', 'site_details.id')
+            ->where("{$tableName}.company_id", $companyId)
+            ->select("{$tableName}.*", 'users.name as user_name', 'site_details.name as site_name');
+
+        if ($search) {
+            // Wrapped in a closure so it doesn't bypass the company_id where clause!
+            $query->where(function($q) use ($search) {
+                $q->where('users.name', 'like', "%{$search}%")
+                  ->orWhere('site_details.name', 'like', "%{$search}%");
+            });
+        }
+
+        if ($fromDate) $query->whereDate("{$tableName}.created_at", '>=', $fromDate);
+        if ($toDate) $query->whereDate("{$tableName}.created_at", '<=', $toDate);
+
+        $records = $query->latest("{$tableName}.created_at")->paginate(15);
+    }
+
+    return view('reports.detailed', compact('records', 'category', 'search', 'fromDate', 'toDate', 'subType', 'viewType'));
+}
 }
