@@ -647,90 +647,64 @@ class ClientDetailsController extends Controller
     }
 
     // saved geofence in database
-    public function Geofencestore($client_id, $site_id)
+    // saved geofence in database
+    public function Geofencestore(Request $request, $client_id, $site_id)
     {
-        // dd($client_id, $site_id);
-        // dd($_GET['type'], $_GET['poly_coords']);
         $user = session('user');
         $site_name = SiteDetails::where('id', $site_id)->first();
+
         if ($user) {
+            $type = $request->input('type');
+            $poly_coords = $request->input('poly_coords'); // This is the JSON string
+            $name = $request->input('name');
+            $center = $request->input('center');
+            $radius = $request->input('radius');
 
-            if ($_GET['type'] == 'Polygon') {
+            $location = new SiteGeofences();
 
-                $pointsArray = json_decode($_GET['poly_coords']); //Expecting an array of [lat, lng] pairs
-                $wktPolygon = $this->convertToWktPolygon($pointsArray);
-                $poly = DB::raw("ST_GeomFromText('$wktPolygon')");
-                $poly_lat_lng = $_GET['poly_coords'];
+            if ($type == 'Polygon' && !empty($poly_coords)) {
+                $pointsArray = json_decode($poly_coords);
+                if (is_array($pointsArray) && count($pointsArray) > 0) {
+                    // 1. Generate WKT for the Spatial Column
+                    $wktPolygon = $this->convertToWktPolygon($pointsArray);
+                    $location->poly_coords = DB::raw("ST_GeomFromText('$wktPolygon')");
+
+                    // 2. Save raw JSON for the Google Maps View
+                    $location->poly_lat_lng = $poly_coords;
+                }
             } else {
-
-                $poly = NULL;
-                $poly_lat_lng = NULL;
+                $location->poly_coords = NULL;
+                $location->poly_lat_lng = NULL;
             }
 
-            //$points = array_map(function ($coord) {
-            //     return new Point($coord->lat, $coord->lng); // lat, lng order for Point
-            // }, $pointsArray);
+            $loc = json_decode($center);
+            $location->name = $name;
+            $location->center = $center;
 
-            // Ensure the polygon is closed
-            // if ($points[0] != end($points)) {
-            //     $points[] = $points[0];
-            // }
-
-            // $points = [];
-            // foreach ($pointsArray as $point) {
-            // $points[] = new Point($point->lat, $point->lng);
-            // }
-            // $points[] = new Point($pointsArray[0]->lat, $pointsArray[0]->lng);
-            // dd($pointsArray);
-            // $lineString = new LineString($points);
-            // $polygon = new Polygon([$lineString]);
-
-            // dd($polygon);
-
-            $loc = json_decode($_GET['center']);
-
-            // $admin = Users::where('id', $client_id)->first();
-            // if (isset($admin)) {
-            //     if ($admin->role_id == 7) {
-            //         $siteName = ClientDetails::where('id', $client_id)->first();
-            //     } else {
-            //         $siteName = SiteDetails::where('id', $site_id)->first();
-            //     }
-            // } else {
-            $siteName = SiteDetails::where('id', $site_id)->first();
-            // }
-
-            //$siteName = SiteDetails::where('id', $site_id)->first();
-            $location = new SiteGeofences();
-            $location->name = $_GET['name'];
-            $location->center = $_GET['center'];
-            if ($_GET['type'] == 'Circle') {
+            if ($type == 'Circle' && $loc) {
                 $location->lat = $loc->lat;
                 $location->lng = $loc->lng;
             }
-            $location->radius = $_GET['radius'];
-            $location->type = $_GET['type'];
-            $location->poly_coords = $poly;
-            $location->poly_lat_lng = $poly_lat_lng;
+
+            $location->radius = $radius;
+            $location->type = $type;
             $location->site_id = $site_id;
-            $location->site_name = $siteName->name;
-            $location->client_id = $siteName->client_id;
+            $location->site_name = $site_name->name;
+            $location->client_id = $site_name->client_id;
             $location->company_id = $user->company_id;
             $result = $location->save();
+
+            // Activity Log ...
             ActivityLog::create([
                 'company_id' => $user->company_id,
                 'user_id' => $user->id,
                 'user_name' => $user->name,
                 'type' => "Create Geofence",
-                'message' => $location->name . " geofence created in site " . $site_name->name . " by " . $user->name,
+                'message' => $location->name . " geofence created by " . $user->name,
                 'date_time' => date('Y-m-d H:i:s'),
             ]);
-            if ($result) {
-                return "Geofence Created";
-            } else {
-                return "Something went wrong!";
-            }
-            return redirect()->route('clients.getshifts', [$client_id, $site_id]);
+
+            return response()->json($result ? "Geofence Created" : "Error", $result ? 200 : 500);
         }
     }
 
@@ -749,60 +723,64 @@ class ClientDetailsController extends Controller
     }
 
     // geofence updated data saved in database
-    public function geofenceEditAction($client_id, $site_id, $id)
+    // geofence updated data saved in database
+    public function geofenceEditAction(Request $request, $client_id, $site_id, $id)
     {
         $user = session('user');
         if ($user) {
-
-            // dd($client_id, $site_id, $id);
-            if ($_GET['type'] == 'Polygon') {
-                $pointsArray = json_decode($_GET['poly_coords']); // Expecting an array of [lat, lng] pairs
-
-                $wktPolygon = $this->convertToWktPolygon($pointsArray);
-
-                $poly = DB::raw("ST_GeomFromText('$wktPolygon')");
-                $poly_lat_lng = $_GET['poly_coords'];
-            } else {
-                $poly = NULL;
-                $poly_lat_lng = NULL;
-            }
+            $type = $request->input('type');
+            $poly_coords = $request->input('poly_coords');
+            $name = $request->input('name');
+            $center = $request->input('center');
+            $radius = $request->input('radius');
 
             $location = SiteGeofences::find($id);
-            //dd($_GET['name'],$location);
-            $loc = json_decode($_GET['center']);
-            $location->radius = $_GET['radius'];
-            $location->type = $_GET['type'];
-            $location->poly_coords = $poly;
-            $location->poly_lat_lng = $poly_lat_lng;
-            $location->name = $_GET['name'];
-            $location->center = $_GET['center'];
-            if ($_GET['type'] == 'Circle') {
+            $loc = json_decode($center);
+
+            if ($type == 'Polygon' && !empty($poly_coords)) {
+                $pointsArray = json_decode($poly_coords);
+                $wktPolygon = $this->convertToWktPolygon($pointsArray);
+                $location->poly_coords = DB::raw("ST_GeomFromText('$wktPolygon')");
+                $location->poly_lat_lng = $poly_coords; // Keep JSON synced
+            } else {
+                $location->poly_coords = NULL;
+                $location->poly_lat_lng = NULL;
+            }
+
+            $location->radius = $radius;
+            $location->type = $type;
+            $location->name = $name;
+            $location->center = $center;
+
+            if ($type == 'Circle' && $loc) {
                 $location->lat = $loc->lat;
                 $location->lng = $loc->lng;
             }
 
-            $location->site_id = $site_id;
-            $location->client_id = $client_id;
-            $location->company_id = $user->company_id;
             $result = $location->save();
 
-            ActivityLog::create([
-                'company_id' => $user->company_id,
-                'user_id' => $user->id,
-                'user_name' => $user->name,
-                'type' => "Update Geofence",
-                'message' => $location->name . " geofence updated by " . $user->name,
-                'date_time' => date('Y-m-d H:i:s'),
-            ]);
-            if ($result) {
-                return "Geofence Created";
-            } else {
-                return "Something went wrong!";
-            }
-            return redirect()->route('clients.getclientgeofences', [$client_id, $site_id]);
+            // Log activity...
+            return response()->json($result ? "Geofence Updated" : "Error");
         }
     }
 
+    public function viewGeofence($id)
+    {
+        $geofence = SiteGeofences::find($id);
+
+        if (!$geofence) {
+            return back()->with('error', 'Geofence not found.');
+        }
+
+        // Crucial: Hide binary data before sending to view to prevent JSON errors
+        $geofence->makeHidden('poly_coords');   
+
+        $center = json_decode($geofence->center);
+        $lat = $center->lat ?? 21.150585;
+        $lng = $center->lng ?? 79.103984;
+
+        return view('gmaps', compact('geofence', 'lat', 'lng'));
+    }
     // delete geofence
     public function GeofenceDelete($client_id, $site_id, $id)
     {
