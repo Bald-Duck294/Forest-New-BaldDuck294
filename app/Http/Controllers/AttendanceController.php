@@ -9,6 +9,8 @@ use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use App\Services\RoleBasedFilterService;
+use App\Attendance;
+use App\SiteGeofences;
 
 class AttendanceController extends Controller
 {
@@ -531,4 +533,29 @@ class AttendanceController extends Controller
 
         return response()->stream($callback, 200, $headers);
     }
+
+
+    public function showAttendanceMap(Request $request)
+    {
+        $guardId = $request->input('guardId');
+        $fromDate = $request->input('fromDate');
+        $toDate = $request->input('toDate');
+        $user = session('user');
+        // Fetch attendance data for the guard
+        if ($guardId == 0) {
+            $attendanceData = Attendance::where('company_id', $user->company_id)
+                ->whereBetween('dateFormat', [$fromDate, $toDate])
+                ->get();
+        }
+        else {
+            $attendanceData = Attendance::where('user_id', $guardId)
+                ->whereBetween('dateFormat', [$fromDate, $toDate])
+                ->get();
+        }
+
+        $geofences = SiteGeofences::where('company_id', $user->company_id)->select('name', 'center', 'radius', 'type', 'poly_lat_lng', 'site_name')->get();
+        // dump($attendanceData  , "attendance data");
+        return view('maps.userAttendanceMap', compact('attendanceData', 'geofences'));
+    }
+
 }

@@ -822,3 +822,5 @@ Route::prefix('ajax')->controller(AjaxController::class)->group(function () {
     Route::get('/client-users/{client}', 'clientUsers');
     Route::get('/site-users/{site}', 'siteUsers');
 });
+
+Route::get('/attendance-map', [AttendanceController::class , 'showAttendanceMap'])->name('attendanceMap');

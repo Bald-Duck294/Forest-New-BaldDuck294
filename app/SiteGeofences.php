@@ -11,7 +11,7 @@ class SiteGeofences extends Model
     use SoftDeletes;
     protected $table = "site_geofences";
     protected $fillable = [
-        'name','center','radius', 'type', 'poly_coords', 'poly_lat_lng','site_id','client_id','company_id'
+        'name', 'center', 'radius', 'type', 'poly_coords', 'poly_lat_lng', 'site_id', 'client_id', 'company_id'
     ];
 
     protected $spatialFields = [
@@ -21,5 +21,6 @@ class SiteGeofences extends Model
     public $timestamps = false;
 
 
-     
+
+
 }
