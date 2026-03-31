@@ -62,11 +62,12 @@ Route::get('/', function () {
 
 /* Protected Routes - Require Authentication */
 Route::middleware(['auth'])->group(function () {
-    Route::get('/dashboard', [DashboardController::class , 'index'])->name('dashboard');
-    Route::get('/home', [DashboardController::class , 'index']); // Alias for home
-
-
-    Route::get('/global-dashboard', [GlobalSuperAdminController::class , 'dashboard'])
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/home', [DashboardController::class, 'index']); // Alias for home
+    Route::get('/my-profile', [ProfileController::class, 'index'])->name('profile.index');
+    Route::get('/my-profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::post('/my-profile/update', [ProfileController::class, 'update'])->name('profile.update');
+    Route::get('/global-dashboard', [GlobalSuperAdminController::class, 'dashboard'])
         ->name('global.dashboard');
 
 
