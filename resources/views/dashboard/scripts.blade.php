@@ -15,6 +15,19 @@
     window.activeSubTab = 'felling';
     window.viewMode = 'overall';
 
+    // const CHART_COLORS = {
+    //     emerald: '#10b981',
+    //     rose: '#f43f5e',
+    //     amber: '#f59e0b',
+    //     blue: '#3b82f6',
+    //     indigo: '#6366f1',
+    //     teal: '#14b8a6',
+    //     slate: '#64748b'
+    // };
+    // const COLOR_PALETTE = [CHART_COLORS.emerald, CHART_COLORS.amber, CHART_COLORS.rose, CHART_COLORS.blue, CHART_COLORS
+    //     .indigo
+    // ];
+
     const CHART_COLORS = {
         emerald: '#10b981',
         rose: '#f43f5e',
@@ -24,10 +37,14 @@
         teal: '#14b8a6',
         slate: '#64748b'
     };
-    const COLOR_PALETTE = [CHART_COLORS.emerald, CHART_COLORS.amber, CHART_COLORS.rose, CHART_COLORS.blue, CHART_COLORS
-        .indigo
-    ];
 
+    // 🔥 Expanded to 20 colors to prevent Chart.js "startsWith" crashes on large datasets!
+    const COLOR_PALETTE = [
+        '#3b82f6', '#10b981', '#f59e0b', '#f43f5e', '#8b5cf6',
+        '#06b6d4', '#ec4899', '#f97316', '#84cc16', '#6366f1',
+        '#14b8a6', '#eab308', '#d946ef', '#22c55e', '#64748b',
+        '#0284c7', '#059669', '#ea580c', '#e11d48', '#7c3aed'
+    ];
     let overallChart = null;
     let activeCharts = {};
 
@@ -756,6 +773,7 @@
                     type: 'bar',
                     toggles: ['Type', 'Gender'],
                     generator: (idx, db) => {
+                        console.log(db, "animla sighting");
                         let obj = idx === 0 ? db.wildlife?.type : db.wildlife?.gender;
                         let labels = Object.keys(obj || {});
                         if (!labels.length) return {
@@ -778,7 +796,10 @@
                         });
                         return {
                             labels,
-                            datasets
+                            datasets: datasets.map(ds => ({
+                                ...ds,
+                                backgroundColor: ds.backgroundColor || '#3b82f6'
+                            }))
                         };
                     },
                     options: {
@@ -868,6 +889,8 @@
                     calcPill: () => `Active`
                 }
             ],
+            // --- EVENTS ---
+            // (Only replacing the 'events.water' part)
             'events.water': [{
                     id: 'wat-c1',
                     title: 'Water Availability',
@@ -876,27 +899,38 @@
                     generator: (idx, db) => {
                         let obj = db.water?.availability || {};
                         let labels = Object.keys(obj);
-                        if (!labels.length) return {
-                            labels: ['No Data'],
-                            datasets: [{
-                                data: [0]
-                            }]
-                        };
+
+                        // 🔥 Safe Fallback with Background Color
+                        if (!labels || !labels.length) {
+                            return {
+                                labels: ['No Data'],
+                                datasets: [{
+                                    label: 'None',
+                                    data: [0],
+                                    backgroundColor: '#64748b'
+                                }]
+                            };
+                        }
+
                         let wet = labels.map(l => obj[l]?.['No'] || 0);
                         let dry = labels.map(l => obj[l]?.['Yes'] || 0);
+
+                        // Properly formatted return object
                         return {
-                            labels,
+                            labels: labels,
                             datasets: [{
-                                label: 'Has Water',
-                                data: wet,
-                                backgroundColor: CHART_COLORS.blue,
-                                borderRadius: 4
-                            }, {
-                                label: 'Dry',
-                                data: dry,
-                                backgroundColor: CHART_COLORS.amber,
-                                borderRadius: 4
-                            }]
+                                    label: 'Has Water',
+                                    data: wet,
+                                    backgroundColor: CHART_COLORS.blue,
+                                    borderRadius: 4
+                                },
+                                {
+                                    label: 'Dry',
+                                    data: dry,
+                                    backgroundColor: CHART_COLORS.amber,
+                                    borderRadius: 4
+                                }
+                            ]
                         };
                     },
                     options: {
@@ -951,10 +985,19 @@
                     generator: (idx, db) => {
                         let l = Object.keys(db.water?.ranges || {});
                         let v = Object.values(db.water?.ranges || {}).map(Number);
-                        if (!l.length) {
-                            l = ['No Data'];
-                            v = [0];
+
+                        // 🔥 Safe Fallback with Background Color
+                        if (!l || !l.length) {
+                            return {
+                                labels: ['No Data'],
+                                datasets: [{
+                                    label: 'None',
+                                    data: [0],
+                                    backgroundColor: '#64748b'
+                                }]
+                            };
                         }
+
                         return {
                             labels: l,
                             datasets: [{
@@ -968,8 +1011,10 @@
                     options: {
                         indexAxis: 'y'
                     },
-                    calcPill: (data) =>
-                        `Max: ${Math.max(...(data.datasets[0].data.length ? data.datasets[0].data : [0]))}`
+                    calcPill: (data) => {
+                        let max = Math.max(...(data.datasets[0].data.length ? data.datasets[0].data : [0]));
+                        return `Max: ${max}`;
+                    }
                 }
             ],
             'events.compensation': [{
@@ -2297,12 +2342,13 @@
     window.renderAnalyticalCharts = function() {
         const grid = document.getElementById('charts-grid');
         if (!grid) return;
-        grid.innerHTML = '';
 
+        // 1. COMPLETELY DESTROY OLD CHARTS AND WIPE CANVAS ELEMENTS
         Object.values(activeCharts).forEach(c => {
             if (c) c.destroy();
         });
         activeCharts = {};
+        grid.innerHTML = ''; // Force wipe the grid to kill any lingering Chart.js animations
 
         const db = window.dashboardData.analytics || {};
         const viewKey = window.activeMainTab + '.' + window.activeSubTab;
@@ -2357,11 +2403,13 @@
                 </div>`;
         });
 
+        // 2. USE A SLIGHTLY LONGER TIMEOUT TO ENSURE DOM IS READY
         setTimeout(() => {
             chartsConfig.forEach(cfg => {
                 const ctxEl = document.getElementById(cfg.id);
                 if (!ctxEl) return;
 
+                // ALWAYS pass 0 as the initial index when rendering a fresh tab
                 let raw = cfg.generator ? cfg.generator(0, db) : (cfg.data ? cfg.data(db) : {});
 
                 if (window.activeSubTab === 'water' && cfg.id === 'wat-c1' && !raw.datasets) {
@@ -2379,6 +2427,15 @@
                     };
                 }
 
+                // newly added for safty purpuse may cuase breakdonw - dev
+                if (!Array.isArray(raw.datasets)) {
+                    raw.datasets = [{
+                        label: 'Data',
+                        data: raw.datasets || [0],
+                        backgroundColor: '#3b82f6'
+                    }];
+                }
+                // 3. SAFE FALLBACK DATA INJECTION
                 const chartData = raw.datasets ? raw : {
                     labels: Object.keys(raw).length ? Object.keys(raw) : ['No Data'],
                     datasets: [{
@@ -2402,6 +2459,10 @@
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
+                        // Turn off animation on initial load to prevent tab-switching crashes
+                        animation: {
+                            duration: 0
+                        },
                         plugins: {
                             legend: {
                                 display: (cfg.type === 'doughnut' || cfg.type === 'pie'),
@@ -2432,9 +2493,40 @@
                     const pillEl = document.getElementById(`pill-${cfg.id}`);
                     if (pillEl) pillEl.innerText = cfg.calcPill(chartData, 0);
                 }
+
+
             });
-        }, 50);
+        }, 100); // Increased timeout slightly to ensure the old canvas is truly dead before making a new one
     };
+
+    // window.updateSubChart = function(chartId, viewKey, toggleIndex, btnElement) {
+    //     const toggleContainer = document.getElementById(`toggles-${chartId}`);
+    //     const buttons = toggleContainer.querySelectorAll('button');
+    //     buttons.forEach((b, i) => {
+    //         b.className = i === toggleIndex ?
+    //             'px-2 py-1 text-[10px] rounded border-0 transition-colors bg-white shadow-sm text-success fw-bold' :
+    //             'px-2 py-1 text-[10px] rounded border-0 transition-colors bg-transparent text-muted';
+    //     });
+
+    //     const cfg = config.views[viewKey].find(c => c.id === chartId);
+    //     if (cfg && activeCharts[chartId]) {
+    //         const chart = activeCharts[chartId];
+    //         const newData = cfg.generator(toggleIndex, window.dashboardData.analytics || {});
+
+    //         chart.data = newData;
+    //         if (cfg.options) chart.options = {
+    //             ...chart.options,
+    //             ...cfg.options
+    //         };
+    //         chart.update();
+
+    //         if (cfg.calcPill) {
+    //             const pillEl = document.getElementById(`pill-${chartId}`);
+    //             if (pillEl) pillEl.innerText = cfg.calcPill(newData, toggleIndex);
+    //         }
+    //     }
+    // };
+
 
     window.updateSubChart = function(chartId, viewKey, toggleIndex, btnElement) {
         const toggleContainer = document.getElementById(`toggles-${chartId}`);
@@ -2446,16 +2538,49 @@
         });
 
         const cfg = config.views[viewKey].find(c => c.id === chartId);
+        // if (cfg && activeCharts[chartId]) {
+        //     const chart = activeCharts[chartId];
+        //     const newData = cfg.generator(toggleIndex, window.dashboardData.analytics || {});
+
+        //     // 🔥 Safely replace the arrays inside the data object, rather than destroying the object itself
+        //     chart.data.labels = newData.labels;
+        //     chart.data.datasets = newData.datasets;
+
+        //     if (cfg.options) {
+        //         chart.options = {
+        //             ...chart.options,
+        //             ...cfg.options
+        //         };
+        //     }
+
+        //     chart.update(); // Re-render cleanly
+
+        //     if (cfg.calcPill) {
+        //         const pillEl = document.getElementById(`pill-${chartId}`);
+        //         if (pillEl) pillEl.innerText = cfg.calcPill(newData, toggleIndex);
+        //     }
+        // }
+
+
         if (cfg && activeCharts[chartId]) {
-            const chart = activeCharts[chartId];
+            const oldChart = activeCharts[chartId];
+
+            // 🔥 DESTROY old chart completely
+            oldChart.destroy();
+
+            const ctx = document.getElementById(chartId);
+
             const newData = cfg.generator(toggleIndex, window.dashboardData.analytics || {});
 
-            chart.data = newData;
-            if (cfg.options) chart.options = {
-                ...chart.options,
-                ...cfg.options
-            };
-            chart.update();
+            activeCharts[chartId] = new Chart(ctx, {
+                type: cfg.type,
+                data: newData,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    ...(cfg.options || {})
+                }
+            });
 
             if (cfg.calcPill) {
                 const pillEl = document.getElementById(`pill-${chartId}`);
@@ -2463,6 +2588,8 @@
             }
         }
     };
+
+
 
     // =================================================================
     // 6. INITIALIZATION & REFRESH LOGIC
