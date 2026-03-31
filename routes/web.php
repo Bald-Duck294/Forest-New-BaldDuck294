@@ -37,10 +37,10 @@ use App\Http\Controllers\IncidenceController;
 use App\Http\Controllers\AjaxController;
 /* Auth Routes */
 
-Route::get('/login', [AuthController::class , 'showLoginForm'])->name('login');
+Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
 
-Route::post('/login', [AuthController::class , 'login']);
-Route::post('/logout', [AuthController::class , 'logout'])->name('logout');
+Route::post('/login', [AuthController::class, 'login']);
+Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 /* Root redirect - redirect to login if not authenticated */
 Route::get('/', function () {
@@ -263,6 +263,7 @@ Route::controller(ClientDetailsController::class)->group(function () {
     Route::get('/clients/geofence_create/{client_id}/{site_id}', 'getGeofenceCreate')->name('clients.geofence_create');
     Route::post('/clients/geofencestore/{client_id}/{site_id}', 'Geofencestore')->name('clients.geofencestore');
     Route::get('/clients/geofence_edit/{client_id}/{site_id}/{id}', 'geofence_edit')->name('clients.geofence_edit');
+    Route::get('/viewGeofence/{id}', 'viewGeofence')->name('viewGeofence');
     Route::post('/clients/geofence_editaction/{client_id}/{site_id}/{id}', 'geofenceEditAction')->name('clients.geofence_editaction');
     Route::get('/clients/geofence_delete/{client_id}/{site_id}/{id}', 'GeofenceDelete')->name('clients.geofence_delete');
 
@@ -334,12 +335,12 @@ Route::controller(GuardsController::class)->group(function () {
     Route::get('/unassigned/guard_export', 'unassigned_export')->name('unassigned_guard.export');
     Route::get('/guards/guardexport/exp', 'assignedExport')->name('assigned.export');
 
-// Route::get('/fetchClients', 'fetchClients')->name('fetchClients');
-// Route::get('/fetchSites', 'fetchSites')->name('fetchSites');
-// Route::get('/fetchCheckIn', 'fetchCheckIn')->name('fetchCheckIn');
-// Route::get('/fetchLateShow', 'fetchLateShow')->name('fetchLateShow');
-// Route::get('/fetchNoShow', 'fetchNoShow')->name('fetchNoShow');
-// Route::get('/fetchLog', 'fetchLog')->name('fetchLog');
+    // Route::get('/fetchClients', 'fetchClients')->name('fetchClients');
+    // Route::get('/fetchSites', 'fetchSites')->name('fetchSites');
+    // Route::get('/fetchCheckIn', 'fetchCheckIn')->name('fetchCheckIn');
+    // Route::get('/fetchLateShow', 'fetchLateShow')->name('fetchLateShow');
+    // Route::get('/fetchNoShow', 'fetchNoShow')->name('fetchNoShow');
+    // Route::get('/fetchLog', 'fetchLog')->name('fetchLog');
 });
 
 
