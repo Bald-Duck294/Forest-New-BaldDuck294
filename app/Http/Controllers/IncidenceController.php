@@ -604,9 +604,9 @@ class IncidenceController extends Controller
         // dd(' in all guard');
 
         // dump($generatedOn, "generated on");
-        $pra = SiteAssign::where('company_id', $user->company_id)
-            ->where('user_name', 'Laxman Bansode')
-            ->get();
+        // $pra = SiteAssign::where('company_id', $user->company_id)
+        //     ->where('user_name', 'Laxman Bansode')
+        //     ->get();
 
         // dump($pra, 'pratiks');
         // Calculate days count

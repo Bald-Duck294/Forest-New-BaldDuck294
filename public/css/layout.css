@@ -40,6 +40,120 @@ body {
     width: calc(100% - 68px) !important;
 }
 
+/* =========================================
+           GOOGLE MAPS INFOWINDOW THEME OVERRIDES
+        ========================================= */
+/* The main popup bubble */
+.gm-style-iw.gm-style-iw-c {
+    background-color: var(--bg-card) !important;
+    border: 1px solid var(--border-color) !important;
+    border-radius: 12px !important;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15) !important;
+    padding: 0 !important; /* Removes default padding so our inner div fits flush */
+}
+
+/* The little arrow pointing down to the marker */
+.gm-style-iw-d .gm-style-iw-tc::after {
+    background: var(--bg-card) !important;
+    border: 1px solid var(--border-color) !important;
+}
+
+/* The default close (x) button */
+.gm-style-iw .gm-ui-hover-effect {
+    top: 10px !important;
+    right: 10px !important;
+    background: var(--bg-body) !important;
+    border-radius: 50% !important;
+    opacity: 1 !important;
+}
+.gm-style-iw .gm-ui-hover-effect span {
+    background-color: var(--text-muted) !important;
+}
+
+/* Force hide the old HTML Sidebar and its Toggle Button */
+#mapFilterSidebar,
+#mapDrawerToggle {
+    display: none !important;
+}
+
+/* =========================================
+           MODERN SAAS MAP LEGEND (THEME AWARE)
+        ========================================= */
+.modern-legend-toggle {
+    background: var(--bg-card) !important;
+    color: var(--text-main) !important;
+    border: 1px solid var(--border-color) !important;
+    border-radius: 50px !important;
+    padding: 10px 20px !important;
+    font-size: 0.9rem !important;
+    font-weight: 700 !important;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1) !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    transition: all 0.3s ease !important;
+    font-family:
+        "Inter",
+        -apple-system,
+        sans-serif !important;
+}
+
+.modern-legend-toggle:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15) !important;
+    border-color: var(--sapphire-primary) !important;
+    color: var(--sapphire-primary) !important;
+}
+
+.modern-legend-panel {
+    background: var(--bg-card) !important;
+    border: 1px solid var(--border-color) !important;
+    border-radius: 16px !important;
+    padding: 16px !important;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2) !important;
+    font-family:
+        "Inter",
+        -apple-system,
+        sans-serif !important;
+    min-width: 260px !important;
+    max-height: 65vh !important;
+    overflow-y: auto !important;
+    margin: 10px 10px 0 10px !important;
+}
+
+/* Custom subtle scrollbar for the panel */
+.modern-legend-panel::-webkit-scrollbar {
+    width: 6px;
+}
+.modern-legend-panel::-webkit-scrollbar-track {
+    background: transparent;
+}
+.modern-legend-panel::-webkit-scrollbar-thumb {
+    background: var(--border-color);
+    border-radius: 10px;
+}
+
+.modern-legend-item {
+    display: flex !important;
+    align-items: center !important;
+    padding: 10px 12px !important;
+    border-radius: 10px !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+    margin-bottom: 4px !important;
+    border: 1px solid transparent;
+}
+
+.modern-legend-item:hover {
+    background: var(--table-hover) !important;
+    border-color: var(--border-color);
+}
+
+/* Grays out items when toggled off */
+.modern-legend-item.inactive {
+    opacity: 0.4 !important;
+    filter: grayscale(100%);
+}
 /* Mobile Layout Adjustments */
 @media (max-width: 991px) {
     html,
