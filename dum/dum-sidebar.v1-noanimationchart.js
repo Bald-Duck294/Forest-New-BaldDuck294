@@ -1898,91 +1898,9 @@
         if (hasPoints) overallMap.fitBounds(bounds);
     }
 
-    // function createLegend(dbMapData) {
-    //     if (!window.nativeMapLegend) {
-
-    //         // 1. Modern Toggle Button (Floating Action Button style)
-    //         window.nativeLegendToggle = document.createElement('div');
-    //         window.nativeLegendToggle.className = 'modern-legend-toggle';
-    //         window.nativeLegendToggle.style.margin = '10px 10px 25px 10px';
-    //         window.nativeLegendToggle.style.cursor = 'pointer';
-    //         window.nativeLegendToggle.innerHTML = `<i class="bi bi-stack" style="font-size: 1.1rem;"></i> Map Layers`;
-
-    //         // 2. Modern Legend Panel
-    //         window.nativeMapLegend = document.createElement('div');
-    //         window.nativeMapLegend.className = 'modern-legend-panel';
-    //         window.nativeMapLegend.style.display = 'none';
-
-    //         // Toggle Panel Logic
-    //         window.nativeLegendToggle.onclick = function() {
-    //             const isHidden = window.nativeMapLegend.style.display === 'none';
-    //             window.nativeMapLegend.style.display = isHidden ? 'block' : 'none';
-    //             // Highlight button when active
-    //             this.style.borderColor = isHidden ? 'var(--sapphire-primary)' : 'var(--border-color)';
-    //             this.style.color = isHidden ? 'var(--sapphire-primary)' : 'var(--text-main)';
-    //         };
-
-    //         // Push to map ONLY ONCE
-    //         overallMap.controls[google.maps.ControlPosition.RIGHT_BOTTOM].push(window.nativeLegendToggle);
-    //         overallMap.controls[google.maps.ControlPosition.RIGHT_BOTTOM].push(window.nativeMapLegend);
-    //     }
-
-    //     const mapLegend = window.nativeMapLegend;
-
-    //     // Panel Header
-    //     mapLegend.innerHTML = `
-    //         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid var(--border-color);">
-    //             <h6 style="font-weight: 800; color: var(--text-muted); margin: 0; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px;">Active Map Layers</h6>
-    //         </div>
-    //     `;
-
-    //     let anyDataFound = false;
-
-    //     // Populate the list
-    //     Object.values(mapLayerDefinitions).flat().forEach(layerDef => {
-    //         const count = dbMapData.filter(record => {
-    //             if (!record.report_type) return false;
-    //             const type = record.report_type.toLowerCase().trim();
-    //             return (type === layerDef.dbType.toLowerCase() || type === layerDef.id.toLowerCase()) &&
-    //                 record.latitude;
-    //         }).length;
-
-    //         if (count > 0) {
-    //             anyDataFound = true;
-    //             const itemHtml = `
-    //                 <div class="modern-legend-item" id="item_${layerDef.id}" onclick="window.toggleMapLayer('${layerDef.id}', this)">
-    //                     <div style="background-color: ${layerDef.color}; width: 12px; height: 12px; border-radius: 50%; margin-right: 12px; box-shadow: 0 0 10px ${layerDef.color}80;"></div>
-    //                     <div style="flex-grow: 1; font-weight: 600; font-size: 0.85rem; color: var(--text-main);">${layerDef.label}</div>
-    //                     <div style="background: ${layerDef.color}15; color: ${layerDef.color}; padding: 2px 10px; border-radius: 12px; font-size: 0.75rem; font-weight: 700; border: 1px solid ${layerDef.color}30;">
-    //                         ${count}
-    //                     </div>
-    //                 </div>`;
-    //             mapLegend.insertAdjacentHTML('beforeend', itemHtml);
-    //         }
-    //     });
-
-    //     if (!anyDataFound) {
-    //         mapLegend.innerHTML +=
-    //             '<div class="p-3 text-muted text-center" style="font-size:0.85rem; font-style: italic;">No map data available for selected filters.</div>';
-    //     }
-
-    //     // Add Modern Heatmap toggle
-    //     mapLegend.insertAdjacentHTML('beforeend', `
-    //         <div class="modern-legend-item mt-3" onclick="window.toggleHeatmap(this)" style="border: 1px solid var(--sapphire-danger); background: rgba(239, 68, 68, 0.05); justify-content: center;">
-    //             <div style="color: var(--sapphire-danger); font-weight: 700; font-size: 0.85rem; display:flex; align-items:center; gap:8px;">
-    //                 <i class="bi bi-fire fs-6"></i> Toggle Heatmap
-    //             </div>
-    //         </div>
-    //     `);
-    // }
-
-
-
-    // =================================================================
-    // REPLACEMENT 1: createLegend (Always shows 0 counts)
-    // =================================================================
     function createLegend(dbMapData) {
         if (!window.nativeMapLegend) {
+
             // 1. Modern Toggle Button (Floating Action Button style)
             window.nativeLegendToggle = document.createElement('div');
             window.nativeLegendToggle.className = 'modern-legend-toggle';
@@ -1999,6 +1917,7 @@
             window.nativeLegendToggle.onclick = function() {
                 const isHidden = window.nativeMapLegend.style.display === 'none';
                 window.nativeMapLegend.style.display = isHidden ? 'block' : 'none';
+                // Highlight button when active
                 this.style.borderColor = isHidden ? 'var(--sapphire-primary)' : 'var(--border-color)';
                 this.style.color = isHidden ? 'var(--sapphire-primary)' : 'var(--text-main)';
             };
@@ -2017,7 +1936,9 @@
             </div>
         `;
 
-        // Populate the list (Now always showing items, even if count is 0)
+        let anyDataFound = false;
+
+        // Populate the list
         Object.values(mapLayerDefinitions).flat().forEach(layerDef => {
             const count = dbMapData.filter(record => {
                 if (!record.report_type) return false;
@@ -2026,21 +1947,24 @@
                     record.latitude;
             }).length;
 
-            // 🔥 NEW: Check if count is 0. If it is, we fade it out and disable clicking.
-            const isEmpty = count === 0;
-            const opacityStyle = isEmpty ? 'opacity: 0.4; pointer-events: none; filter: grayscale(100%);' : '';
-            const defaultClass = isEmpty ? 'modern-legend-item inactive' : 'modern-legend-item';
-
-            const itemHtml = `
-                <div class="${defaultClass}" id="item_${layerDef.id}" onclick="window.toggleMapLayer('${layerDef.id}', this)" style="${opacityStyle}">
-                    <div style="background-color: ${layerDef.color}; width: 12px; height: 12px; border-radius: 50%; margin-right: 12px; box-shadow: 0 0 10px ${layerDef.color}80;"></div>
-                    <div style="flex-grow: 1; font-weight: 600; font-size: 0.85rem; color: var(--text-main);">${layerDef.label}</div>
-                    <div style="background: ${layerDef.color}15; color: ${layerDef.color}; padding: 2px 10px; border-radius: 12px; font-size: 0.75rem; font-weight: 700; border: 1px solid ${layerDef.color}30;">
-                        ${count}
-                    </div>
-                </div>`;
-            mapLegend.insertAdjacentHTML('beforeend', itemHtml);
+            if (count > 0) {
+                anyDataFound = true;
+                const itemHtml = `
+                    <div class="modern-legend-item" id="item_${layerDef.id}" onclick="window.toggleMapLayer('${layerDef.id}', this)">
+                        <div style="background-color: ${layerDef.color}; width: 12px; height: 12px; border-radius: 50%; margin-right: 12px; box-shadow: 0 0 10px ${layerDef.color}80;"></div>
+                        <div style="flex-grow: 1; font-weight: 600; font-size: 0.85rem; color: var(--text-main);">${layerDef.label}</div>
+                        <div style="background: ${layerDef.color}15; color: ${layerDef.color}; padding: 2px 10px; border-radius: 12px; font-size: 0.75rem; font-weight: 700; border: 1px solid ${layerDef.color}30;">
+                            ${count}
+                        </div>
+                    </div>`;
+                mapLegend.insertAdjacentHTML('beforeend', itemHtml);
+            }
         });
+
+        if (!anyDataFound) {
+            mapLegend.innerHTML +=
+                '<div class="p-3 text-muted text-center" style="font-size:0.85rem; font-style: italic;">No map data available for selected filters.</div>';
+        }
 
         // Add Modern Heatmap toggle
         mapLegend.insertAdjacentHTML('beforeend', `
@@ -2051,43 +1975,6 @@
             </div>
         `);
     }
-
-    // =================================================================
-    // REPLACEMENT 2: toggleMapLayer (Adds Smooth Zoom/Fly Animation)
-    // =================================================================
-    window.toggleMapLayer = function(layerId, element) {
-        const markers = overlayMapGroups[layerId];
-        if (!markers || markers.length === 0) return;
-
-        const isCurrentlyVisible = markers[0].getMap() !== null;
-
-        if (isCurrentlyVisible) {
-            // HIDE the layer
-            markers.forEach(m => m.setMap(null));
-            element.classList.add('inactive');
-        } else {
-            // SHOW the layer
-            markers.forEach(m => m.setMap(overallMap));
-            element.classList.remove('inactive');
-
-            // 🔥 NEW: Smooth Animation to the newly activated markers
-            const bounds = new google.maps.LatLngBounds();
-            markers.forEach(m => {
-                bounds.extend(m.getPosition());
-            });
-
-            // If there is only 1 marker, zooming to "bounds" zooms in too far.
-            // We use panTo for 1 marker, and fitBounds for multiple!
-            if (markers.length === 1) {
-                overallMap.panTo(markers[0].getPosition());
-                overallMap.setZoom(15); // Smoothly fly and zoom into the single pin
-            } else {
-                overallMap.fitBounds(bounds, {
-                    padding: 50
-                }); // Smoothly frame all pins in this layer
-            }
-        }
-    };
 
     // Toggle visibility of specific pins
     window.toggleMapLayer = function(layerId, element) {

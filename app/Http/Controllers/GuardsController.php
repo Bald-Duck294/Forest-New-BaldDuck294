@@ -198,12 +198,10 @@ class GuardsController extends Controller
                     ->selectRaw('users.*, users.id as id, site_assign.site_name, site_assign.date_range, site_assign.shift_name')
                     ->orderBy('users.name', 'ASC')->get();
             }
-        }
-        else if ($user->role_id == '0') {
+        } else if ($user->role_id == '0') {
             $guards = Users::where('role_id', 3)->where('showUser', 1)->get();
             return view('companies/guardlist')->with('guards', $guards);
-        }
-        else if ($user->role_id == '7') {
+        } else if ($user->role_id == '7') {
             if ($sites) {
                 $clientArray = json_decode($sites['site_id'], true);
                 $userArray = SiteAssign::whereIn('client_id', $clientArray)->pluck('user_id')->toArray();
@@ -232,8 +230,7 @@ class GuardsController extends Controller
                     ->selectRaw('users.*, users.id as id, site_assign.site_name, site_assign.date_range, site_assign.shift_name')
                     ->orderBy('users.name', 'ASC')->get();
             }
-        }
-        else {
+        } else {
             $attendance = Attendance::where('company_id', $user->company_id)
                 ->where('role_id', 3)
                 ->where('dateFormat', $date)
@@ -284,8 +281,7 @@ class GuardsController extends Controller
         $sites = SiteDetails::where('company_id', $user->company_id)->get();
         if ($assignsite->shift_id != null) {
             $shifts = ShiftAssigned::where('id', $assignsite->shift_id)->get();
-        }
-        else {
+        } else {
             $shifts = [];
         }
 
@@ -376,8 +372,7 @@ class GuardsController extends Controller
             if (!empty($unassignedGuards)) {
                 // dd($unassignedGuards , "un guards");
                 return view('unassignguardlist')->with('unassignedGuards', $unassignedGuards);
-            }
-            else {
+            } else {
                 // dd('here');
                 return view('unassignguardlist', ['jsonMessage' => 'no data found']);
             }
@@ -392,13 +387,11 @@ class GuardsController extends Controller
             $clients = ClientDetails::where('company_id', $user->company_id)
                 ->select('count(*) as allcount')
                 ->count();
-        }
-        else if ($user->role_id == '2') {
+        } else if ($user->role_id == '2') {
             $clients = ClientDetails::where('company_id', $user->company_id)
                 ->select('count(*) as allcount')
                 ->count();
-        }
-        else if ($user->role_id == "7") {
+        } else if ($user->role_id == "7") {
             $clients = ClientDetails::where('company_id', $user->company_id)
                 ->select('count(*) as allcount')
                 ->count();
@@ -415,13 +408,11 @@ class GuardsController extends Controller
                 ->where('company_id', $user->company_id)
                 ->select('count(*) as allcount')
                 ->count();
-        }
-        else if ($user->role_id == '2') {
+        } else if ($user->role_id == '2') {
             $sites = SiteAssign::where('user_id', $user->id)->first();
             $siteArray = json_decode($sites['site_id'], true);
             $sitess = DB::table('site_details')->whereIn('id', $siteArray)->select('count(*) as allcount')->count();
-        }
-        else if ($user->role_id == "7") {
+        } else if ($user->role_id == "7") {
             $clients = SiteAssign::where('user_id', $user->id)->pluck('site_id')->toArray();
             // $siteArray = SiteDetails::whereIn('client_id', json_decode($clients[0]))->pluck('id')->toArray();
             $sitess = DB::table('site_details')->whereIn('client_id', json_decode($clients[0], true))->select('count(*) as allcount')->count();
@@ -448,8 +439,7 @@ class GuardsController extends Controller
                 ->selectRaw('users.*, users.id as id, site_assign.site_name')
                 ->select('count(*) as allcount')
                 ->count();
-        }
-        else if ($user->role_id == '2') {
+        } else if ($user->role_id == '2') {
             $sites = SiteAssign::where('user_id', $user->id)->first();
             $siteArray = json_decode($sites['site_id'], true);
             $attendance = Attendance::whereIn('site_id', $siteArray)
@@ -461,8 +451,7 @@ class GuardsController extends Controller
                 ->selectRaw('users.*, users.id as id, site_assign.site_name')
                 ->select('count(*) as allcount')
                 ->count();
-        }
-        else if ($user->role_id == '7') {
+        } else if ($user->role_id == '7') {
             $clients = SiteAssign::where('user_id', $user->id)->first();
             $siteArray = SiteDetails::whereIn('client_id', json_decode($clients->site_id, true))->pluck('id')->toArray();
             $userArray = SiteAssign::whereIn('site_id', $siteArray)->distinct('user_id')->pluck('user_id')->toArray();
@@ -498,8 +487,7 @@ class GuardsController extends Controller
                 ->selectRaw('users.*, users.id as id, site_assign.site_name')
                 ->select('count(*) as allcount')
                 ->count();
-        }
-        else if ($user->role_id == '2') {
+        } else if ($user->role_id == '2') {
             $sites = SiteAssign::where('user_id', $user->id)->first();
             $siteArray = json_decode($sites['site_id'], true);
             $lateAttendance = Attendance::whereIn('site_id', $siteArray)
@@ -512,8 +500,7 @@ class GuardsController extends Controller
                 ->selectRaw('users.*, users.id as id, site_assign.site_name')
                 ->select('count(*) as allcount')
                 ->count();
-        }
-        else if ($user->role_id == '7') {
+        } else if ($user->role_id == '7') {
             $clients = SiteAssign::where('user_id', $user->id)->pluck('site_id')->toArray();
 
             $siteArray = SiteDetails::whereIn('client_id', json_decode($clients[0], true))->pluck('id')->toArray();
@@ -532,7 +519,7 @@ class GuardsController extends Controller
                 ->selectRaw('users.*, users.id as id, site_assign.site_name')
                 ->select('count(*) as allcount')
                 ->count();
-        //dd($late);
+            //dd($late);
         }
 
         return $late;
@@ -568,8 +555,7 @@ class GuardsController extends Controller
                 ->selectRaw('users.*, users.id as id, site_assign.site_name')
                 ->select('count(*) as allcount')
                 ->count();
-        }
-        else if ($user->role_id == '2') {
+        } else if ($user->role_id == '2') {
             $sites = SiteAssign::where('user_id', $user->id)->first();
             $siteArray = json_decode($sites['site_id'], true);
 
@@ -588,8 +574,7 @@ class GuardsController extends Controller
                 ->selectRaw('users.*, users.id as id, site_assign.site_name')
                 ->select('count(*) as allcount')
                 ->count();
-        }
-        else if ($user->role_id == '7') {
+        } else if ($user->role_id == '7') {
             $clients = SiteAssign::where('user_id', $user->id)->pluck('site_id')->toArray();
 
             $siteArray = SiteDetails::whereIn('client_id', json_decode($clients[0], true))->pluck('id')->toArray();
@@ -609,7 +594,7 @@ class GuardsController extends Controller
                 ->selectRaw('users.*, users.id as id, site_assign.site_name')
                 ->select('count(*) as allcount')
                 ->count();
-        //dd($absent);
+            //dd($absent);
         }
         return $absent;
     }
@@ -666,8 +651,7 @@ class GuardsController extends Controller
         if ($roleId === 1) {
             // Admin: All guards
             $userIds = Users::where('company_id', $companyId)->where('role_id', 3)->pluck('id')->toArray();
-        }
-        elseif ($roleId === 2) {
+        } elseif ($roleId === 2) {
             // Supervisor: Only guards assigned to their sites
             $siteIds = SiteAssign::where('user_id', $user->id)
                 ->pluck('site_id')
@@ -677,16 +661,14 @@ class GuardsController extends Controller
                 ->toArray();
 
             $userIds = SiteAssign::whereIn('site_id', $siteIds)->pluck('user_id')->toArray();
-        }
-        elseif ($roleId === 7) {
+        } elseif ($roleId === 7) {
             $siteAssigned = SiteAssign::where('user_id', $user->id)->first();
             $clientSiteIds = json_decode(optional($siteAssigned)->site_id ?? '[]', true);
 
             $userIds = SiteAssign::whereIn('client_id', $clientSiteIds)->pluck('user_id')->toArray();
 
-        // dd($siteAssigned , $clientSiteIds , $userIds , "ids");
-        }
-        else {
+            // dd($siteAssigned , $clientSiteIds , $userIds , "ids");
+        } else {
             // Others: no access
             $userIds = [];
         }
@@ -728,11 +710,11 @@ class GuardsController extends Controller
 
         return $this->excel->download(
             new GuardExport(
-            $guards,
-            $absent,
-            $late,
-            $companyName,
-            $type
+                $guards,
+                $absent,
+                $late,
+                $companyName,
+                $type
             ),
             'assigned guards.xlsx'
         );

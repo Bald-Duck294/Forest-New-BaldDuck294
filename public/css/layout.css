@@ -40,10 +40,6 @@ body {
     width: calc(100% - 68px) !important;
 }
 
-/* =========================================
-           GOOGLE MAPS INFOWINDOW THEME OVERRIDES
-        ========================================= */
-/* The main popup bubble */
 .gm-style-iw.gm-style-iw-c {
     background-color: var(--bg-card) !important;
     border: 1px solid var(--border-color) !important;

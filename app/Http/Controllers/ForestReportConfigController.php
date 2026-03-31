@@ -12,8 +12,8 @@ use App\Users;
 
 class ForestReportConfigController extends Controller
 {
-  
-public function reportsDashboard(Request $request)
+
+    public function reportsDashboard(Request $request)
     {
         // dd('in controller of forest config');
         $authUser = session('user') ?? auth()->user();
@@ -78,18 +78,18 @@ public function reportsDashboard(Request $request)
         // =======================================================================
         $allReports = $query->get();
         $allPlantations = $plantationQuery->get();
-        
+
         $activePatrols = (clone $patrolQuery)->count();
         $totalAssets = (clone $assetQuery)->count();
         // dd($totalAssets);
 
-        $totalGuards = Users::where('company_id' , $authUser->company_id)->count();
+        $totalGuards = Users::where('company_id', $authUser->company_id)->count();
         // --- DYNAMIC ATTENDANCE LOGIC ---
         // Denominator: Total registered guards (Role 3) assigned to these locations
         $totalOfficersQuery = DB::table('users')
             ->leftJoin('site_assign', 'users.id', '=', 'site_assign.user_id')
             ->where('users.company_id', $companyId)
-            ->where('users.role_id', 3) 
+            ->where('users.role_id', 3)
             ->where('users.showUser', 1);
 
         // Numerator: Guards (Role 3) who actually checked in, joined with site_assign for filtering
@@ -136,24 +136,24 @@ public function reportsDashboard(Request $request)
 
         // 🔥 FETCH REAL RANGES & BEATS FOR DROPDOWNS
         $ranges = DB::table('client_details')->where('company_id', $companyId)->pluck('name', 'id');
-        $beats  = DB::table('site_details')->where('company_id', $companyId)->select('id', 'name', 'client_id')->get();
+        $beats = DB::table('site_details')->where('company_id', $companyId)->select('id', 'name', 'client_id')->get();
 
         // =======================================================================
         // 3. KPI CALCULATIONS (Using the filtered $allReports collection)
         // =======================================================================
-        $stats = (object)[
+        $stats = (object) [
             'criminal_count' => $allReports->whereIn('report_type', ['felling', 'illegal_felling', 'transport', 'storage', 'poaching', 'encroachment', 'mining'])->count(),
-            'events_count'   => $allReports->whereIn('category', ['events', 'Events & Monitoring', 'Wildlife Sighting', 'Water Body', 'Public Grievance'])->count(),
-            'fire_count'     => $allReports->whereIn('category', ['fire', 'Fire Incident'])->count(),
-            'felling'        => $allReports->whereIn('report_type', ['felling', 'illegal_felling'])->count(),
-            'transport'      => $allReports->where('report_type', 'transport')->count(),
-            'storage'        => $allReports->where('report_type', 'storage')->count(),
-            'poaching'       => $allReports->where('report_type', 'poaching')->count(),
-            'encroachment'   => $allReports->where('report_type', 'encroachment')->count(),
-            'mining'         => $allReports->where('report_type', 'mining')->count(),
-            'wildlife'       => $allReports->where('report_type', 'sighting')->count(),
-            'water'          => $allReports->where('report_type', 'water_status')->count(),
-            'compensation'   => $allReports->where('report_type', 'compensation')->count(),
+            'events_count' => $allReports->whereIn('category', ['events', 'Events & Monitoring', 'Wildlife Sighting', 'Water Body', 'Public Grievance'])->count(),
+            'fire_count' => $allReports->whereIn('category', ['fire', 'Fire Incident'])->count(),
+            'felling' => $allReports->whereIn('report_type', ['felling', 'illegal_felling'])->count(),
+            'transport' => $allReports->where('report_type', 'transport')->count(),
+            'storage' => $allReports->where('report_type', 'storage')->count(),
+            'poaching' => $allReports->where('report_type', 'poaching')->count(),
+            'encroachment' => $allReports->where('report_type', 'encroachment')->count(),
+            'mining' => $allReports->where('report_type', 'mining')->count(),
+            'wildlife' => $allReports->where('report_type', 'sighting')->count(),
+            'water' => $allReports->where('report_type', 'water_status')->count(),
+            'compensation' => $allReports->where('report_type', 'compensation')->count(),
         ];
 
         // =======================================================================
@@ -173,16 +173,16 @@ public function reportsDashboard(Request $request)
         // 4. PARSE JSON DATA FOR ANALYTICAL CHARTS
         // =======================================================================
         $analytics = [
-            'felling'      => ['species_qty' => [], 'species_vol' => [], 'species_girth' => [], 'reasons' => [], 'ranges' => []],
-            'transport'    => ['vehicles_qty' => [], 'vehicles_trips' => [], 'routes' => [], 'trend' => []],
-            'storage'      => ['species_godown' => [], 'species_open' => [], 'proportion' => [], 'time_godown' => [], 'time_open' => []],
-            'poaching'     => ['species' => [], 'gender' => [], 'age' => [], 'trend' => []],
+            'felling' => ['species_qty' => [], 'species_vol' => [], 'species_girth' => [], 'reasons' => [], 'ranges' => []],
+            'transport' => ['vehicles_qty' => [], 'vehicles_trips' => [], 'routes' => [], 'trend' => []],
+            'storage' => ['species_godown' => [], 'species_open' => [], 'proportion' => [], 'time_godown' => [], 'time_open' => []],
+            'poaching' => ['species' => [], 'gender' => [], 'age' => [], 'trend' => []],
             'encroachment' => ['types' => [], 'area_by_range' => [], 'occupants_by_range' => [], 'trend' => []],
-            'mining'       => ['minerals' => [], 'methods' => [], 'volume_by_range' => []],
-            'wildlife'     => ['type' => [], 'gender' => [], 'evidence' => [], 'trend' => []],
-            'water'        => ['availability' => [], 'ranges' => []],
+            'mining' => ['minerals' => [], 'methods' => [], 'volume_by_range' => []],
+            'wildlife' => ['type' => [], 'gender' => [], 'evidence' => [], 'trend' => []],
+            'water' => ['availability' => [], 'ranges' => []],
             'compensation' => ['claims_qty' => [], 'claims_amt' => [], 'trend' => []],
-            'fire'         => ['ranges_incidents' => [], 'ranges_area' => [], 'causes' => [], 'trend_incidents' => [], 'trend_area' => [], 'ranges_resp_time' => [], 'ranges_resp_count' => []],
+            'fire' => ['ranges_incidents' => [], 'ranges_area' => [], 'causes' => [], 'trend_incidents' => [], 'trend_area' => [], 'ranges_resp_time' => [], 'ranges_resp_count' => []],
             'plantations' => $plantationStats
         ];
 
@@ -196,9 +196,9 @@ public function reportsDashboard(Request $request)
 
             if ($type === 'felling') {
                 $sp = $data['species'] ?? 'Unknown';
-                $analytics['felling']['species_qty'][$sp] = ($analytics['felling']['species_qty'][$sp] ?? 0) + (float)($data['qty'] ?? 0);
-                $analytics['felling']['species_vol'][$sp] = ($analytics['felling']['species_vol'][$sp] ?? 0) + (float)($data['volume'] ?? 0);
-                $analytics['felling']['species_girth'][$sp] = ($analytics['felling']['species_girth'][$sp] ?? 0) + (float)($data['girth'] ?? 0);
+                $analytics['felling']['species_qty'][$sp] = ($analytics['felling']['species_qty'][$sp] ?? 0) + (float) ($data['qty'] ?? 0);
+                $analytics['felling']['species_vol'][$sp] = ($analytics['felling']['species_vol'][$sp] ?? 0) + (float) ($data['volume'] ?? 0);
+                $analytics['felling']['species_girth'][$sp] = ($analytics['felling']['species_girth'][$sp] ?? 0) + (float) ($data['girth'] ?? 0);
                 $reason = $data['reason'] ?? 'Others';
                 $analytics['felling']['reasons'][$reason] = ($analytics['felling']['reasons'][$reason] ?? 0) + 1;
                 $analytics['felling']['ranges'][$range_name] = ($analytics['felling']['ranges'][$range_name] ?? 0) + 1;
@@ -206,7 +206,7 @@ public function reportsDashboard(Request $request)
                 $veh = $data['vehicle_type'] ?? 'Others';
                 $route = $data['route'] ?? 'Unknown';
                 $raw_qty = $data['qty_final'] ?? 0;
-                $qty = is_numeric($raw_qty) ? (float)$raw_qty : 0;
+                $qty = is_numeric($raw_qty) ? (float) $raw_qty : 0;
 
                 $analytics['transport']['vehicles_qty'][$veh] = ($analytics['transport']['vehicles_qty'][$veh] ?? 0) + $qty;
                 $analytics['transport']['vehicles_trips'][$veh] = ($analytics['transport']['vehicles_trips'][$veh] ?? 0) + 1;
@@ -215,7 +215,7 @@ public function reportsDashboard(Request $request)
             } elseif ($type === 'storage') {
                 $sp = $data['species'] ?? 'Unknown';
                 $raw_qty = $data['qty_cmt'] ?? 0;
-                $qty = is_numeric($raw_qty) ? (float)$raw_qty : 0;
+                $qty = is_numeric($raw_qty) ? (float) $raw_qty : 0;
                 $storageType = $data['storage_type'] ?? 'Open Space';
 
                 if ($storageType === 'Godown') {
@@ -236,8 +236,8 @@ public function reportsDashboard(Request $request)
                 $analytics['poaching']['trend'][$date] = ($analytics['poaching']['trend'][$date] ?? 0) + 1;
             } elseif ($type === 'encroachment') {
                 $encType = $data['encroachment_type'] ?? 'Unknown';
-                $area = (float)($data['area_hectare'] ?? 0);
-                $occ = (int)($data['occupants'] ?? 0);
+                $area = (float) ($data['area_hectare'] ?? 0);
+                $occ = (int) ($data['occupants'] ?? 0);
                 $analytics['encroachment']['types'][$encType] = ($analytics['encroachment']['types'][$encType] ?? 0) + 1;
                 $analytics['encroachment']['area_by_range'][$range_name] = ($analytics['encroachment']['area_by_range'][$range_name] ?? 0) + $area;
                 $analytics['encroachment']['occupants_by_range'][$range_name] = ($analytics['encroachment']['occupants_by_range'][$range_name] ?? 0) + $occ;
@@ -245,7 +245,7 @@ public function reportsDashboard(Request $request)
             } elseif ($type === 'mining') {
                 $minType = $data['mineral_type'] ?? 'Unknown';
                 $method = $data['mining_method'] ?? 'Unknown';
-                $vol = (float)($data['volume_cum'] ?? 0);
+                $vol = (float) ($data['volume_cum'] ?? 0);
                 $analytics['mining']['minerals'][$minType] = ($analytics['mining']['minerals'][$minType] ?? 0) + 1;
                 $analytics['mining']['methods'][$method] = ($analytics['mining']['methods'][$method] ?? 0) + $vol;
                 $analytics['mining']['volume_by_range'][$range_name] = ($analytics['mining']['volume_by_range'][$range_name] ?? 0) + $vol;
@@ -254,7 +254,7 @@ public function reportsDashboard(Request $request)
                 $sType = $data['sighting_type'] ?? 'Unknown';
                 $gender = $data['gender'] ?? 'Unknown';
                 $evType = $data['evidence_type'] ?? 'Unknown';
-                $qty = (int)($data['num_animals'] ?? 1);
+                $qty = (int) ($data['num_animals'] ?? 1);
                 $analytics['wildlife']['type'][$sp][$sType] = ($analytics['wildlife']['type'][$sp][$sType] ?? 0) + $qty;
                 $analytics['wildlife']['gender'][$sp][$gender] = ($analytics['wildlife']['gender'][$sp][$gender] ?? 0) + $qty;
                 $analytics['wildlife']['evidence'][$evType] = ($analytics['wildlife']['evidence'][$evType] ?? 0) + 1;
@@ -266,16 +266,16 @@ public function reportsDashboard(Request $request)
                 $analytics['water']['ranges'][$rng] = ($analytics['water']['ranges'][$rng] ?? 0) + 1;
             } elseif ($type === 'compensation') {
                 $compType = $data['comp_type'] ?? 'Unknown';
-                $amt = (float)($data['amount_claimed'] ?? 0);
+                $amt = (float) ($data['amount_claimed'] ?? 0);
                 $analytics['compensation']['claims_qty'][$compType] = ($analytics['compensation']['claims_qty'][$compType] ?? 0) + 1;
                 $analytics['compensation']['claims_amt'][$compType] = ($analytics['compensation']['claims_amt'][$compType] ?? 0) + $amt;
                 $analytics['compensation']['trend'][$date] = ($analytics['compensation']['trend'][$date] ?? 0) + 1;
             } elseif ($type === 'fire') {
                 $cause = $data['fire_cause'] ?? 'Unknown';
                 $raw_area = $data['area_burnt'] ?? 0;
-                $area = is_numeric($raw_area) ? (float)$raw_area : 0;
+                $area = is_numeric($raw_area) ? (float) $raw_area : 0;
                 $raw_resp = $data['response_time'] ?? 0;
-                $respTime = is_numeric($raw_resp) ? (float)$raw_resp : 0;
+                $respTime = is_numeric($raw_resp) ? (float) $raw_resp : 0;
 
                 $analytics['fire']['ranges_incidents'][$range_name] = ($analytics['fire']['ranges_incidents'][$range_name] ?? 0) + 1;
                 $analytics['fire']['ranges_area'][$range_name] = ($analytics['fire']['ranges_area'][$range_name] ?? 0) + $area;
@@ -318,39 +318,39 @@ public function reportsDashboard(Request $request)
 
         return view('dashboard.index', [
             'ranges' => $ranges,
-            'beats'  => $beats,
-            'kpis'   => [
-                'officers'       => (int)$activeOfficersCount, // ONLY active officers who checked in
-                'totalOfficers'  => (int)$totalGuards,       // The full denominator
+            'beats' => $beats,
+            'kpis' => [
+                'officers' => (int) $activeOfficersCount, // ONLY active officers who checked in
+                'totalOfficers' => (int) $totalGuards,       // The full denominator
                 'attendanceRate' => $attendanceRate,           // The calculated % 
-                'activeGuards'   => (int)$activeOfficersCount,
-                'patrols'        => (int)$activePatrols,
-                'totalPatrols'   => (int)$activePatrols,
-                'criminal'       => (int)($stats->criminal_count ?? 0),
-                'totalIncidents' => (int)($stats->criminal_count ?? 0),
-                'events'         => (int)($stats->events_count ?? 0),
-                'fire'           => (int)($stats->fire_count ?? 0),
-                'assets'         => (int)$totalAssets,
-                'inventory'      => (int)$totalAssets, // 🔥 ADD THIS LINE!
-                'felling'        => (int)($stats->felling ?? 0),
-                'transport'      => (int)($stats->transport ?? 0),
-                'storage'        => (int)($stats->storage ?? 0),
-                'poaching'       => (int)($stats->poaching ?? 0),
-                'encroachment'   => (int)($stats->encroachment ?? 0),
-                'mining'         => (int)($stats->mining ?? 0),
-                'wildlife'       => (int)($stats->wildlife ?? 0),
-                'water'          => (int)($stats->water ?? 0),
-                'compensation'   => (int)($stats->compensation ?? 0),
-                'totalDistance'  => 0,
+                'activeGuards' => (int) $activeOfficersCount,
+                'patrols' => (int) $activePatrols,
+                'totalPatrols' => (int) $activePatrols,
+                'criminal' => (int) ($stats->criminal_count ?? 0),
+                'totalIncidents' => (int) ($stats->criminal_count ?? 0),
+                'events' => (int) ($stats->events_count ?? 0),
+                'fire' => (int) ($stats->fire_count ?? 0),
+                'assets' => (int) $totalAssets,
+                'inventory' => (int) $totalAssets, // 🔥 ADD THIS LINE!
+                'felling' => (int) ($stats->felling ?? 0),
+                'transport' => (int) ($stats->transport ?? 0),
+                'storage' => (int) ($stats->storage ?? 0),
+                'poaching' => (int) ($stats->poaching ?? 0),
+                'encroachment' => (int) ($stats->encroachment ?? 0),
+                'mining' => (int) ($stats->mining ?? 0),
+                'wildlife' => (int) ($stats->wildlife ?? 0),
+                'water' => (int) ($stats->water ?? 0),
+                'compensation' => (int) ($stats->compensation ?? 0),
+                'totalDistance' => 0,
                 'resolutionRate' => 0,
-                'siteCoverage'   => 0,
-                'totalSites'     => (int)$beats->count(),
-                'plantations'    => (int)$allPlantations->count(),
+                'siteCoverage' => 0,
+                'totalSites' => (int) $beats->count(),
+                'plantations' => (int) $allPlantations->count(),
             ],
-            'mapData'     => $allReports->whereNotNull('latitude')->whereNotNull('longitude')->values()->toArray(),
+            'mapData' => $allReports->whereNotNull('latitude')->whereNotNull('longitude')->values()->toArray(),
             'chartLabels' => $chartLabels,
             'chartValues' => $chartValues,
-            'analytics'   => array_merge($analytics, [
+            'analytics' => array_merge($analytics, [
                 'assets' => ['distribution' => $assetDistribution, 'status' => $statusData, 'trend' => $deploymentTrend]
             ])
         ]);
@@ -535,8 +535,8 @@ public function reportsDashboard(Request $request)
             if (in_array($category, ['criminal', 'events', 'fire'])) {
                 $catMap = [
                     'criminal' => ['crimes', 'Criminal Activity'],
-                    'events'   => ['events', 'Events & Monitoring', 'Wildlife Sighting', 'Water Body', 'Public Grievance'],
-                    'fire'     => ['fire', 'Fire Incident']
+                    'events' => ['events', 'Events & Monitoring', 'Wildlife Sighting', 'Water Body', 'Public Grievance'],
+                    'fire' => ['fire', 'Fire Incident']
                 ];
 
                 $query = \Illuminate\Support\Facades\DB::table('forest_reports')
@@ -550,9 +550,12 @@ public function reportsDashboard(Request $request)
                             ->orWhere('beat', 'like', "%{$search}%");
                     });
                 }
-                if ($subType) $query->where('report_type', $subType);
-                if ($fromDate) $query->whereDate('created_at', '>=', $fromDate);
-                if ($toDate) $query->whereDate('created_at', '<=', $toDate);
+                if ($subType)
+                    $query->where('report_type', $subType);
+                if ($fromDate)
+                    $query->whereDate('created_at', '>=', $fromDate);
+                if ($toDate)
+                    $query->whereDate('created_at', '<=', $toDate);
 
                 $records = $query->latest()->paginate(15);
                 $viewType = 'reports';
@@ -560,9 +563,12 @@ public function reportsDashboard(Request $request)
             // 2. ASSETS
             elseif ($category === 'assets') {
                 $query = \App\Models\Asset::where('company_id', $companyId);
-                if ($search) $query->where('category', 'like', "%{$search}%");
-                if ($fromDate) $query->whereDate('created_at', '>=', $fromDate);
-                if ($toDate) $query->whereDate('created_at', '<=', $toDate);
+                if ($search)
+                    $query->where('category', 'like', "%{$search}%");
+                if ($fromDate)
+                    $query->whereDate('created_at', '>=', $fromDate);
+                if ($toDate)
+                    $query->whereDate('created_at', '<=', $toDate);
 
                 $records = $query->latest()->paginate(15);
             }
@@ -574,13 +580,16 @@ public function reportsDashboard(Request $request)
                         ->orWhere('name', 'like', "%{$search}%")
                         ->orWhere('plant_species', 'like', "%{$search}%");
                 }
-                if ($fromDate) $query->whereDate('created_at', '>=', $fromDate);
-                if ($toDate) $query->whereDate('created_at', '<=', $toDate);
+                if ($fromDate)
+                    $query->whereDate('created_at', '>=', $fromDate);
+                if ($toDate)
+                    $query->whereDate('created_at', '<=', $toDate);
 
                 $records = $query->latest()->paginate(15);
             }
             // 4. ON DUTY OFFICERS (Using your attendance logic)
             elseif ($category === 'onduty') {
+                dd('testing');
                 // If no date is selected, default to today to only show CURRENTLY on-duty staff
                 $targetDate = $fromDate ? $fromDate : date('Y-m-d');
 
@@ -628,8 +637,10 @@ public function reportsDashboard(Request $request)
                     });
                 }
 
-                if ($fromDate) $query->whereDate("{$tableName}.created_at", '>=', $fromDate);
-                if ($toDate) $query->whereDate("{$tableName}.created_at", '<=', $toDate);
+                if ($fromDate)
+                    $query->whereDate("{$tableName}.created_at", '>=', $fromDate);
+                if ($toDate)
+                    $query->whereDate("{$tableName}.created_at", '<=', $toDate);
 
                 $records = $query->latest("{$tableName}.created_at")->paginate(15);
             }
