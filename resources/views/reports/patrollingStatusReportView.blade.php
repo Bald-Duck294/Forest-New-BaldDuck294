@@ -19,7 +19,7 @@
         </div>
 
         <div class="d-flex align-items-center gap-2 mt-2 mt-md-0">
-            <form method="post" action="{{ route('downloadPatrollingStatusReport') }}" target="_blank" class="d-flex gap-2 mb-0">
+            <form method="post" action="{{ route('downloadPatrollingStatusReport') }}" class="d-flex gap-2 mb-0">
                 @csrf
                 <input type="hidden" name="patrols" value="{{ json_encode($patrols) }}" />
                 <input type="hidden" name="client" value="{{ $clientId }}" />

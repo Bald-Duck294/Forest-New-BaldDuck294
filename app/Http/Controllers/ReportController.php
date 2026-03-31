@@ -29,7 +29,6 @@ use App\Exports\PerformanceExport;
 use App\Exports\PatrollingStatusExport;
 use App\Exports\PatrollingSummaryExport;
 use App\Exports\PatrolLogsExport;
-
 use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
@@ -2179,6 +2178,13 @@ class ReportController extends Controller
             ->whereBetween('attendance.dateFormat', [$startDate, $endDate])
             ->whereNotIn('site.role_id', [1, 2, 7, 4])
             ->whereNull('exit_time')
+            // EXPLICIT SELECTION TO AVOID OVERWRITING DATA
+            ->select(
+                'attendance.*',
+                'site.user_name as site_assigned_name',
+                'site.client_name as site_assigned_client',
+                'site.site_name as site_assigned_location'
+            )
             ->orderBy('attendance.name')
             ->orderBy('attendance.dateFormat');
 
@@ -3029,7 +3035,7 @@ class ReportController extends Controller
             ];
 
             if ($request->xlsx == "xlsx") {
-                return $this->excel->download(new AllGuardAttendance(...array_values($params)), $subType . '.xlsx');
+                return $this->excel->download(new AllGuardAttendance($params), $subType . '.xlsx');
             } else {
                 // dump('in pdf' , $subType. '.pdf');
                 if ($startDate == $endDate) {
@@ -3449,8 +3455,8 @@ class ReportController extends Controller
                     'flag' => $flag,
                     'subType' => $subType,
                     'client' => $request->client,
-                    'clientName' => $clientName,
-                    'siteName' => $siteName,
+                    'clientName' => $clientName ?? 'N/A',
+                    'siteName'     => $siteName ?? 'N/A',
                     'generatedOn' => $this->generatedOn
                 ])->setPaper('a4', 'portrait');
 
@@ -4233,64 +4239,43 @@ class ReportController extends Controller
 
     public function downloadPatrollingStatusReport(Request $request)
     {
-
-        // dd('reached in download patrol ');
-        // dd($request->all());
-
         $user = session('user');
         $company_id = $user->company_id;
 
-        $startDate = Carbon::parse($request->fromDate)->startOfDay();
-        $endDate = Carbon::parse($request->toDate)->endOfDay();
-        $reportMonth = $startDate->format('d-m-Y') . " to " . $endDate->format('d-m-Y');
+        // 1. Check if the frontend is sending the patrol data directly
+        if ($request->has('patrols') && !empty($request->patrols)) {
+            // Convert the JSON string back into a Laravel Collection
+            $patrols = collect(json_decode($request->patrols, true));
+            $reportMonth = "Selected Date Range";
+        } else {
+            // 2. Otherwise, query the database
+            $startDate = Carbon::parse($request->fromDate)->startOfDay();
+            $endDate = Carbon::parse($request->toDate)->endOfDay();
+            $reportMonth = $startDate->format('d-m-Y') . " to " . $endDate->format('d-m-Y');
 
-        $patrolSubType = $request->subType;
-        $clientId = $request->client;
-        $beatId = $request->geofences;
-        $employeeId = $request->guard;
+            $query = PatrolSession::query()
+                ->with(['user', 'site'])
+                ->where('company_id', $company_id)
+                ->whereBetween('started_at', [$startDate, $endDate]);
 
-        // dump($patrolSubType, $clientId, $beatId, $employeeId, "ids");
-        $allData = json_decode($request->allData, true);
-
-        // --- Build query ---
-        $query = PatrolSession::query()
-            ->with([
-                'user',
-                'site',
-            ])
-            ->where('company_id', $company_id)
-            ->whereBetween('started_at', [$startDate, $endDate]);
-
-        // if ($clientId && $clientId !== 'all') {
-        //     $query->whereHas('beat.range', function ($q) use ($clientId) {
-        //         $q->where('id', $clientId);
-        //     });
-        // }
-
-        // if ($beatId && $beatId !== 'all') {
-        //     $query->where('beat_id', $beatId);
-        // }
-
-        // if ($employeeId && $employeeId !== 'all') {
-        //     $query->where('user_id', $employeeId);
-        // }
-
-        $patrols = $query->orderBy('started_at', 'desc')->get();
-        // dd($patrols, $startDate, $endDate, "pat");
-        // dd($patrols[15]->site->client_name, "12");
-
-        $company = CompanyDetails::find($user->company_id);
-        $companyName = $company->name ?? 'N/A';
+            $patrols = $query->orderBy('started_at', 'desc')->get();
+        }
 
         // --- If no records found ---
         if ($patrols->count() === 0) {
-            return "error"; // Or redirect back with message
+            return redirect()->back()->with('alert', 'No records found for the selected criteria.');
         }
 
-        // --- Handle export ---
-        $customPaper = [0, 0, 500, 1400];
+        $company = CompanyDetails::find($company_id);
+        $companyName = $company->name ?? 'N/A';
 
-        // dd($clientId , "client id");
+        $patrolSubType = $request->subType ?? 'Patrolling_Status';
+        $clientId = $request->client;
+        $beatId = $request->geofences;
+        $employeeId = $request->guard;
+        $allData = json_decode($request->allData, true);
+
+        // --- Handle export ---
         if ($request->format == "xlsx") {
             return $this->excel->download(
                 new PatrollingStatusExport(
@@ -4306,7 +4291,7 @@ class ReportController extends Controller
                 $patrolSubType . '.xlsx'
             );
         } else {
-            // dd('load pdf' , $clientId );
+            $customPaper = [0, 0, 500, 1400];
             $pdf = PDF::loadView(
                 'reports.patrollingStatusReportDownload',
                 [
@@ -4354,6 +4339,7 @@ class ReportController extends Controller
 
     public function patrollingLogsReportDownload(Request $request)
     {
+        // Decode the JSON string back into a collection
         $logs = collect(json_decode($request->logs, true));
         $companyName = $request->companyName;
         $dateRange = $request->dateRange;
@@ -4362,17 +4348,12 @@ class ReportController extends Controller
         if ($request->format === 'xlsx') {
             return $this->excel->download(
                 new PatrolLogsExport($logs, $companyName, $dateRange, $logType),
-                'Patrol_Logs_Report.xlsx'
+                'Patrol_Logs_Report_' . date('Y-m-d') . '.xlsx'
             );
         }
 
-        $pdf = PDF::loadView('reports.patrolLogsReportPDF', [
-            'logs' => $logs,
-            'companyName' => $companyName,
-            'dateRange' => $dateRange,
-            'logType' => $logType,
-        ]);
-
+        // PDF Logic remains the same...
+        $pdf = PDF::loadView('reports.patrolLogsReportPDF', compact('logs', 'companyName', 'dateRange', 'logType'));
         return $pdf->stream("Patrol_Logs_Report.pdf");
     }
 
@@ -4382,8 +4363,7 @@ class ReportController extends Controller
      */
     public function exportPatrolReport(Request $request)
     {
-
-        $v = Validator::make($request->all(), [
+        $v = \Validator::make($request->all(), [
             'startDate' => 'required|date_format:Y-m-d',
             'endDate' => 'required|date_format:Y-m-d|after_or_equal:startDate',
             'exportType' => 'required|in:xlsx,pdf',
@@ -4401,24 +4381,33 @@ class ReportController extends Controller
             ], 422);
         }
 
-        // Normalize filters
+        // --- FIX 1: Safely parse dates and handle frontend empty strings ---
         $start = Carbon::createFromFormat('Y-m-d', $request->startDate)->startOfDay();
         $end = Carbon::createFromFormat('Y-m-d', $request->endDate)->endOfDay();
-        $siteId = $request->site_id ?? null;
-        $clientId = $request->client_id ?? null;
-        $method = $request->method ?? 'all';
-        $patrolTypes = $request->patrolTypes ?? 'all';
-        $logTypes = $request->logTypes ?? 'all';
 
-        // Query sessions
+        // Using !empty() prevents the frontend from passing "" and breaking the query
+        $siteId = !empty($request->site_id) ? $request->site_id : 'all';
+        $clientId = !empty($request->client_id) ? $request->client_id : 'all';
+        $method = !empty($request->method) ? $request->method : 'all';
+        $patrolTypes = !empty($request->patrolTypes) ? $request->patrolTypes : 'all';
+        $logTypes = !empty($request->logTypes) ? $request->logTypes : 'all';
+
+        // Get logged in user
+        $user = session('user');
+
+        // --- FIX 2: Query sessions (Added company_id filter) ---
         $sessionsQ = PatrolSession::with(['site.client', 'user', 'media'])
             ->whereBetween('started_at', [$start, $end]);
 
-        if ($siteId && $siteId !== 'all') {
+        if ($user) {
+            $sessionsQ->where('company_id', $user->company_id);
+        }
+
+        if ($siteId !== 'all') {
             $sessionsQ->where('site_id', $siteId);
         }
 
-        if ($clientId && $clientId !== 'all') {
+        if ($clientId !== 'all') {
             $sessionsQ->whereHas('site', function ($q) use ($clientId) {
                 $q->where('client_id', $clientId);
             });
@@ -4434,14 +4423,20 @@ class ReportController extends Controller
 
         $sessions = $sessionsQ->orderBy('started_at')->get();
 
-        // Query logs
+        // --- FIX 3: Query logs safely ---
         $logsQ = PatrolLog::with(['session.site.client', 'session.user', 'media'])
-            ->whereHas('session', function ($q) use ($start, $end, $siteId, $clientId) {
+            ->whereHas('session', function ($q) use ($start, $end, $siteId, $clientId, $user) {
                 $q->whereBetween('started_at', [$start, $end]);
-                if ($siteId && $siteId !== 'all') {
+
+                if ($user) {
+                    $q->where('company_id', $user->company_id);
+                }
+
+                if ($siteId !== 'all') {
                     $q->where('site_id', $siteId);
                 }
-                if ($clientId && $clientId !== 'all') {
+
+                if ($clientId !== 'all') {
                     $q->whereHas('site', function ($qq) use ($clientId) {
                         $qq->where('client_id', $clientId);
                     });
@@ -4454,7 +4449,7 @@ class ReportController extends Controller
 
         $logs = $logsQ->orderBy('created_at')->get();
 
-        // Build metrics (same as API version)
+        // Build metrics
         $metrics = [
             'total_sessions' => $sessions->count(),
             'total_logs' => $logs->count(),
@@ -4474,7 +4469,7 @@ class ReportController extends Controller
                 'metrics' => $metrics,
             ])->setPaper('a4', 'landscape');
 
-            Storage::disk('public')->put($path, $pdf->output());
+            \Storage::disk('public')->put($path, $pdf->output());
         }
 
         return response()->json([

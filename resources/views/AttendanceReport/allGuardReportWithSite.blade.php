@@ -1,5 +1,3 @@
-
-
 <table style="border-collapse:collapse;max-width:100%; text-align: center;">
     <?php $datee = $startDatee;
     $dailyCountArray = []; ?>
@@ -153,7 +151,7 @@
             </td>
             @else
             <td style="border:1px solid black;text-align:left;padding:3px;">
-                {{$attendSites[$key][0]}}
+                {{ is_array($attendSites[$key][0]) ? implode(', ', $attendSites[$key][0]) : $attendSites[$key][0] }}
             </td>
             @endif
             @else
@@ -191,10 +189,16 @@
                     </td>
                     @elseif($_REQUEST['attendanceSubType'] == 'EmployeeAttendanceReportwithSite')
                     <td style="border:1px solid black;text-align:center;color:#00873d;padding:3px;">
-                        @if(isset($attendSites[$key][$index]) && $attendSites[$key][$index] != "Current Location")
-                        {{ $attendSites[$key][$index] }}
+                        @if(isset($attendSites[$key][$index]))
+                        @php
+                        $siteData = is_array($attendSites[$key][$index]) ? implode(', ', $attendSites[$key][$index]) : $attendSites[$key][$index];
+                        @endphp
+
+                        @if($siteData != "Current Location")
+                        {{ $siteData }}
                         @else
                         <span style="color:rgb(49, 104, 175);">On Site </span>
+                        @endif
                         @endif
                     </td>
                     @else

@@ -153,12 +153,14 @@
             <td style="text-align:center;border: 1px solid black;">{{$srNo++}}</td>
             <td style="text-align:center;border: 1px solid black;">{{date('d-m-y', strtotime($item->date))}}</td>
 
+            <?php
+            // MOVED THESE TWO LINES UP HERE
+            $date = date('Y-m-d', strtotime($item->date));
+            $user = session('user');
+            ?>
+
             @foreach($checkList as $row)
             <?php
-
-            $date = date('Y-m-d', strtotime($item->date));
-
-            $user = session('user');
 
 
             $IncidenceDetails = App\IncidenceDetails::where('dateFormat', $date)

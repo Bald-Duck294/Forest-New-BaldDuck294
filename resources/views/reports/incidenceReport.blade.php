@@ -1,4 +1,4 @@
-@include('includes.header')
+
 <table style="border-collapse:collapse;width:100%;justify-content:center;">
     <tbody>
         <tr>

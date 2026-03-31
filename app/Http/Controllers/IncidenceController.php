@@ -3702,9 +3702,18 @@ class IncidenceController extends Controller
                 // dump($IncidenceDetails->pluck('checkList')->toArray() , "Incidnece data");
                 //if(count($IncidenceDetails) > 0) {
                 // dump("How a " ,$client);
-                $modaldata = view('reports/incidenceSummaryReportView')->with('client', $client)
+                $modaldata = view('reports/incidenceSummaryReportView')
+                    ->with('client', $client)
                     ->with('data', $IncidenceDetails)
-                    ->with('geoName', $geoName)->with('client', $request->client)->with('geofences', $geofences)->with('incidenceSubType', $incidenceSubType)->with('toDate', $endDate)->with('daysCount', $daysCount)->with('fromDate', $startDate)->render();
+                    ->with('geoName', $geoName)
+                    ->with('geofences', $geofences)
+                    ->with('incidenceSubType', $incidenceSubType)
+                    ->with('toDate', $endDate)
+                    ->with('daysCount', $daysCount)
+                    ->with('fromDate', $startDate)
+                    ->with('total', count($IncidenceDetails)) 
+                    ->render();
+
                 echo $modaldata;
                 //} else {
                 //     return "error";
@@ -4028,11 +4037,9 @@ class IncidenceController extends Controller
 
 
             if (!$result || $result == '') {
-
-                $result = view('incidence.incidenceReportView')
-                    ->with('data', [])
-                    ->with('message', 'No data found')
-                    ->render();
+                // Tell the frontend AJAX there is no data, without trying to load a missing view!
+                echo "error";
+                return;
             }
 
             echo $result;

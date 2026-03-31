@@ -1,151 +1,62 @@
-@include('includes.header')
 @php
     $user = session('user');
-    // dd($user);
+    $cols = ($user->role_id != 2) ? 6 : 5;
 @endphp
 
-<style>
-    .report-container {
-        margin: 20px;
-        padding: 15px;
-    }
+<table style="width: 100%; border-collapse: collapse;">
+    <thead>
+        <tr>
+            <th colspan="1" style="background-color: #1e293b; color: #94a3b8; font-size: 10px; text-align: center; border: 1px solid #334155; font-weight: bold;">ORGANIZATION</th>
+            @if($user->role_id != 2)
+            <th colspan="1" style="background-color: #1e293b; color: #94a3b8; font-size: 10px; text-align: center; border: 1px solid #334155; font-weight: bold;">CLIENT / RANGE</th>
+            @endif
+            <th colspan="1" style="background-color: #1e293b; color: #94a3b8; font-size: 10px; text-align: center; border: 1px solid #334155; font-weight: bold;">SITE / BEAT</th>
+            <th colspan="2" style="background-color: #1e293b; color: #94a3b8; font-size: 10px; text-align: center; border: 1px solid #334155; font-weight: bold;">DATE RANGE</th>
+            <th colspan="1" style="background-color: #1e293b; color: #94a3b8; font-size: 10px; text-align: center; border: 1px solid #334155; font-weight: bold;">GENERATED ON</th>
+        </tr>
 
-    .report-header {
-        margin-bottom: 25px;
-        border: 1px solid #dee2e6;
-        border-radius: 5px;
-        background-color: #fff;
-    }
+        <tr>
+            <td colspan="1" style="background-color: #1e293b; color: #ffffff; font-weight: bold; text-align: center; border: 1px solid #334155;">{{ $companyName->name ?? $companyName }}</td>
+            @if($user->role_id != 2)
+            <td colspan="1" style="background-color: #1e293b; color: #ffffff; font-weight: bold; text-align: center; border: 1px solid #334155;">{{ $clientName ?? 'All Clients' }}</td>
+            @endif
+            <td colspan="1" style="background-color: #1e293b; color: #ffffff; font-weight: bold; text-align: center; border: 1px solid #334155;">{{ ($geofences == 'all') ? 'All sites' : $siteName }}</td>
+            <td colspan="2" style="background-color: #1e293b; color: #ffffff; font-weight: bold; text-align: center; border: 1px solid #334155;">{{ $startDate }} to {{ $endDate }}</td>
+            <td colspan="1" style="background-color: #1e293b; color: #ffffff; font-weight: bold; text-align: center; border: 1px solid #334155;">{{ $generatedOn }}</td>
+        </tr>
 
-    .report-table {
-        width: 100%;
-        border-collapse: separate;
-        border-spacing: 0;
-        margin-bottom: 0;
-    }
+        <tr><td colspan="{{ $cols }}" style="height: 20px;"></td></tr>
 
-    .header-cell {
-        /* background-color: #fcd7a9; */
-        padding: 12px 15px;
-        text-align: center;
-        border: 1px solid #000;
-        font-weight: 600;
-    }
+        <tr style="background-color: #334155;">
+            <th style="border: 1px solid #000000; text-align: center; font-weight: bold; color: #ffffff; background-color: #334155;">SR NO</th>
+            <th style="border: 1px solid #000000; text-align: center; font-weight: bold; color: #ffffff; background-color: #334155;">EMPLOYEE NAME</th>
+            <th style="border: 1px solid #000000; text-align: center; font-weight: bold; color: #ffffff; background-color: #334155;">TOTAL DAYS</th>
+            <th style="border: 1px solid #000000; text-align: center; font-weight: bold; color: #ffffff; background-color: #334155;">WORKED</th>
+            <th style="border: 1px solid #000000; text-align: center; font-weight: bold; color: #ffffff; background-color: #334155;">ABSENT</th>
+            <th style="border: 1px solid #000000; text-align: center; font-weight: bold; color: #ffffff; background-color: #334155;">WEEK OFF</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach ($groupedData as $userId => $userData)
+        <tr>
+            <td style="border: 1px solid #cccccc; text-align: center;">{{ $loop->iteration }}</td>
+            <td style="border: 1px solid #cccccc; text-align: left;">{{ $userData['user_name'] }}</td>
+            <td style="border: 1px solid #cccccc; text-align: center;">{{ $userData['totalWorkingDays'] }}</td>
 
-    .data-cell {
-        padding: 10px 15px;
-        border: 1px solid #000;
-        text-align: center;
-    }
+            {{-- Green for Worked --}}
+            <td style="border: 1px solid #cccccc; text-align: center; color: #10b981; font-weight: bold;">
+                {{ $userData['daysWorked'] == 0 && $fileType == 'xlsx' ? "-0" : $userData['daysWorked'] }}
+            </td>
 
-    .employee-link {
-        color: #003add;
-        cursor: pointer;
-        text-decoration: none;
-    }
+            {{-- Red for Absent --}}
+            <td style="border: 1px solid #cccccc; text-align: center; color: #ef4444; font-weight: bold;">
+                {{ $userData['absentDays'] == 0 && $fileType == 'xlsx' ? "-0" : $userData['absentDays'] }}
+            </td>
 
-    .employee-link:hover {
-        text-decoration: underline;
-    }
-
-    .table-container {
-        border: 1px solid #dee2e6;
-        border-radius: 5px;
-        overflow: hidden;
-        margin-top: 20px;
-    }
-
-    .table-scroll {
-        overflow: auto;
-        max-height: 70vh;
-    }
-
-    /* Fix for header alignment */
-    .header-row th {
-        position: sticky;
-        top: 0;
-        z-index: 2;
-        background-color: #d97979;
-    }
-</style>
-
-<div class="report-container">
-    <!-- Report Header Table -->
-    <div class="report-header">
-        <table class="report-table">
-            <tr style="background-color: #fcd7a9;">
-                <th class="header-cell" style="width: 16.66%">Organization</th>
-                @if($user->role_id != 2)
-                    <th class="header-cell" style="width: 16.66%">Client / Range </th>
-                @endif
-                <th class="header-cell" style="width: 16.66%">Site / Beat</th>
-                <th class="header-cell" style="width: 16.66%">Date Range</th>
-                <th class="header-cell" style="width: 16.66%">Report Type</th>
-                <th class="header-cell" style="width: 16.66%">Generated On</th>
-            </tr>
-            <tr>
-                <td class="data-cell">{{ $companyName ?? '-' }}</td>
-                @if($user->role_id != 2)
-                    <td class="data-cell">{{ $clientName ?? '_' }}</td>
-                @endif
-                <td class="data-cell">{{ ($geofences == 'all') ? 'All sites' : $siteName }}</td>
-                <td class="data-cell">{{ $startDate }} to {{ $endDate }}</td>
-                <td class="data-cell">Working Summary Report</td>
-                <td class="data-cell"> {{ $generatedOn  }} </td>
-            </tr>
-        </table>
-    </div>
-
-    <!-- Main Report Table -->
-    <div class="table-container">
-        <div class="table-scroll">
-            <table class="report-table">
-                <thead style="background-color: #d97979;">
-                    <tr>
-                        <th class="header-cell" style="border:1px solid black;text-align:center;">Sr No</th>
-                        <th class="header-cell" style="border:1px solid black;text-align:center;">Employee Name</th>
-                        <th class="header-cell" style="border:1px solid black;text-align:center;">Total Working Days
-                        </th>
-                        <th class="header-cell" style="border:1px solid black;text-align:center;">Days Worked</th>
-                        <th class="header-cell" style="border:1px solid black;text-align:center;">Days Absent</th>
-                        <th class="header-cell" style="border:1px solid black;text-align:center;">Total WeekOff</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach ($groupedData as $userId => $userData)
-                        <tr>
-                            <td class="data-cell" style="border:1px solid black;text-align:center;">{{ $loop->iteration }}
-                            </td>
-                            <td class="data-cell" style="width: 32%; text-align: left">
-                                <a class="employee-link"
-                                    onclick="guardAttendanceReport('{{ $userId }}','{{ $startDate }}','{{ $endDate }}')">
-                                    {{ $userData['user_name'] }}
-                                </a>
-                            </td>
-                            @if ($fileType != 'xlsx')
-                                <td class="data-cell" style="border:1px solid black;text-align:center;">
-                                    {{ $userData['totalWorkingDays'] }}</td>
-                                <td class="data-cell" style="border:1px solid black;text-align:center;">
-                                    {{ $userData['daysWorked']  }}</td>
-                                <td class="data-cell" style="border:1px solid black;text-align:center;">
-                                    {{ $userData['absentDays']  }}</td>
-                                <td class="data-cell" style="border:1px solid black;text-align:center; font-weight: bold;">
-                                    {{ $userData['weekOffCount'] }}</td>
-                            @else
-
-                                <td class="data-cell" style="border:1px solid black;text-align:center;">
-                                    {{ $userData['totalWorkingDays'] == 0 ? "-0" : $userData['totalWorkingDays']  }}</td>
-                                <td class="data-cell" style="border:1px solid black;text-align:center;">
-                                    {{ $userData['daysWorked'] == 0 ? "-0" : $userData['daysWorked'] }}</td>
-                                <td class="data-cell" style="border:1px solid black;text-align:center;">
-                                    {{ $userData['absentDays'] == 0 ? "-0" : $userData['absentDays'] }}</td>
-                                <td class="data-cell" style="border:1px solid black;text-align:center; font-weight: bold;">
-                                    {{ $userData['weekOffCount'] == 0 ? "-0" : $userData['weekOffCount']}}</td>
-                            @endif
-                        </tr>
-                    @endforeach
-                </tbody>
-            </table>
-        </div>
-    </div>
-</div>
+            <td style="border: 1px solid #cccccc; text-align: center; color: #64748b;">
+                {{ $userData['weekOffCount'] == 0 && $fileType == 'xlsx' ? "-0" : $userData['weekOffCount'] }}
+            </td>
+        </tr>
+        @endforeach
+    </tbody>
+</table>
