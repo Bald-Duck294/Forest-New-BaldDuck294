@@ -291,7 +291,7 @@ $user = session('user');
 
             <div class="modern-header">
                 <div class="header-left">
-                    <a href="javascript:history.back()" class="btn-back" title="Go Back">
+                    <a href="{{ route('sites.getsites', $client_id) }}" class="btn-back" title="Go to Site List">
                         <i class="la la-arrow-left"></i>
                     </a>
                     <div class="header-title-container">

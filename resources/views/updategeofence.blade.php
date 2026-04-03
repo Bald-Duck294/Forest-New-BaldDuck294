@@ -325,6 +325,10 @@ $user = session('user');
                         <input class="range-slider__range" type="range" id="sliderRange" value="{{$geofence->radius}}" min="0" max="1000" step="10">
                         <span class="range-slider__value">{{$geofence->radius}} m</span>
                     </div>
+
+                    <button type="button" class="btn-action btn-secondary" style="padding: 8px 16px;" onclick="locateMe()" title="Find My Location">
+                        <i class="la la-crosshairs"></i> Locate Me
+                    </button>
                 </div>
 
                 <div class="map-wrapper">
@@ -361,11 +365,11 @@ $user = session('user');
     var site_id = @json($site_id);
     var id = @json($id);
     var drawingManager;
-    // FIXED: Removed spaces from ->
     var radius = @json($geofence->radius);
     var geoType = @json($geofence->type);
     var coord = @json($geofence->poly_lat_lng);
     var initialData = @json($geofence);
+
     // Initialize Range Slider UI
     $(document).ready(function() {
         $('#sliderRange').on('input', function() {
@@ -380,8 +384,13 @@ $user = session('user');
                 lng: lng
             },
             zoom: 15,
-            mapTypeControl: false,
-            streetViewControl: false
+            mapTypeControl: true, // <-- CHANGED: Enabled Satellite/Map Toggle
+            mapTypeControlOptions: {
+                style: google.maps.MapTypeControlStyle.HORIZONTAL_BAR,
+                position: google.maps.ControlPosition.TOP_RIGHT
+            },
+            streetViewControl: false,
+            gestureHandling: 'cooperative' // <-- CHANGED: Added Ctrl+Scroll zoom requirement
         });
 
         var input = document.getElementById('searchMapInput');
@@ -494,13 +503,53 @@ $user = session('user');
         radius = 0;
     }
 
+    // NEW: Locate Me Function
+    function locateMe() {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                function(position) {
+                    var pos = {
+                        lat: position.coords.latitude,
+                        lng: position.coords.longitude
+                    };
+
+                    map.setCenter(pos);
+                    map.setZoom(16);
+
+                    lat = pos.lat;
+                    lng = pos.lng;
+
+                    // Move existing marker to current location
+                    if (marker) {
+                        marker.setPosition(pos);
+                    } else {
+                        marker = new google.maps.Marker({
+                            position: pos,
+                            map: map,
+                            draggable: true
+                        });
+                    }
+
+                    // Move circle to current location if in Circle mode
+                    if (geoType === 'Circle' && cityCircle && typeof cityCircle.setCenter === 'function') {
+                        cityCircle.setCenter(pos);
+                    }
+                },
+                function() {
+                    Swal.fire("Error", "The Geolocation service failed or permission was denied.", "error");
+                }
+            );
+        } else {
+            Swal.fire("Error", "Your browser doesn't support geolocation.", "error");
+        }
+    }
+
     function myFunction() {
         if ((radius && lat && geoType === 'Circle') || (coord && geoType === 'Polygon')) {
             Swal.fire({
                 title: 'Update Geofence Name',
                 input: 'text',
-                // FIXED: Removed spaces from ->
-                inputValue: @json($geofence -> name),
+                inputValue: @json($geofence->name),
                 showCancelButton: true,
                 confirmButtonText: 'Update',
                 confirmButtonColor: 'var(--primary-color)',

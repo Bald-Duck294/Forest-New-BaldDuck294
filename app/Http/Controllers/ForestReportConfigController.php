@@ -42,7 +42,12 @@ class ForestReportConfigController extends Controller
         // --- A. Range/Beat Filters (Now using IDs) ---
         if ($request->filled('range_id') && $request->range_id !== '0' && $request->range_id !== 'all') {
             $query->where('client_id', $request->range_id);
-            $patrolQuery->where('client_id', $request->range_id);
+
+            // FIX: Find the site IDs that belong to this client (range) and filter patrols by those
+            $patrolQuery->whereIn('site_id', function ($q) use ($request) {
+                $q->select('id')->from('site_details')->where('client_id', $request->range_id);
+            });
+
             $plantationQuery->whereHas('site', function ($q) use ($request) {
                 $q->where('client_id', $request->range_id);
             });
@@ -145,6 +150,8 @@ class ForestReportConfigController extends Controller
         // 🔥 FETCH REAL RANGES & BEATS FOR DROPDOWNS
         $ranges = DB::table('client_details')->where('company_id', $companyId)->pluck('name', 'id');
         $beats = DB::table('site_details')->where('company_id', $companyId)->select('id', 'name', 'client_id')->get();
+
+
 
         // =======================================================================
         // 3. KPI CALCULATIONS (Using the filtered $allReports collection)
@@ -299,7 +306,7 @@ class ForestReportConfigController extends Controller
         }
 
         // =======================================================================
-        // 5. ASSET ANALYTICS DATA 
+        // 5. ASSET ANALYTICS DATA
         // =======================================================================
         $assetDistribution = (clone $assetQuery)->select('category', DB::raw('count(*) as total'))->groupBy('category')->pluck('total', 'category')->toArray();
 
@@ -319,7 +326,7 @@ class ForestReportConfigController extends Controller
             })->toArray();
 
         // =======================================================================
-        // 6. MAIN CHART DATA FIX 
+        // 6. MAIN CHART DATA FIX
         // =======================================================================
         $chartLabels = $allReports->groupBy('report_type')->keys()->toArray();
         $chartValues = $allReports->groupBy('report_type')->map->count()->values()->toArray();
@@ -348,7 +355,7 @@ class ForestReportConfigController extends Controller
             'kpis' => [
                 'officers' => (int) $activeOfficersCount, // ONLY active officers who checked in
                 'totalOfficers' => (int) $totalGuards,       // The full denominator
-                'attendanceRate' => $attendanceRate,           // The calculated % 
+                'attendanceRate' => $attendanceRate,           // The calculated %
                 'activeGuards' => (int) $activeOfficersCount,
                 'patrols' => (int) $activePatrols,
                 'totalPatrols' => (int) $activePatrols,
@@ -542,7 +549,8 @@ class ForestReportConfigController extends Controller
         $fromDate = $request->get('from_date');
         $toDate = $request->get('to_date');
         $subType = $request->get('sub_type'); // specific event type
-
+        $ranges = DB::table('client_details')->where('company_id', $companyId)->pluck('name', 'id');
+        $beats = DB::table('site_details')->where('company_id', $companyId)->select('id', 'name', 'client_id')->get();
         $records = collect(); // Empty collection to start
         $viewType = $category; // By default, viewType matches category
 
@@ -670,7 +678,7 @@ class ForestReportConfigController extends Controller
                 $records = $query->latest("{$tableName}.created_at")->paginate(15);
             }
 
-            return view('reports.detailed', compact('records', 'category', 'search', 'fromDate', 'toDate', 'subType', 'viewType'));
+            return view('reports.detailed', compact('records', 'category', 'search', 'fromDate', 'toDate', 'subType', 'viewType', 'ranges', 'beats'));
         }
     }
 }
