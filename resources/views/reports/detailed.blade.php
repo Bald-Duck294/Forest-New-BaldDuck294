@@ -11,8 +11,8 @@
 
     <style>
         /* =========================================
-                   SAPPHIRE THEME - DETAILED VIEW
-                ========================================= */
+                                           SAPPHIRE THEME - DETAILED VIEW
+                                        ========================================= */
         .detailed-header-btn {
             background-color: var(--bg-card);
             color: var(--text-main);
@@ -157,7 +157,7 @@
                 <h3 class="fw-bold mb-1" style="color: var(--text-main);">Detailed Data Records</h3>
                 <p class="mb-0 text-muted" style="font-size: 0.9rem;">View, filter, and export all system records.</p>
             </div>
-            <a href="{{ route('dashboard') }}"
+            <a href="/report-configs/reports-dashboard"
                 class="btn detailed-header-btn shadow-sm d-flex align-items-center gap-2 px-4 py-2">
                 <i class="bi bi-arrow-left"></i> Back to Dashboard
             </a>

@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\DB;
 use App\Asset;
 use Carbon\Carbon;
 use App\Users;
+use App\PatrolSession;
 
 class ForestReportConfigController extends Controller
 {
@@ -17,8 +18,10 @@ class ForestReportConfigController extends Controller
     {
         // dd('in controller of forest config');
         $authUser = session('user') ?? auth()->user();
+        // dd($authUser , "auth user");
         $companyId = $authUser ? $authUser->company_id : 46;
-
+        // $dum = Users::where('company_id', 62)->where('role_id', 1)->get();
+        //    dd($dum , "dum");
         // 🔥 If Global Admin is simulating another company, prioritize the simulated ID
         if ($authUser && $authUser->role_id == 8 && session()->has('simulated_company_id')) {
             $companyId = session('simulated_company_id');
@@ -29,8 +32,12 @@ class ForestReportConfigController extends Controller
         // =======================================================================
         $query = DB::table('forest_reports')->where('company_id', $companyId);
         $assetQuery = Asset::where('company_id', $companyId);
-        $patrolQuery = DB::table('forest_reports')->where('company_id', $companyId)->where('created_at', '>=', now()->subDay());
+        // $patrolQuery = DB::table('forest_reports')->where('company_id', $companyId)->where('created_at', '>=', now()->subDay());
         $plantationQuery = Plantation::where('user_id', '!=', 0); // Base query
+
+        // $patrolQuery = DB::table('forest_reports')->where('company_id', $companyId)->where('created_at', '>=', now()->subDay());
+        $patrolQuery = PatrolSession::where('company_id', $authUser->company_id)
+            ->whereDate('created_at', today());
 
         // --- A. Range/Beat Filters (Now using IDs) ---
         if ($request->filled('range_id') && $request->range_id !== '0' && $request->range_id !== 'all') {
@@ -77,6 +84,7 @@ class ForestReportConfigController extends Controller
         // 2. FETCH FILTERED DATA & CALCULATE DYNAMIC ATTENDANCE
         // =======================================================================
         $allReports = $query->get();
+        // dd($allReports, "all reports");
         $allPlantations = $plantationQuery->get();
 
         $activePatrols = (clone $patrolQuery)->count();
@@ -316,6 +324,24 @@ class ForestReportConfigController extends Controller
         $chartLabels = $allReports->groupBy('report_type')->keys()->toArray();
         $chartValues = $allReports->groupBy('report_type')->map->count()->values()->toArray();
 
+        $beatsMap = $beats->pluck('name', 'id')->toArray();
+        $rangesMap = $ranges->toArray(); // $ranges is already [id => name]
+
+        $enhancedMapData = $allReports->whereNotNull('latitude')->whereNotNull('longitude')->map(function ($report) use ($rangesMap, $beatsMap) {
+            // Check if IDs exist natively on the row, or hidden inside the JSON report_data
+            $parsedData = is_string($report->report_data) ? json_decode($report->report_data, true) : [];
+            $clientId = $report->client_id ?? $parsedData['client_id'] ?? null;
+            $siteId = $report->site_id ?? $parsedData['site_id'] ?? null;
+
+            // Resolve Range Name: Try row -> JSON -> ID Lookup -> Fallback
+            $report->resolved_range = $report->range ?? $report->client_name ?? ($clientId ? ($rangesMap[$clientId] ?? null) : null) ?? 'Unknown Range';
+
+            // Resolve Beat Name: Try row -> JSON -> ID Lookup -> Fallback
+            $report->resolved_beat = $report->beat ?? $report->site_name ?? ($siteId ? ($beatsMap[$siteId] ?? null) : null) ?? 'Unknown Beat';
+
+            return $report;
+        })->values()->toArray();
+
         return view('dashboard.index', [
             'ranges' => $ranges,
             'beats' => $beats,
@@ -347,7 +373,7 @@ class ForestReportConfigController extends Controller
                 'totalSites' => (int) $beats->count(),
                 'plantations' => (int) $allPlantations->count(),
             ],
-            'mapData' => $allReports->whereNotNull('latitude')->whereNotNull('longitude')->values()->toArray(),
+            'mapData' => $enhancedMapData,
             'chartLabels' => $chartLabels,
             'chartValues' => $chartValues,
             'analytics' => array_merge($analytics, [
@@ -521,7 +547,7 @@ class ForestReportConfigController extends Controller
         $viewType = $category; // By default, viewType matches category
 
         // We route the query based on the Master Category because the tables are different
-        if (in_array($category, ['criminal', 'events', 'fire'])) {
+        if (in_array($category, ['criminal', 'events', 'fire', 'onduty', 'patrol'])) {
             $catMap = [
                 'criminal' => ['crimes', 'Criminal Activity'],
                 'events' => ['events', 'Events & Monitoring'],
@@ -589,7 +615,6 @@ class ForestReportConfigController extends Controller
             }
             // 4. ON DUTY OFFICERS (Using your attendance logic)
             elseif ($category === 'onduty') {
-                dd('testing');
                 // If no date is selected, default to today to only show CURRENTLY on-duty staff
                 $targetDate = $fromDate ? $fromDate : date('Y-m-d');
 

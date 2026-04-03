@@ -145,7 +145,7 @@
                             }]
                         };
                     },
-                    calcPill: (data) => `Total: ${data.datasets[0].data.reduce((a,b)=>a+b,0).toFixed(0)}`
+                    calcPill: (data) => `Total: ${data.datasets[0].data.reduce((a, b) => a + b, 0).toFixed(0)}`
                 },
                 {
                     id: 'fell-c2',
@@ -245,7 +245,7 @@
                             }]
                         };
                     },
-                    calcPill: (data) => `Total: ${data.datasets[0].data.reduce((a,b)=>a+b,0).toFixed(0)}`
+                    calcPill: (data) => `Total: ${data.datasets[0].data.reduce((a, b) => a + b, 0).toFixed(0)}`
                 },
                 {
                     id: 'trans-c2',
@@ -493,7 +493,7 @@
                             }]
                         };
                     },
-                    calcPill: (data) => `Total: ${data.datasets[0].data.reduce((a,b)=>a+b,0).toFixed(0)}`
+                    calcPill: (data) => `Total: ${data.datasets[0].data.reduce((a, b) => a + b, 0).toFixed(0)}`
                 },
                 {
                     id: 'enc-c2',
@@ -585,7 +585,7 @@
                             }]
                         };
                     },
-                    calcPill: (data) => `Total: ${data.datasets[0].data.reduce((a,b)=>a+b,0).toFixed(0)}`
+                    calcPill: (data) => `Total: ${data.datasets[0].data.reduce((a, b) => a + b, 0).toFixed(0)}`
                 },
                 {
                     id: 'min-c2',
@@ -680,7 +680,7 @@
                             }]
                         };
                     },
-                    calcPill: (data) => `Total: ${data.datasets[0].data.reduce((a,b)=>a+b,0)}`
+                    calcPill: (data) => `Total: ${data.datasets[0].data.reduce((a, b) => a + b, 0)}`
                 },
                 {
                     id: 'poach-c2',
@@ -813,7 +813,7 @@
                         }
                     },
                     calcPill: (data) =>
-                        `Records: ${data.datasets.reduce((sum, ds) => sum + ds.data.reduce((a,b)=>a+b,0), 0)}`
+                        `Records: ${data.datasets.reduce((sum, ds) => sum + ds.data.reduce((a, b) => a + b, 0), 0)}`
                 },
                 {
                     id: 'wl-c2',
@@ -1041,8 +1041,8 @@
                         };
                     },
                     calcPill: (data, idx) => idx === 1 ?
-                        `Total: ₹${(data.datasets[0].data.reduce((a,b)=>a+b,0)/1000).toFixed(1)}k` :
-                        `Total: ${data.datasets[0].data.reduce((a,b)=>a+b,0)}`
+                        `Total: ₹${(data.datasets[0].data.reduce((a, b) => a + b, 0) / 1000).toFixed(1)}k` :
+                        `Total: ${data.datasets[0].data.reduce((a, b) => a + b, 0)}`
                 },
                 {
                     id: 'comp-c2',
@@ -1139,7 +1139,7 @@
                             }]
                         };
                     },
-                    calcPill: (data) => `Alerts: ${data.datasets[0].data.reduce((a,b)=>a+b,0).toFixed(0)}`
+                    calcPill: (data) => `Alerts: ${data.datasets[0].data.reduce((a, b) => a + b, 0).toFixed(0)}`
                 },
                 {
                     id: 'fire-c2',
@@ -1304,7 +1304,7 @@
                             }
                         }
                     },
-                    calcPill: (data) => `Total: ${data.datasets[0].data.reduce((a,b)=>a+b,0)}`
+                    calcPill: (data) => `Total: ${data.datasets[0].data.reduce((a, b) => a + b, 0)}`
                 },
                 {
                     id: 'ast-c2',
@@ -1472,7 +1472,7 @@
                     options: {
                         indexAxis: 'y'
                     },
-                    calcPill: (data) => `Total: ${data.datasets[0].data.reduce((a,b)=>a+b,0)}`
+                    calcPill: (data) => `Total: ${data.datasets[0].data.reduce((a, b) => a + b, 0)}`
                 },
                 {
                     id: 'plt-c3',
@@ -1547,7 +1547,8 @@
                             }]
                         };
                     },
-                    calcPill: (data) => `Total Ha: ${data.datasets[0].data.reduce((a,b)=>a+b,0).toFixed(1)}`
+                    calcPill: (data) =>
+                        `Total Ha: ${data.datasets[0].data.reduce((a, b) => a + b, 0).toFixed(1)}`
                 }
             ]
         }
@@ -1636,6 +1637,27 @@
             label: 'Fire Alerts',
             emoji: '🔥',
             color: '#f97316'
+        }],
+        assets: [{
+            id: 'inventory',
+            dbType: 'Asset',
+            label: 'Asset Locations',
+            emoji: '🛡️',
+            color: '#14b8a6'
+        }],
+        forestry: [{
+            id: 'plantations',
+            dbType: 'Plantation',
+            label: 'Plantations',
+            emoji: '🌲',
+            color: '#10b981'
+        }],
+        boundaries: [{
+            id: 'admin_bounds',
+            dbType: 'administrative_boundaries',
+            label: 'Admin Boundaries',
+            emoji: '🗺️',
+            color: '#facc15'
         }]
     };
 
@@ -1644,6 +1666,7 @@
     let overlayMapGroups = {};
     let isHeatmapActive = false;
     let infoWindow = null;
+    let adminBoundaryLayer = null; // 🔥 NEW GLOBAL VARIABLE
 
     function createGoogleEmojiIcon(emoji, hexColor) {
         const svg = `
@@ -1658,9 +1681,177 @@
         };
     }
 
+    // function initOverallMap() {
+    //     const mapEl = document.getElementById('map');
+    //     if (!mapEl) return;
+
+    //     overallMap = new google.maps.Map(mapEl, {
+    //         zoom: 11,
+    //         center: {
+    //             lat: 21.640,
+    //             lng: 79.560
+    //         },
+    //         mapTypeId: 'terrain',
+    //         scrollwheel: false,
+    //         mapTypeControl: true,
+    //         mapTypeControlOptions: {
+    //             style: google.maps.MapTypeControlStyle.DROPDOWN_MENU,
+    //             mapTypeIds: ['roadmap', 'terrain', 'satellite', 'hybrid']
+    //         },
+    //         streetViewControl: true,
+    //         fullscreenControl: true
+    //     });
+
+    //     infoWindow = new google.maps.InfoWindow();
+
+    //     const dbMapData = window.dashboardData.mapData || [];
+
+    //     const heatMapDataPoints = [];
+    //     dbMapData.forEach(p => {
+    //         if (p.latitude && p.longitude) {
+    //             const lat = parseFloat(p.latitude);
+    //             const lng = parseFloat(p.longitude);
+    //             if (!isNaN(lat) && !isNaN(lng)) {
+    //                 heatMapDataPoints.push(new google.maps.LatLng(lat, lng));
+    //             }
+    //         }
+    //     });
+
+    //     try {
+    //         heatmapLayer = new google.maps.visualization.HeatmapLayer({
+    //             data: heatMapDataPoints,
+    //             map: null,
+    //             radius: 25,
+    //             opacity: 0.8
+    //         });
+    //     } catch (e) {
+    //         console.error(
+    //             "Heatmap library missing. Add '&libraries=visualization' to your Google Maps API script tag.");
+    //     }
+
+    //     setupCtrlScroll(mapEl);
+    //     initAllMapLayers(dbMapData);
+    //     createLegend(dbMapData);
+    // }
+
+
+    // function initOverallMap() {
+    //     const mapEl = document.getElementById('map');
+    //     if (!mapEl) return;
+
+    //     overallMap = new google.maps.Map(mapEl, {
+    //         zoom: 11,
+    //         center: { lat: 21.640, lng: 79.560 },
+    //         mapTypeId: 'terrain',
+    //         scrollwheel: false,
+    //         mapTypeControl: true,
+    //         mapTypeControlOptions: {
+    //             style: google.maps.MapTypeControlStyle.DROPDOWN_MENU,
+    //             mapTypeIds: ['roadmap', 'terrain', 'satellite', 'hybrid']
+    //         },
+    //         streetViewControl: false,
+    //         fullscreenControl: true
+    //     });
+
+    //     infoWindow = new google.maps.InfoWindow();
+    //     const dbMapData = window.dashboardData.mapData || [];
+    //     console.log("map data", dbMapData);
+    //     const heatMapDataPoints = [];
+
+    //     dbMapData.forEach(p => {
+    //         if (p.latitude && p.longitude) {
+    //             const lat = parseFloat(p.latitude);
+    //             const lng = parseFloat(p.longitude);
+    //             if (!isNaN(lat) && !isNaN(lng)) {
+    //                 heatMapDataPoints.push(new google.maps.LatLng(lat, lng));
+    //             }
+    //         }
+    //     });
+
+    //     try {
+    //         heatmapLayer = new google.maps.visualization.HeatmapLayer({
+    //             data: heatMapDataPoints,
+    //             map: null, // Hidden by default
+    //             radius: 25,
+    //             opacity: 0.8
+    //         });
+    //     } catch (e) {
+    //         console.error("Heatmap library missing.");
+    //     }
+
+    //     setupCtrlScroll(mapEl);
+    //     initAllMapLayers(dbMapData);
+    //     createLegend(dbMapData);
+
+    //     // 🔥 NEW: Setup the Administrative Boundaries Layer
+    //     adminBoundaryLayer = new google.maps.Data();
+    //     adminBoundaryLayer.setStyle({
+    //         strokeColor: '#facc15',
+    //         strokeWeight: 3,
+    //         fillOpacity: 0.05
+    //     });
+
+    //     // Add a clean click popup for the polygons
+    //     adminBoundaryLayer.addListener('click', function (event) {
+    //         let name = event.feature.getProperty('name') || 'Boundary Area';
+    //         let level = event.feature.getProperty('level') || '';
+    //         infoWindow.setContent(`
+    //             <div style="font-family: 'Inter', sans-serif; padding: 10px; min-width: 180px;">
+    //                 <h6 style="margin:0; font-weight:800; color:#1e293b;">${name}</h6>
+    //                 <p style="margin:4px 0 0; font-size:0.75rem; color:#64748b; text-transform:uppercase; font-weight:600;">${level} Boundary</p>
+    //             </div>
+    //         `);
+    //         infoWindow.setPosition(event.latLng);
+    //         infoWindow.open(overallMap);
+    //     });
+
+    //     // Fetch and load them by default!
+    //     loadAdministrativeBoundaries();
+    // }
+
+
+
     function initOverallMap() {
         const mapEl = document.getElementById('map');
         if (!mapEl) return;
+
+        // 🔥 1. Check if the page is currently in dark mode
+        const isDark = document.documentElement.getAttribute('data-bs-theme') === 'dark';
+
+        // 🔥 2. Define the custom dark theme colors (Sapphire Navy match)
+        const darkStyle = [{
+                elementType: "geometry",
+                stylers: [{
+                    color: "#1e293b"
+                }]
+            },
+            {
+                elementType: "labels.text.stroke",
+                stylers: [{
+                    color: "#1e293b"
+                }]
+            },
+            {
+                elementType: "labels.text.fill",
+                stylers: [{
+                    color: "#94a3b8"
+                }]
+            },
+            {
+                featureType: "water",
+                elementType: "geometry",
+                stylers: [{
+                    color: "#0f172a"
+                }]
+            },
+            {
+                featureType: "poi",
+                elementType: "labels",
+                stylers: [{
+                    visibility: "off"
+                }]
+            } // Cleans up clutter
+        ];
 
         overallMap = new google.maps.Map(mapEl, {
             zoom: 11,
@@ -1669,6 +1860,7 @@
                 lng: 79.560
             },
             mapTypeId: 'terrain',
+            styles: isDark ? darkStyle : [], // 🔥 3. Apply the styles here!
             scrollwheel: false,
             mapTypeControl: true,
             mapTypeControlOptions: {
@@ -1680,10 +1872,9 @@
         });
 
         infoWindow = new google.maps.InfoWindow();
-
         const dbMapData = window.dashboardData.mapData || [];
-
         const heatMapDataPoints = [];
+
         dbMapData.forEach(p => {
             if (p.latitude && p.longitude) {
                 const lat = parseFloat(p.latitude);
@@ -1702,13 +1893,88 @@
                 opacity: 0.8
             });
         } catch (e) {
-            console.error(
-                "Heatmap library missing. Add '&libraries=visualization' to your Google Maps API script tag.");
+            console.error("Heatmap library missing.");
         }
 
         setupCtrlScroll(mapEl);
         initAllMapLayers(dbMapData);
         createLegend(dbMapData);
+
+        // Setup the Administrative Boundaries Layer
+        adminBoundaryLayer = new google.maps.Data();
+        adminBoundaryLayer.setStyle({
+            strokeColor: '#facc15',
+            strokeWeight: 3,
+            fillOpacity: 0.05
+        });
+
+        adminBoundaryLayer.addListener('click', function(event) {
+            let name = event.feature.getProperty('name') || 'Boundary Area';
+            let level = event.feature.getProperty('level') || '';
+            infoWindow.setContent(`
+                <div style="font-family: 'Inter', sans-serif; padding: 10px; min-width: 180px;">
+                    <h6 style="margin:0; font-weight:800; color:#1e293b;">${name}</h6>
+                    <p style="margin:4px 0 0; font-size:0.75rem; color:#64748b; text-transform:uppercase; font-weight:600;">${level} Boundary</p>
+                </div>
+            `);
+            infoWindow.setPosition(event.latLng);
+            infoWindow.open(overallMap);
+        });
+
+        loadAdministrativeBoundaries();
+    }
+
+
+    // =================================================================
+    // 🔥 NEW: FETCH AND DRAW POLYGONS ON LOAD
+    // =================================================================
+    function loadAdministrativeBoundaries() {
+        // Read active filters from the page if they exist
+        const rangeId = document.getElementById('range_id')?.value || '';
+        const siteId = document.getElementById('site_id')?.value || '';
+
+        let url = `{{ route('normal.boundaries.data') }}?layer_types[]=administrative_boundaries`;
+        if (rangeId) url += `&range_id=${rangeId}`;
+        if (siteId) url += `&site_id=${siteId}`;
+
+        fetch(url)
+            .then(res => res.json())
+            .then(response => {
+                if (response.status === 'SUCCESS' && response.data && response.data.administrative_boundaries) {
+                    const features = response.data.administrative_boundaries;
+
+                    // Inject GeoJSON into the Map Data layer
+                    adminBoundaryLayer.addGeoJson({
+                        type: 'FeatureCollection',
+                        features: features
+                    });
+
+                    // Show by default
+                    adminBoundaryLayer.setMap(overallMap);
+
+                    // Fit Map Camera exactly to the loaded boundaries
+                    let bounds = new google.maps.LatLngBounds();
+                    adminBoundaryLayer.forEach(feature => {
+                        feature.getGeometry().forEachLatLng(latlng => {
+                            bounds.extend(latlng);
+                        });
+                    });
+                    overallMap.fitBounds(bounds, {
+                        padding: 40
+                    });
+
+                    // 🔥 Manually update the Legend UI to look "Active"
+                    let countEl = document.getElementById('count_admin_bounds');
+                    let itemEl = document.getElementById('item_admin_bounds');
+                    if (countEl && itemEl) {
+                        countEl.innerText = features.length;
+                        itemEl.classList.remove('empty-layer', 'inactive');
+                        itemEl.style.background = '#facc1515';
+                        itemEl.style.borderColor = '#facc1540';
+                    }
+                }
+            })
+            .catch(err => console.error("Error loading boundaries:", err));
     }
 
     function setupCtrlScroll(mapEl) {
@@ -1752,8 +2018,9 @@
 
         Object.keys(mapLayerDefinitions).forEach(category => {
             const layers = mapLayerDefinitions[category];
-
+            //    console.log("layers", layers);
             layers.forEach((layerDef) => {
+                console.log("layers def", layerDef);
                 const layerRecords = dbMapData.filter(record => {
                     if (!record.report_type) return false;
                     const type = record.report_type.toLowerCase().trim();
@@ -1762,7 +2029,9 @@
                 });
 
                 let markerArray = [];
-
+                if (layerRecords[0]?.report_type == 'felling') {
+                    console.log(layerRecords, "layers recoreds")
+                }
                 layerRecords.forEach(record => {
                     const lat = parseFloat(record.latitude);
                     const lng = parseFloat(record.longitude);
@@ -1773,7 +2042,7 @@
 
                     const marker = new google.maps.Marker({
                         position: pos,
-                        map: overallMap,
+                        map: null, // overallMap - set to null to add to cluster without displaying immediately -dev
                         icon: createGoogleEmojiIcon(layerDef.emoji, layerDef.color),
                         title: layerDef.label
                     });
@@ -1845,8 +2114,8 @@
                     }
 
                     // Extract Range and Beat (with safe fallbacks)
-                    const rangeText = record.range || record.client_name || 'Unassigned';
-                    const beatText = record.beat || record.site_name || 'Unassigned';
+                    const rangeText = record.range || record.resolved_range || 'Unassigned';
+                    const beatText = record.beat || record.resolved_beat || 'Unassigned';
 
                     // Modern SaaS InfoWindow Layout (Now fully Dark Mode compatible)
                     const infoContent = `
@@ -1914,7 +2183,7 @@
     //         window.nativeMapLegend.style.display = 'none';
 
     //         // Toggle Panel Logic
-    //         window.nativeLegendToggle.onclick = function() {
+    //         window.nativeLegendToggle.onclick = function () {
     //             const isHidden = window.nativeMapLegend.style.display === 'none';
     //             window.nativeMapLegend.style.display = isHidden ? 'block' : 'none';
     //             // Highlight button when active
@@ -1976,75 +2245,257 @@
     //     `);
     // }
 
+    // // Toggle visibility of specific pins
+    // window.toggleMapLayer = function (layerId, element) {
+    //     const markers = overlayMapGroups[layerId];
+    //     if (!markers || markers.length === 0) return;
+
+    //     const isVisible = markers[0].getMap() !== null;
+
+    //     markers.forEach(m => {
+    //         m.setMap(isVisible ? null : overallMap);
+    //     });
+
+    //     if (isVisible) {
+    //         element.classList.add('inactive');
+    //     } else {
+    //         element.classList.remove('inactive');
+    //     }
+    // };
 
 
     // =================================================================
-    // REPLACEMENT 1: createLegend (Always shows 0 counts)
+    // 1. LEGEND GENERATOR (Now always shows 0 items)
+    // =================================================================
+    // function createLegend(dbMapData) {
+    //     if (!window.nativeMapLegend) {
+    //         // Modern Toggle Button
+    //         window.nativeLegendToggle = document.createElement('div');
+    //         window.nativeLegendToggle.className = 'modern-legend-toggle';
+    //         window.nativeLegendToggle.style.margin = '10px 10px 25px 10px';
+    //         window.nativeLegendToggle.style.cursor = 'pointer';
+    //         window.nativeLegendToggle.innerHTML = `<i class="bi bi-stack" style="font-size: 1.1rem;"></i> Map Layers`;
+
+    //         // Modern Legend Panel
+    //         window.nativeMapLegend = document.createElement('div');
+    //         window.nativeMapLegend.className = 'modern-legend-panel';
+    //         window.nativeMapLegend.style.display = 'none';
+
+    //         window.nativeLegendToggle.onclick = function () {
+    //             const isHidden = window.nativeMapLegend.style.display === 'none';
+    //             window.nativeMapLegend.style.display = isHidden ? 'block' : 'none';
+    //             this.style.borderColor = isHidden ? 'var(--sapphire-primary)' : 'var(--border-color)';
+    //             this.style.color = isHidden ? 'var(--sapphire-primary)' : 'var(--text-main)';
+    //         };
+
+    //         overallMap.controls[google.maps.ControlPosition.RIGHT_BOTTOM].push(window.nativeLegendToggle);
+    //         overallMap.controls[google.maps.ControlPosition.RIGHT_BOTTOM].push(window.nativeMapLegend);
+    //     }
+
+    //     const mapLegend = window.nativeMapLegend;
+
+    //     mapLegend.innerHTML = `
+    //         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid var(--border-color);">
+    //             <h6 style="font-weight: 800; color: var(--text-muted); margin: 0; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px;">Active Map Layers</h6>
+    //         </div>
+    //     `;
+
+    //     // 🔥 FIX: Loop through everything, NO "if (count > 0)" block!
+    //     Object.values(mapLayerDefinitions).flat().forEach(layerDef => {
+    //         const count = dbMapData.filter(record => {
+    //             if (!record.report_type) return false;
+    //             const type = record.report_type.toLowerCase().trim();
+    //             return (type === layerDef.dbType.toLowerCase() || type === layerDef.id.toLowerCase()) && record.latitude;
+    //         }).length;
+
+    //         // Check if empty to apply gray-out disabled styles
+    //         const isEmpty = count === 0;
+    //         const opacityStyle = isEmpty ? 'opacity: 0.4; pointer-events: none; filter: grayscale(100%);' : '';
+    //         const defaultClass = isEmpty ? 'modern-legend-item inactive' : 'modern-legend-item';
+
+    //         const itemHtml = `
+    //             <div class="${defaultClass}" id="item_${layerDef.id}" onclick="window.toggleMapLayer('${layerDef.id}', this)" style="${opacityStyle}">
+    //                 <div style="background-color: ${layerDef.color}; width: 12px; height: 12px; border-radius: 50%; margin-right: 12px; box-shadow: 0 0 10px ${layerDef.color}80;"></div>
+    //                 <div style="flex-grow: 1; font-weight: 600; font-size: 0.85rem; color: var(--text-main);">${layerDef.label}</div>
+    //                 <div style="background: ${layerDef.color}15; color: ${layerDef.color}; padding: 2px 10px; border-radius: 12px; font-size: 0.75rem; font-weight: 700; border: 1px solid ${layerDef.color}30;">
+    //                     ${count}
+    //                 </div>
+    //             </div>`;
+    //         mapLegend.insertAdjacentHTML('beforeend', itemHtml);
+    //     });
+
+    //     // Add Modern Heatmap toggle
+    //     mapLegend.insertAdjacentHTML('beforeend', `
+    //         <div class="modern-legend-item mt-3" onclick="window.toggleHeatmap(this)" style="border: 1px solid var(--sapphire-danger); background: rgba(239, 68, 68, 0.05); justify-content: center;">
+    //             <div style="color: var(--sapphire-danger); font-weight: 700; font-size: 0.85rem; display:flex; align-items:center; gap:8px;">
+    //                 <i class="bi bi-fire fs-6"></i> Toggle Heatmap
+    //             </div>
+    //         </div>
+    //     `);
+    // }
+
+    // =================================================================
+    // 2. MAP LAYER TOGGLE (With Smooth Fly-To Animation)
+    // =================================================================
+    // window.toggleMapLayer = function (layerId, element) {
+    //     const markers = overlayMapGroups[layerId];
+    //     if (!markers || markers.length === 0) return;
+
+    //     const isVisible = markers[0].getMap() !== null;
+
+    //     if (isVisible) {
+    //         // HIDE LAYER
+    //         markers.forEach(m => m.setMap(null));
+    //         element.classList.add('inactive');
+    //     } else {
+    //         // SHOW LAYER
+    //         markers.forEach(m => m.setMap(overallMap));
+    //         element.classList.remove('inactive');
+
+    //         // 🔥 THE ANIMATION TRICK
+    //         const bounds = new google.maps.LatLngBounds();
+    //         markers.forEach(m => bounds.extend(m.getPosition()));
+
+    //         // Step 1: Start smoothly panning the camera to the center of the pins
+    //         overallMap.panTo(bounds.getCenter());
+
+    //         // Step 2: Wait 300ms for the pan to start, then adjust the zoom to frame them perfectly
+    //         setTimeout(() => {
+    //             if (markers.length === 1) {
+    //                 overallMap.setZoom(16); // Zoom in deep for a single pin
+    //             } else {
+    //                 overallMap.fitBounds(bounds, { padding: 60 }); // Frame multiple pins
+    //             }
+    //         }, 300);
+    //     }
+    // };
+
+    // =================================================================
+    // 1. LEGEND GENERATOR (With Minimalist Action Drawer)
     // =================================================================
     function createLegend(dbMapData) {
         if (!window.nativeMapLegend) {
-            // 1. Modern Toggle Button (Floating Action Button style)
             window.nativeLegendToggle = document.createElement('div');
             window.nativeLegendToggle.className = 'modern-legend-toggle';
-            window.nativeLegendToggle.style.margin = '10px 10px 25px 10px';
+            window.nativeLegendToggle.style.margin = '10px 10px 10px 10px';
             window.nativeLegendToggle.style.cursor = 'pointer';
-            window.nativeLegendToggle.innerHTML = `<i class="bi bi-stack" style="font-size: 1.1rem;"></i> Map Layers`;
+            window.nativeLegendToggle.style.backgroundColor = 'var(--bg-card, #ffffff)';
+            window.nativeLegendToggle.style.border = '2px solid var(--sapphire-primary, #3b82f6)';
+            window.nativeLegendToggle.style.borderRadius = '8px';
+            window.nativeLegendToggle.style.padding = '8px 16px';
+            window.nativeLegendToggle.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
+            window.nativeLegendToggle.style.color = 'var(--text-main, #1e293b)';
+            window.nativeLegendToggle.style.fontWeight = '700';
+            window.nativeLegendToggle.style.display = 'flex';
+            window.nativeLegendToggle.style.alignItems = 'center';
+            window.nativeLegendToggle.style.gap = '8px';
+            window.nativeLegendToggle.style.transition = 'all 0.2s ease';
 
-            // 2. Modern Legend Panel
+            window.nativeLegendToggle.innerHTML =
+                `<i class="bi bi-layers-fill" style="color: var(--sapphire-primary, #3b82f6); font-size: 1.2rem; transition: color 0.2s;"></i> Map Layers`;
+
+            window.nativeLegendToggle.onmouseover = function() {
+                if (window.nativeMapLegend.style.display === 'none') {
+                    this.style.transform = 'translateY(-2px)';
+                    this.style.boxShadow = '0 6px 15px rgba(0,0,0,0.2)';
+                }
+            };
+            window.nativeLegendToggle.onmouseout = function() {
+                this.style.transform = 'translateY(0)';
+                this.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
+            };
+
             window.nativeMapLegend = document.createElement('div');
             window.nativeMapLegend.className = 'modern-legend-panel';
             window.nativeMapLegend.style.display = 'none';
+            window.nativeMapLegend.style.margin = '0px 10px 10px 10px';
 
-            // Toggle Panel Logic
+            window.nativeMapLegend.addEventListener('wheel', function(e) {
+                e.stopPropagation();
+            });
+
             window.nativeLegendToggle.onclick = function() {
                 const isHidden = window.nativeMapLegend.style.display === 'none';
                 window.nativeMapLegend.style.display = isHidden ? 'block' : 'none';
-                this.style.borderColor = isHidden ? 'var(--sapphire-primary)' : 'var(--border-color)';
-                this.style.color = isHidden ? 'var(--sapphire-primary)' : 'var(--text-main)';
+
+                this.style.backgroundColor = isHidden ? 'var(--sapphire-primary, #3b82f6)' :
+                    'var(--bg-card, #ffffff)';
+                this.style.color = isHidden ? '#ffffff' : 'var(--text-main, #1e293b)';
+                this.querySelector('i').style.color = isHidden ? '#ffffff' : 'var(--sapphire-primary, #3b82f6)';
             };
 
-            // Push to map ONLY ONCE
-            overallMap.controls[google.maps.ControlPosition.RIGHT_BOTTOM].push(window.nativeLegendToggle);
-            overallMap.controls[google.maps.ControlPosition.RIGHT_BOTTOM].push(window.nativeMapLegend);
+            overallMap.controls[google.maps.ControlPosition.RIGHT_TOP].push(window.nativeLegendToggle);
+            overallMap.controls[google.maps.ControlPosition.RIGHT_TOP].push(window.nativeMapLegend);
         }
 
         const mapLegend = window.nativeMapLegend;
 
-        // Panel Header
         mapLegend.innerHTML = `
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid var(--border-color);">
-                <h6 style="font-weight: 800; color: var(--text-muted); margin: 0; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px;">Active Map Layers</h6>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid var(--border-color, #e2e8f0);">
+                <h6 style="font-weight: 800; color: var(--text-muted, #64748b); margin: 0; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px;">Available Map Layers</h6>
             </div>
         `;
 
-        // Populate the list (Now always showing items, even if count is 0)
-        Object.values(mapLayerDefinitions).flat().forEach(layerDef => {
-            const count = dbMapData.filter(record => {
-                if (!record.report_type) return false;
-                const type = record.report_type.toLowerCase().trim();
-                return (type === layerDef.dbType.toLowerCase() || type === layerDef.id.toLowerCase()) &&
-                    record.latitude;
-            }).length;
+        let anyDataFound = false;
 
-            // 🔥 NEW: Check if count is 0. If it is, we fade it out and disable clicking.
-            const isEmpty = count === 0;
-            const opacityStyle = isEmpty ? 'opacity: 0.4; pointer-events: none; filter: grayscale(100%);' : '';
-            const defaultClass = isEmpty ? 'modern-legend-item inactive' : 'modern-legend-item';
+        Object.keys(mapLayerDefinitions).forEach(mainCat => {
+            mapLayerDefinitions[mainCat].forEach(layerDef => {
 
-            const itemHtml = `
-                <div class="${defaultClass}" id="item_${layerDef.id}" onclick="window.toggleMapLayer('${layerDef.id}', this)" style="${opacityStyle}">
-                    <div style="background-color: ${layerDef.color}; width: 12px; height: 12px; border-radius: 50%; margin-right: 12px; box-shadow: 0 0 10px ${layerDef.color}80;"></div>
-                    <div style="flex-grow: 1; font-weight: 600; font-size: 0.85rem; color: var(--text-main);">${layerDef.label}</div>
-                    <div style="background: ${layerDef.color}15; color: ${layerDef.color}; padding: 2px 10px; border-radius: 12px; font-size: 0.75rem; font-weight: 700; border: 1px solid ${layerDef.color}30;">
-                        ${count}
-                    </div>
-                </div>`;
-            mapLegend.insertAdjacentHTML('beforeend', itemHtml);
+                const count = dbMapData.filter(record => {
+                    if (!record.report_type) return false;
+                    const type = record.report_type.toLowerCase().trim();
+                    return (type === layerDef.dbType.toLowerCase() || type === layerDef.id
+                        .toLowerCase()) && record.latitude;
+                }).length;
+
+                const isEmpty = count === 0;
+                if (!isEmpty) anyDataFound = true;
+
+                const defaultClass = isEmpty ? 'modern-legend-item empty-layer' :
+                    'modern-legend-item inactive';
+
+                // Generate Dynamic URLs
+                const routeCat = mainCat === 'forestry' ? 'plantations' : mainCat;
+                const listUrl =
+                    `{{ route('reports.detailed') }}?category=${routeCat}&sub_type=${layerDef.id}`;
+                const analyticsAction =
+                    `event.stopPropagation(); window.activeMainTab='${mainCat}'; window.activeSubTab='${layerDef.id}'; setViewMode('analytical'); renderMainTabs(); buildAnalyticalUI();`;
+
+                const hideDrawer = layerDef.id === 'admin_bounds' ? 'display: none !important;' : '';
+                // 🔥 MINIMALIST ACCORDION HTML
+                const itemHtml = `
+                    <div style="margin-bottom: 4px;">
+                        <div class="${defaultClass}" id="item_${layerDef.id}" onclick="window.toggleMapLayer('${layerDef.id}', this, '${layerDef.color}')" style="margin-bottom: 0; position: relative; z-index: 2;">
+                            <div style="background-color: ${layerDef.color}; width: 12px; height: 12px; border-radius: 50%; margin-right: 12px; box-shadow: 0 0 10px ${layerDef.color}80;"></div>
+                            <div style="flex-grow: 1; font-weight: 600; font-size: 0.85rem; color: var(--text-main);">${layerDef.label}</div>
+                            <div style="background: ${layerDef.color}15; color: ${layerDef.color}; padding: 2px 10px; border-radius: 12px; font-size: 0.75rem; font-weight: 800;">
+                                ${count}
+                            </div>
+                        </div>
+                        
+                        <div class="legend-actions-drawer" id="actions_${layerDef.id}" style="display: none; padding: 6px 12px 8px 36px; gap: 8px;">
+                            <button onclick="event.stopPropagation(); window.location.href='${listUrl}'" class="drawer-btn list-btn" title="View Detailed List">
+                                <i class="bi bi-list-ul fs-6"></i> List
+                            </button>
+                            <div class="drawer-divider"></div>
+                            <button onclick="${analyticsAction}" class="drawer-btn chart-btn" title="View Charts">
+                                <i class="bi bi-bar-chart-line-fill fs-6"></i> Charts
+                            </button>
+                        </div>
+                    </div>`;
+
+                mapLegend.insertAdjacentHTML('beforeend', itemHtml);
+            });
         });
+
+        if (!anyDataFound) {
+            mapLegend.innerHTML +=
+                '<div class="p-3 text-muted text-center" style="font-size:0.85rem; font-style: italic;">No map data available.</div>';
+        }
 
         // Add Modern Heatmap toggle
         mapLegend.insertAdjacentHTML('beforeend', `
-            <div class="modern-legend-item mt-3" onclick="window.toggleHeatmap(this)" style="border: 1px solid var(--sapphire-danger); background: rgba(239, 68, 68, 0.05); justify-content: center;">
+            <div class="modern-legend-item mt-3 inactive" onclick="window.toggleHeatmap(this)" style="border: 1px dashed var(--sapphire-danger); justify-content: center; padding: 10px;">
                 <div style="color: var(--sapphire-danger); font-weight: 700; font-size: 0.85rem; display:flex; align-items:center; gap:8px;">
                     <i class="bi bi-fire fs-6"></i> Toggle Heatmap
                 </div>
@@ -2052,134 +2503,93 @@
         `);
     }
 
-    // =================================================================
-    // REPLACEMENT 2: toggleMapLayer (Adds Smooth Zoom/Fly Animation)
-    // =================================================================
-    window.toggleMapLayer = function(layerId, element) {
+    window.toggleMapLayer = function(layerId, element, colorHex) {
+        if (element.classList.contains('empty-layer')) return;
+
+        const drawer = document.getElementById('actions_' + layerId);
+
+        // 🔥 SPECIAL CASE: Toggling Administrative Boundaries (Polygons)
+        if (layerId === 'admin_bounds') {
+            const isBoundsVisible = adminBoundaryLayer.getMap() !== null;
+            if (isBoundsVisible) {
+                adminBoundaryLayer.setMap(null);
+                element.classList.add('inactive');
+                element.style.background = 'transparent';
+                element.style.borderColor = 'transparent';
+            } else {
+                adminBoundaryLayer.setMap(overallMap);
+                element.classList.remove('inactive');
+                element.style.background = colorHex + '15';
+                element.style.borderColor = colorHex + '40';
+
+                // Re-center camera on the boundaries
+                let bounds = new google.maps.LatLngBounds();
+                adminBoundaryLayer.forEach(f => f.getGeometry().forEachLatLng(ll => bounds.extend(ll)));
+                overallMap.fitBounds(bounds, {
+                    padding: 40
+                });
+            }
+            return; // Exit function early
+        }
+
+        // --- STANDARD MARKER LOGIC ---
         const markers = overlayMapGroups[layerId];
         if (!markers || markers.length === 0) return;
 
         const isCurrentlyVisible = markers[0].getMap() !== null;
 
         if (isCurrentlyVisible) {
-            // HIDE the layer
             markers.forEach(m => m.setMap(null));
             element.classList.add('inactive');
+            element.style.background = 'transparent';
+            element.style.borderColor = 'transparent';
+            if (drawer) drawer.style.display = 'none';
         } else {
-            // SHOW the layer
             markers.forEach(m => m.setMap(overallMap));
             element.classList.remove('inactive');
+            element.style.background = colorHex + '15';
+            element.style.borderColor = colorHex + '40';
+            if (drawer) drawer.style.display = 'flex';
 
-            // 🔥 NEW: Smooth Animation to the newly activated markers
             const bounds = new google.maps.LatLngBounds();
-            markers.forEach(m => {
-                bounds.extend(m.getPosition());
-            });
+            markers.forEach(m => bounds.extend(m.getPosition()));
+            overallMap.panTo(bounds.getCenter());
 
-            // If there is only 1 marker, zooming to "bounds" zooms in too far.
-            // We use panTo for 1 marker, and fitBounds for multiple!
-            if (markers.length === 1) {
-                overallMap.panTo(markers[0].getPosition());
-                overallMap.setZoom(15); // Smoothly fly and zoom into the single pin
-            } else {
-                overallMap.fitBounds(bounds, {
-                    padding: 50
-                }); // Smoothly frame all pins in this layer
-            }
+            setTimeout(() => {
+                if (markers.length === 1) {
+                    overallMap.setZoom(16);
+                } else {
+                    overallMap.fitBounds(bounds, {
+                        padding: 60
+                    });
+                }
+            }, 300);
         }
     };
+    window.toggleHeatmap = function(element) {
+        if (!heatmapLayer) return;
 
-    // Toggle visibility of specific pins
-    window.toggleMapLayer = function(layerId, element) {
-        const markers = overlayMapGroups[layerId];
-        if (!markers || markers.length === 0) return;
+        isHeatmapActive = !isHeatmapActive;
 
-        const isVisible = markers[0].getMap() !== null;
-
-        markers.forEach(m => {
-            m.setMap(isVisible ? null : overallMap);
-        });
-
-        if (isVisible) {
-            element.classList.add('inactive');
-        } else {
+        if (isHeatmapActive) {
+            heatmapLayer.setMap(overallMap);
             element.classList.remove('inactive');
-        }
-    };
-
-    // Toggle Heatmap Layer
-    window.toggleHeatmap = function(element) {
-        if (!heatmapLayer) return;
-
-        isHeatmapActive = !isHeatmapActive;
-
-        if (isHeatmapActive) {
-            heatmapLayer.setMap(overallMap);
-            element.style.background = 'rgba(239, 68, 68, 0.15)'; // Darken background slightly on active
-
-            // Hide all standard markers
-            Object.values(overlayMapGroups).flat().forEach(m => m.setMap(null));
-
-            // Gray out the legend items
-            const items = document.querySelectorAll('.modern-legend-item:not(.mt-3)');
-            items.forEach(item => item.classList.add('inactive'));
-
-        } else {
-            heatmapLayer.setMap(null);
-            element.style.background = 'rgba(239, 68, 68, 0.05)';
-
-            // Restore all standard markers
-            Object.values(overlayMapGroups).flat().forEach(m => m.setMap(overallMap));
-
-            // Restore legend items
-            const items = document.querySelectorAll('.modern-legend-item:not(.mt-3)');
-            items.forEach(item => item.classList.remove('inactive'));
-        }
-    };
-    window.toggleMapLayer = function(layerId, element) {
-        const markers = overlayMapGroups[layerId];
-        if (!markers || markers.length === 0) return;
-
-        const isVisible = markers[0].getMap() !== null;
-
-        markers.forEach(m => {
-            m.setMap(isVisible ? null : overallMap);
-        });
-
-        if (isVisible) {
-            element.classList.remove('active');
-            element.style.opacity = '0.5';
-        } else {
-            element.classList.add('active');
-            element.style.opacity = '1';
-        }
-    };
-
-    window.toggleHeatmap = function(element) {
-        if (!heatmapLayer) return;
-
-        isHeatmapActive = !isHeatmapActive;
-
-        if (isHeatmapActive) {
-            heatmapLayer.setMap(overallMap);
             element.style.background = 'rgba(239, 68, 68, 0.15)';
+            element.style.borderColor = 'rgba(239, 68, 68, 0.4)';
 
+            // Hide standard markers & reset their menu highlights
             Object.values(overlayMapGroups).flat().forEach(m => m.setMap(null));
-
-            const items = document.querySelectorAll('.layer-item:not(.mt-3)');
-            items.forEach(item => item.style.opacity = '0.3');
+            document.querySelectorAll('.modern-legend-item:not(.mt-3):not(.empty-layer)').forEach(item => {
+                item.classList.add('inactive');
+                item.style.background = 'transparent';
+                item.style.borderColor = 'transparent';
+            });
 
         } else {
             heatmapLayer.setMap(null);
-            element.style.background = 'rgba(239, 68, 68, 0.05)';
-
-            Object.values(overlayMapGroups).flat().forEach(m => m.setMap(overallMap));
-
-            const items = document.querySelectorAll('.layer-item:not(.mt-3)');
-            items.forEach(item => {
-                if (item.classList.contains('active')) item.style.opacity = '1';
-                else item.style.opacity = '0.5';
-            });
+            element.classList.add('inactive');
+            element.style.background = 'transparent';
+            element.style.borderColor = 'transparent';
         }
     };
 
@@ -2452,6 +2862,11 @@
         renderAnalyticalCharts();
     };
 
+
+
+
+
+
     window.renderAnalyticalCharts = function() {
         const grid = document.getElementById('charts-grid');
         if (!grid) return;
@@ -2483,6 +2898,34 @@
         const gridColor = getThemeColor('--border-color', '#e2e8f0');
         const brandColor = getThemeColor('--sapphire-primary', '#3b82f6');
         const cardBg = getThemeColor('--bg-card', '#ffffff');
+
+        // 🔥 NEW: Inject a modern Action Banner at the top of the active tab!
+        // Maps 'forestry' to 'plantations' to match your controller logic
+        const routeCategory = window.activeMainTab === 'forestry' ? 'plantations' : window.activeMainTab;
+
+        // Dynamically build the URL passing the exact category and sub_type
+        const listUrl = `{{ route('reports.detailed') }}?category=${routeCategory}&sub_type=${window.activeSubTab}`;
+
+        // Grab the nice display name (e.g., "Illegal Felling" instead of "felling")
+        const tabTitle = config.labels[window.activeSubTab] || window.activeSubTab;
+
+        grid.innerHTML = `
+            <div class="col-12 mb-3">
+                <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center p-3 rounded" style="background: var(--bg-card); border: 1px solid var(--border-color); box-shadow: 0 4px 6px rgba(0,0,0,0.02);">
+                    <div>
+                        <h5 class="fw-bold m-0" style="color: var(--text-main); text-transform: capitalize; font-family: 'Inter', sans-serif;">
+                            ${tabTitle} Analytics
+                        </h5>
+                        <p class="m-0 mt-1" style="color: var(--text-muted); font-size: 0.85rem;">
+                            Visual breakdown of recent ${tabTitle.toLowerCase()} reports.
+                        </p>
+                    </div>
+                    <a href="${listUrl}" target="" class="btn mt-3 mt-md-0 d-flex align-items-center justify-content-center gap-2" style="background-color: var(--sapphire-primary); color: white; border-radius: 8px; font-weight: 600; padding: 10px 24px; transition: all 0.2s ease; border: none; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);">
+                        <i class="bi bi-table"></i> View Detailed List
+                    </a>
+                </div>
+            </div>
+        `;
 
         chartsConfig.forEach(cfg => {
             let togglesHtml = '';
@@ -2516,7 +2959,7 @@
                 </div>`;
         });
 
-        // 2. USE A SLIGHTLY LONGER TIMEOUT TO ENSURE DOM IS READY
+        // 2. TIMEOUT TO ENSURE DOM IS READY
         setTimeout(() => {
             chartsConfig.forEach(cfg => {
                 const ctxEl = document.getElementById(cfg.id);
@@ -2606,11 +3049,13 @@
                     const pillEl = document.getElementById(`pill-${cfg.id}`);
                     if (pillEl) pillEl.innerText = cfg.calcPill(chartData, 0);
                 }
-
-
             });
         }, 100); // Increased timeout slightly to ensure the old canvas is truly dead before making a new one
     };
+
+
+
+
 
     // window.updateSubChart = function(chartId, viewKey, toggleIndex, btnElement) {
     //     const toggleContainer = document.getElementById(`toggles-${chartId}`);
@@ -2772,11 +3217,63 @@
             });
         }
 
+        // window.addEventListener('themeChanged', () => {
+        //     initOverallChart();
+        //     if (document.getElementById('analytical-container') && !document.getElementById(
+        //         'analytical-container').classList.contains('d-none')) {
+        //         window.renderAnalyticalCharts();
+        //     }
+        // });
         window.addEventListener('themeChanged', () => {
+            // Update the main bar chart
             initOverallChart();
+
+            // Update the sub-charts if they are visible
             if (document.getElementById('analytical-container') && !document.getElementById(
                     'analytical-container').classList.contains('d-none')) {
                 window.renderAnalyticalCharts();
+            }
+
+            // 🔥 NEW: Instantly switch the Google Map Theme
+            if (overallMap) {
+                const isDark = document.documentElement.getAttribute('data-bs-theme') === 'dark';
+                const darkStyle = [{
+                        elementType: "geometry",
+                        stylers: [{
+                            color: "#1e293b"
+                        }]
+                    },
+                    {
+                        elementType: "labels.text.stroke",
+                        stylers: [{
+                            color: "#1e293b"
+                        }]
+                    },
+                    {
+                        elementType: "labels.text.fill",
+                        stylers: [{
+                            color: "#94a3b8"
+                        }]
+                    },
+                    {
+                        featureType: "water",
+                        elementType: "geometry",
+                        stylers: [{
+                            color: "#0f172a"
+                        }]
+                    },
+                    {
+                        featureType: "poi",
+                        elementType: "labels",
+                        stylers: [{
+                            visibility: "off"
+                        }]
+                    }
+                ];
+
+                overallMap.setOptions({
+                    styles: isDark ? darkStyle : []
+                });
             }
         });
     });

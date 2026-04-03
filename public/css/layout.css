@@ -75,19 +75,23 @@ body {
 /* =========================================
            MODERN SAAS MAP LEGEND (THEME AWARE)
         ========================================= */
+
+/* =========================================
+           MODERN SAAS MAP LEGEND (VIBRANT THEME)
+        ========================================= */
 .modern-legend-toggle {
     background: var(--bg-card) !important;
     color: var(--text-main) !important;
     border: 1px solid var(--border-color) !important;
-    border-radius: 50px !important;
-    padding: 10px 20px !important;
-    font-size: 0.9rem !important;
+    border-radius: 10px !important; /* Cute rounded square instead of pill */
+    padding: 8px 12px !important; /* Much more compact */
+    font-size: 0.85rem !important;
     font-weight: 700 !important;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1) !important;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08) !important;
     display: flex !important;
     align-items: center !important;
     gap: 8px !important;
-    transition: all 0.3s ease !important;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
     font-family:
         "Inter",
         -apple-system,
@@ -96,30 +100,28 @@ body {
 
 .modern-legend-toggle:hover {
     transform: translateY(-2px) !important;
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15) !important;
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.12) !important;
     border-color: var(--sapphire-primary) !important;
-    color: var(--sapphire-primary) !important;
 }
 
 .modern-legend-panel {
     background: var(--bg-card) !important;
     border: 1px solid var(--border-color) !important;
-    border-radius: 16px !important;
-    padding: 16px !important;
-    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2) !important;
+    border-radius: 12px !important; /* Modern softer corners */
+    padding: 12px !important;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15) !important;
     font-family:
         "Inter",
         -apple-system,
         sans-serif !important;
-    min-width: 260px !important;
-    max-height: 65vh !important;
+    min-width: 250px !important;
+    max-height: 60vh !important;
     overflow-y: auto !important;
-    margin: 10px 10px 0 10px !important;
+    margin: 8px 10px 0 10px !important;
 }
 
-/* Custom subtle scrollbar for the panel */
 .modern-legend-panel::-webkit-scrollbar {
-    width: 6px;
+    width: 4px;
 }
 .modern-legend-panel::-webkit-scrollbar-track {
     background: transparent;
@@ -132,24 +134,106 @@ body {
 .modern-legend-item {
     display: flex !important;
     align-items: center !important;
-    padding: 10px 12px !important;
-    border-radius: 10px !important;
+    padding: 8px 10px !important;
+    border-radius: 8px !important;
     cursor: pointer !important;
     transition: all 0.2s ease !important;
     margin-bottom: 4px !important;
     border: 1px solid transparent;
+    background: transparent;
 }
 
-.modern-legend-item:hover {
+.modern-legend-item:hover:not(.empty-layer) {
     background: var(--table-hover) !important;
-    border-color: var(--border-color);
 }
 
-/* Grays out items when toggled off */
-.modern-legend-item.inactive {
-    opacity: 0.4 !important;
-    filter: grayscale(100%);
+/* 0-count layers just fade slightly, NO GRAYSCALE! */
+.modern-legend-item.empty-layer {
+    opacity: 0.5 !important;
+    cursor: pointer !important;
 }
+
+/* Grays out items when toggled off (Dull State) */
+.modern-legend-item.inactive {
+    opacity: 0.55 !important;
+    filter: grayscale(80%) !important;
+    background: transparent !important;
+    border-color: transparent !important;
+}
+
+/* Slight hover effect even when dull */
+.modern-legend-item.inactive:hover {
+    opacity: 0.8 !important;
+    filter: grayscale(40%) !important;
+}
+
+/* 0-count layers fade more and do nothing on click (NO BAN SIGN) */
+.modern-legend-item.empty-layer {
+    opacity: 0.35 !important;
+    filter: grayscale(100%) !important;
+    cursor: default !important; /* 🔥 Fix: Removed 'not-allowed' ban sign */
+    background: transparent !important;
+}
+
+/* Peak-a-Boo Animation Trigger */
+.peek-a-boo-row:not(.inactive) .peek-count {
+    opacity: 0;
+    transform: translateX(20px);
+}
+.peek-a-boo-row:not(.inactive) .peek-actions {
+    opacity: 1 !important;
+    transform: translateX(0) !important;
+}
+
+/* =========================================
+           OPTION 3: FLOATING MINI-CARDS
+        ========================================= */
+.legend-actions-drawer {
+    background: transparent !important; /* No background wrapper */
+    border: none !important;
+    margin-top: -4px;
+    padding-top: 8px !important;
+    padding-bottom: 2px !important;
+}
+
+.drawer-btn {
+    flex: 1;
+    background: var(--bg-card); /* Solid card background */
+    border: 1px solid var(--border-color);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+    font-size: 0.7rem;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 6px 4px;
+    border-radius: 8px;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.drawer-btn.list-btn {
+    color: var(--sapphire-primary);
+}
+.drawer-btn.list-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(59, 130, 246, 0.15);
+    border-color: var(--sapphire-primary);
+}
+
+.drawer-btn.chart-btn {
+    color: var(--sapphire-success);
+}
+.drawer-btn.chart-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(16, 185, 129, 0.15);
+    border-color: var(--sapphire-success);
+}
+
+.drawer-divider {
+    display: none;
+} /* Hidden for floating aesthetic */
 /* Mobile Layout Adjustments */
 @media (max-width: 991px) {
     html,
