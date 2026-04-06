@@ -10,14 +10,27 @@ use DB;
 
 class DynamicLabelsController extends Controller
 {
-
     // main page
     public function index()
     {
         $masters = FieldMaster::all();
-        $companies = \App\Models\Company::with('fieldLabels')->get();
+        $user = auth()->user();
 
-        return view('DynamicLabel.index', compact('masters', 'companies'));
+        // Check if the user is a Global Superadmin (Role ID 8)
+        $isGlobalAdmin = $user->role_id == 8;
+
+        if ($isGlobalAdmin) {
+            // Global admin sees all companies
+            $companies = \App\Models\Company::with('fieldLabels')->get();
+        } else {
+            // Company admin ONLY gets their own company
+            $companies = \App\Models\Company::where('id', $user->company_id)
+                ->with('fieldLabels')
+                ->get();
+        }
+
+        // Pass $isGlobalAdmin to the view
+        return view('DynamicLabel.index', compact('masters', 'companies', 'isGlobalAdmin'));
     }
 
     // create master label
@@ -58,24 +71,34 @@ class DynamicLabelsController extends Controller
     // edit company labels
     public function editCompany($companyId)
     {
-        $masters = FieldMaster::all();
+        $user = auth()->user();
+        $isGlobalAdmin = $user->role_id == 8;
 
+        // Safety Check: Ensure the user is only accessing their own company if not global admin
+        if (!$isGlobalAdmin && $user->company_id != $companyId) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        $masters = FieldMaster::all();
         $companyLabels = CompanyFieldLabel::where('company_id', $companyId)
             ->pluck('custom_label', 'field_key')
             ->toArray();
 
-        return view(
-            'dynamiclabels.edit-company',
-            compact('masters', 'companyLabels', 'companyId')
-        );
+        return view('dynamiclabels.edit-company', compact('masters', 'companyLabels', 'companyId'));
     }
 
     // save overrides
     public function saveCompany(Request $request, $companyId)
     {
+        $user = auth()->user();
+        $isGlobalAdmin = $user->role_id == 8;
+
+        // Safety Check
+        if (!$isGlobalAdmin && $user->company_id != $companyId) {
+            abort(403, 'Unauthorized action.');
+        }
 
         $labels = $request->labels ?? [];
-
         $upsert = [];
         $keysToKeep = [];
 
@@ -108,5 +131,4 @@ class DynamicLabelsController extends Controller
 
         return back()->with('success', 'Labels updated');
     }
-
 }

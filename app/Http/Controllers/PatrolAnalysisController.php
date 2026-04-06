@@ -400,16 +400,17 @@ class PatrolAnalysisController extends Controller
         // score = (normalized sessions * 0.4) + (normalized distance * 0.4) + (normalized logs * 0.2)
         $productivity = [];
         $uids = array_unique(array_merge(array_keys($userSessions), array_keys($userDistance), array_keys($userLogs)));
-        $maxSessions = max($userSessions ?: [1]);
-        $maxDistance = max($userDistance ?: [1]);
-        $maxLogs = max($userLogs ?: [1]);
+        $maxSessions = max($userSessions ?: [1]) ?: 1;
+        $maxDistance = max($userDistance ?: [1]) ?: 1;
+        $maxLogs     = max($userLogs ?: [1]) ?: 1;
 
         foreach ($uids as $uid) {
+            // Divisions are now safe because max is guaranteed to be at least 1
             $ns = ($userSessions[$uid] ?? 0) / $maxSessions;
             $nd = ($userDistance[$uid] ?? 0) / $maxDistance;
             $nl = ($userLogs[$uid] ?? 0) / $maxLogs;
+
             $score = ($ns * 0.4) + ($nd * 0.4) + ($nl * 0.2);
-            // $productivity[$uid] = round($score, 4);
             $productivity[$uid] = round($score * 10, 2);
         }
         arsort($productivity); // high to low
@@ -588,19 +589,85 @@ class PatrolAnalysisController extends Controller
     public function liveData(Request $request)
     {
         $user = session('user');
-        $since = $request->since ?? now()->subMinutes(10)->toDateTimeString();
 
-        $sessions = PatrolSession::where('company_id', $user->company_id)
-            ->where('updated_at', '>=', $since)
-            ->get();
+        $sessions = PatrolSession::where('company_id', $user->company_id)->get();
+        $logs = PatrolLog::where('company_id', $user->company_id)->get();
 
-        $logs = PatrolLog::where('company_id', $user->company_id)
-            ->where('created_at', '>=', $since)
-            ->get();
+        $weekly = [];
 
-        return response()->json(['sessions' => $sessions, 'logs' => $logs, 'ts' => now()->toDateTimeString()]);
+        foreach ($sessions as $s) {
+            $date = \Carbon\Carbon::parse($s->created_at);
+
+            $year = $date->year;
+            $week = $date->isoWeek(); // ✅ correct standard
+
+            $key = $year . '-W' . $week;
+
+            if (!isset($weekly[$key])) {
+                $weekly[$key] = [
+                    'year' => $year,
+                    'week' => $week,
+                    'distance' => 0,
+                    'sessions' => 0,
+                    'logs' => 0
+                ];
+            }
+
+            $weekly[$key]['distance'] += $s->distance_m ?? 0;
+            $weekly[$key]['sessions']++;
+        }
+
+        foreach ($logs as $l) {
+            $date = \Carbon\Carbon::parse($l->created_at);
+
+            $year = $date->year;
+            $week = $date->isoWeek();
+
+            $key = $year . '-W' . $week;
+
+            if (!isset($weekly[$key])) {
+                $weekly[$key] = [
+                    'year' => $year,
+                    'week' => $week,
+                    'distance' => 0,
+                    'sessions' => 0,
+                    'logs' => 0
+                ];
+            }
+
+            $weekly[$key]['logs']++;
+        }
+
+        $result = [];
+
+        foreach ($weekly as $key => $data) {
+
+            // 🔥 Normalize values (fix crazy spikes)
+            $distanceScore = min(($data['distance'] / 1000) / 20, 1) * 100; // max ~20km
+            $logScore = min($data['logs'] / 50, 1) * 100;                  // max ~50 logs
+            $sessionScore = min($data['sessions'] / 20, 1) * 100;          // max ~20 sessions
+
+            // Weighted score (0–100)
+            $score =
+                (0.4 * $distanceScore) +
+                (0.3 * $logScore) +
+                (0.3 * $sessionScore);
+
+            $result[] = [
+                'year' => $data['year'],
+                'week_number' => $data['week'],
+                'label' => $data['year'] . ' W' . str_pad($data['week'], 2, '0', STR_PAD_LEFT),
+                'score' => round($score, 2)
+            ];
+        }
+
+        // Sort by year + week
+        usort($result, function ($a, $b) {
+            return [$a['year'], $a['week_number']] <=> [$b['year'], $b['week_number']];
+        });
+
+        return response()->json($result);
     }
-
     // EXPORTS
     public function exportCsv(Request $request)
     {
@@ -746,7 +813,6 @@ class PatrolAnalysisController extends Controller
                 elseif (is_array($raw) && isset($raw[0]) && count($raw[0]) === 2) {
                     $coords = $raw;
                 }
-
             } catch (\Exception $e) {
                 $coords = [];
             }
@@ -758,5 +824,4 @@ class PatrolAnalysisController extends Controller
             'lng' => (float) $c[0]
         ], $coords);
     }
-
 }

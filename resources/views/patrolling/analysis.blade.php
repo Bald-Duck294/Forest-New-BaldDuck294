@@ -6,7 +6,7 @@
 
 @extends('layouts.app')
 
-@section('title', 'Patrol Analysis')
+@section('title', get_label('label_patrol_analysis', 'Patrol Analysis'))
 
 @section('content')
 
@@ -187,7 +187,9 @@
         {{-- HEADER --}}
         <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
             <div>
-                <h3 class="fw-bold mb-1" style="color: var(--text-main);">Patrol Analysis</h3>
+               <h3 class="fw-bold mb-1" style="color: var(--text-main);">
+    {{ get_label('label_patrol_analysis', 'Patrol Analysis') }}
+</h3>
                 <p class="mb-0" style="color: var(--text-muted); font-size: 0.9rem;">
                     Geospatial tracking and route analysis for completed and ongoing sessions.
                 </p>
@@ -206,43 +208,46 @@
             <form method="GET" action="{{ route('patrolling.analysis') }}" class="row g-3 align-items-end">
 
                 <div class="col-md-2">
-                    <label for="client_id" class="form-label small fw-semibold"
-                        style="color: var(--text-muted);">Range</label>
-                    <select class="custom-input" name="client_id" id="rangeSelect">
-                        <option value="">All Ranges</option>
-                        @foreach ($clients as $client)
-                            <option value="{{ $client->id }}" {{ request('client_id') == $client->id ? 'selected' : '' }}>
-                                {{ $client->name }}
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
+    <label for="client_id" class="form-label small fw-semibold" style="color: var(--text-muted);">
+        {{ get_label('label_client', 'Range') }}
+    </label>
+    <select class="custom-input" name="client_id" id="rangeSelect">
+        <option value="">All {{ Str::plural(get_label('label_client', 'Range')) }}</option>
+        @foreach ($clients as $client)
+            <option value="{{ $client->id }}" {{ request('client_id') == $client->id ? 'selected' : '' }}>
+                {{ $client->name }}
+            </option>
+        @endforeach
+    </select>
+</div>
 
-                <div class="col-md-2">
-                    <label for="site_id" class="form-label small fw-semibold" style="color: var(--text-muted);">Beat /
-                        Site</label>
-                    <select class="custom-input" name="site_id" id="siteSelect">
-                        <option value="">All Beats</option>
-                        @foreach ($sites as $site)
-                            <option value="{{ $site->id }}" {{ request('site_id') == $site->id ? 'selected' : '' }}>
-                                {{ $site->name }}
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
+<div class="col-md-2">
+    <label for="site_id" class="form-label small fw-semibold" style="color: var(--text-muted);">
+        {{ get_label('label_site', 'Beat') }}
+    </label>
+    <select class="custom-input" name="site_id" id="siteSelect">
+        <option value="">All {{ Str::plural(get_label('label_site', 'Beat')) }}</option>
+        @foreach ($sites as $site)
+            <option value="{{ $site->id }}" {{ request('site_id') == $site->id ? 'selected' : '' }}>
+                {{ $site->name }}
+            </option>
+        @endforeach
+    </select>
+</div>
 
-                <div class="col-md-2">
-                    <label for="user_id" class="form-label small fw-semibold"
-                        style="color: var(--text-muted);">User</label>
-                    <select class="custom-input" name="user_id" id="userSelect">
-                        <option value="">All Users</option>
-                        @foreach ($users as $user)
-                            <option value="{{ $user->id }}" {{ request('user_id') == $user->id ? 'selected' : '' }}>
-                                {{ $user->name }}
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
+<div class="col-md-2">
+    <label for="user_id" class="form-label small fw-semibold" style="color: var(--text-muted);">
+        {{ get_label('label_user', 'User') }}
+    </label>
+    <select class="custom-input" name="user_id" id="userSelect">
+        <option value="">All {{ Str::plural(get_label('label_user', 'User')) }}</option>
+        @foreach ($users as $user)
+            <option value="{{ $user->id }}" {{ request('user_id') == $user->id ? 'selected' : '' }}>
+                {{ $user->name }}
+            </option>
+        @endforeach
+    </select>
+</div>
 
                 <div class="col-md-2">
                     <label for="date_from" class="form-label small fw-semibold"
@@ -372,7 +377,7 @@
                                     </button>
                                     <a href="{{ route('patrolling.details', $s->id) }}"
                                         class="btn btn-sm btn-sapphire w-100 text-center text-decoration-none"
-                                        target="_blank">
+                                        >
                                         <i class="bi bi-eye"></i> View
                                     </a>
                                 </div>
@@ -404,7 +409,7 @@
 
     <script src="https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
-
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBfBFN6L_HROTd-mS8QqUDRIqskkvHvFYk&callback=initMap" async defer></script>
     <script>
         $(document).ready(function() {
 

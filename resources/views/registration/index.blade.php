@@ -19,7 +19,7 @@ return request('sort_order') == 'asc'
 @endphp
 
 @extends('layouts.app')
-
+@section('title', get_label('label_registration', 'Registration'))
 @section('content')
 <style>
     /* Scoped Light Theme Variables */
@@ -381,8 +381,11 @@ return request('sort_order') == 'asc'
     <div class="card">
         <div class="card-header">
             <div class="header-title">
-                <h4>Member Registrations</h4>
-                <p>Manage users in the registration table</p>
+            <h4>Mange {{ Str::plural(get_label('label_registration', 'Registration')) }}</h4>
+<p>
+    Manage {{ strtolower(Str::plural(get_label('label_user', 'user'))) }}
+    in the {{ strtolower(get_label('label_registration', 'registration')) }} table
+</p>
             </div>
 
             <div class="member-filter-wrapper">

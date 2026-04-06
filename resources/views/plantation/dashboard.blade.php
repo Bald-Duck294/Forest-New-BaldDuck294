@@ -6,7 +6,7 @@
 
 @extends('layouts.app')
 
-@section('title', 'Plantation Dashboard')
+@section('title', get_label('label_plantation', 'Plantation') . ' Dashboard')
 
 @section('content')
 
@@ -103,14 +103,16 @@
         {{-- HEADER & ACTION --}}
         <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
             <div>
-                <h3 class="fw-bold mb-1" style="color: var(--text-main);">Plantation Dashboard</h3>
-                <p class="mb-0" style="color: var(--text-muted); font-size: 0.9rem;">Overview of all plantation sites and
+                <h3 class="fw-bold mb-1" style="color: var(--text-main);">
+    {{ get_label('label_plantation', 'Plantation') }} Dashboard
+</h3>
+                <p class="mb-0" style="color: var(--text-muted); font-size: 0.9rem;">Overview of all {{ get_label('label_plantation', 'Plantation') }} sites and
                     their current phases.</p>
             </div>
             <div>
-                <a href="{{ route('plantation.create') }}" class="btn-sapphire shadow-sm">
-                    <i class="bi bi-plus-lg"></i> Add Plantation
-                </a>
+               <a href="{{ route('plantation.create') }}" class="btn-sapphire shadow-sm">
+    <i class="bi bi-plus-lg"></i> Add {{ get_label('label_plantation', 'Plantation') }}
+</a>
             </div>
         </div>
 
@@ -129,10 +131,9 @@
             <div class="col-12 col-md-6 col-lg-3">
                 <a href="{{ url('plantation/analytics') }}" class="text-decoration-none">
                     <div class="dash-card hover-lift h-100 p-4">
-                        <h6
-                            style="color: var(--text-muted); font-size: 0.85rem; text-transform: uppercase; font-weight: 600; margin-bottom: 0.5rem;">
-                            Total Plantations
-                        </h6>
+                        <h6 style="color: var(--text-muted); font-size: 0.85rem; text-transform: uppercase; font-weight: 600; margin-bottom: 0.5rem;">
+    Total {{ Str::plural(get_label('label_plantation', 'Plantation')) }}
+</h6>
                         <h2 style="color: var(--text-main); font-weight: 700; margin: 0;">
                             {{ $plantations->count() }}
                         </h2>
@@ -188,7 +189,9 @@
         <div class="dash-card p-0 overflow-hidden">
 
             <div class="p-4 pb-3" style="border-bottom: 1px solid var(--border-color);">
-                <h5 class="fw-bold mb-0" style="color: var(--text-main);">Plantation List</h5>
+              <h5 class="fw-bold mb-0" style="color: var(--text-main);">
+    {{ get_label('label_plantation', 'Plantation') }} List
+</h5>
             </div>
 
             <div class="table-responsive">
@@ -197,7 +200,7 @@
                         <tr>
                             <th class="ps-4">Code</th>
                             <th>Name</th>
-                            <th>Site</th>
+                       <th>{{ get_label('label_site', 'Site') }}</th>
                             <th>Phase</th>
                             <th>Status</th>
                             <th class="text-end pe-4">Action</th>

@@ -3,7 +3,7 @@
     $hideBackground = true;
 @endphp
 @extends('layouts.app')
-
+@section('title', get_label('label_all_user', 'All Users'))
 @push('styles')
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
@@ -272,7 +272,9 @@
         {{-- COMPACT HEADER --}}
         <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
             <div>
-                <h4 class="fw-bold mb-1" style="color: var(--text-main);">Employees</h4>
+               <h4 class="fw-bold mb-1" style="color: var(--text-main);">
+    {{ Str::plural(get_label('label_user', 'User')) }}
+</h4>
                 <p class="mb-0" style="color: var(--text-muted); font-size: 0.85rem;">
                     Manage user roles, site assignments, and operational statuses.
                 </p>
@@ -290,7 +292,7 @@
                 <div class="dash-card hover-lift p-3 d-flex align-items-center gap-3" onclick="clearFilters()">
                     <div class="kpi-icon badge-soft-primary"><i class="bi bi-people-fill"></i></div>
                     <div class="kpi-info">
-                        <h6>Total Users</h6>
+                       <h6>Total {{ Str::plural(get_label('label_user', 'User')) }}</h6>
                         <h3>{{ $totalUsersCount ?? 0 }}</h3>
                     </div>
                 </div>
@@ -333,7 +335,9 @@
 
             <div class="p-3 d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3"
                 style="border-bottom: 1px solid var(--border-color);">
-                <h5 class="fw-bold mb-0 ms-2" style="color: var(--text-main);">User Directory</h5>
+               <h5 class="fw-bold mb-0 ms-2" style="color: var(--text-main);">
+    {{ get_label('label_user', 'User') }} Directory
+</h5>
 
                 <div class="filter-group shadow-sm">
                     <button id="btn-all" class="filter-btn active" onclick="filterTable(''); filterRole('');">All</button>
@@ -347,9 +351,9 @@
                     <thead>
                         <tr>
                             <th class="ps-4" style="width: 60px;">#</th>
-                            <th>Employee Name</th>
+                            <th>{{ get_label('label_user', 'Users') }} Name</th>
                             <th>Role</th>
-                            <th>Site Assign</th>
+                            <th>{{ get_label('label_site', 'Site') }} Assigned</th>
                             <th>Contact</th>
                             <th>Duration</th>
                             <th>Shift</th>

@@ -4,7 +4,7 @@
 
 @extends('layouts.app')
 
-@section('title', 'Attendance Requests')
+@section('title', get_label('label_attendance', 'Attendance') . ' ' . Str::plural(get_label('label_request', 'Request')))
 
 @section('content')
 
@@ -110,7 +110,9 @@
         {{-- HEADER & TOGGLE --}}
         <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
             <div>
-                <h3 class="fw-bold mb-1" style="color: var(--text-main);">Attendance Requests</h3>
+               <h3 class="fw-bold mb-1" style="color: var(--text-main);">
+    {{ get_label('label_attendance', 'Attendance') }} {{ Str::plural(get_label('label_request', 'Request')) }}
+</h3>
                 <p class="mb-0" style="color: var(--text-muted); font-size: 0.9rem;">
                     Review and manage employee clock-in/out exceptions
                 </p>
@@ -128,7 +130,7 @@
         </div>
 
         {{-- =========================================
-         GRID VIEW (COMPACT CARDS) 
+         GRID VIEW (COMPACT CARDS)
     ========================================= --}}
         <div id="gridView" class="row g-3">
             @forelse ($requests as $req)
@@ -229,7 +231,7 @@
         </div>
 
         {{-- =========================================
-         LIST VIEW (TABLE) 
+         LIST VIEW (TABLE)
     ========================================= --}}
         <div id="tableView" class="dash-card p-0 overflow-hidden d-none">
             <div class="table-responsive">

@@ -5,7 +5,7 @@
 @endphp
 @extends('layouts.app')
 
-@section('title', 'Patrol Logs')
+@section('title', get_label('label_patrol_logs', 'Patrol Logs'))
 
 @section('content')
 
@@ -250,7 +250,9 @@
             <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center p-4 border-bottom"
                 style="border-color: var(--border-color) !important;">
                 <div>
-                    <h4 class="fw-bold mb-1" style="color: var(--text-main);">Patrol Logs ({{ ucfirst($flag ?? 'All') }})</h4>
+                   <h4 class="fw-bold mb-1" style="color: var(--text-main);">
+    {{ get_label('label_patrol_logs', 'Patrol Logs') }} ({{ ucfirst($flag ?? 'All') }})
+</h4>
                     <p class="mb-0" style="color: var(--text-muted); font-size: 0.85rem;">Overview of
                         {{ strtolower($flag ?? 'all') }} patrol sessions across all ranges.</p>
                 </div>
@@ -282,7 +284,9 @@
                     </div>
 
                     <div class="col-md-3">
-                        <label class="form-label small fw-semibold" style="color: var(--text-muted);">Range</label>
+                      <label class="form-label small fw-semibold" style="color: var(--text-muted);">
+    {{ get_label('label_client', 'Client') }}
+</label>
                         <select name="client_id[]" id="selectRange" class="w-100" multiple="multiple">
                             @foreach ($clients as $client)
                                 <option value="{{ $client->id }}"
@@ -462,8 +466,8 @@
                             <tr>
                                 <th class="ps-4" style="width: 70px;">#</th>
                                 <th>Officer Name</th>
-                                <th>Range</th>
-                                <th>Beat</th>
+                             <th>{{ get_label('label_client', 'Client') }}</th>
+<th>{{ get_label('label_site', 'Beat') }}</th>
                                 <th>Type</th>
                                 <th>Notes</th>
                                 <th>Date & Time</th>
