@@ -110,44 +110,59 @@ class ForestReportConfigController extends Controller
 
         // Numerator: Guards (Role 3) who actually checked in, joined with site_assign for filtering
         $attendanceQuery = DB::table('attendance')
-            ->join('site_assign', 'attendance.user_id', '=', 'site_assign.user_id')
-            ->where('attendance.company_id', $companyId)
-            ->where('attendance.role_id', 3);
+            ->where('company_id', $companyId)
+            ->where('role_id', 3);
 
-        // Apply Range & Site Filters to Officers
+        // 🔥 Range & Site Filters
         if ($request->filled('range_id') && $request->range_id !== '0' && $request->range_id !== 'all') {
-            $totalOfficersQuery->where('site_assign.client_id', $request->range_id);
-            $attendanceQuery->where('site_assign.client_id', $request->range_id);
+            $attendanceQuery->where('client_id', $request->range_id);
         }
+
         if ($request->filled('site_id') && $request->site_id !== '0' && $request->site_id !== 'all') {
-            $totalOfficersQuery->where('site_assign.site_id', $request->site_id);
-            $attendanceQuery->where('site_assign.site_id', $request->site_id);
+            $attendanceQuery->where('site_id', $request->site_id);
         }
 
-        // Apply Date Filters (ONLY to Attendance)
+        // 🔥 Date Filters (FULLY CORRECT)
         if ($request->filled('date_filter') && $request->date_filter !== 'overall') {
-            $dateFilter = $request->date_filter;
-            if ($dateFilter === 'today') {
-                $attendanceQuery->where('attendance.dateFormat', date('Y-m-d'));
-            } elseif ($dateFilter === 'week') {
-                $attendanceQuery->where('attendance.dateFormat', '>=', Carbon::now()->subWeek()->format('Y-m-d'));
-            } elseif ($dateFilter === 'month') {
-                $attendanceQuery->where('attendance.dateFormat', '>=', Carbon::now()->subMonth()->format('Y-m-d'));
+
+            if ($request->date_filter === 'today') {
+                $attendanceQuery->whereDate('dateFormat', today());
+            } elseif ($request->date_filter === 'week') {
+                $attendanceQuery->whereBetween('dateFormat', [
+                    now()->startOfWeek()->format('Y-m-d'),
+                    now()->endOfWeek()->format('Y-m-d')
+                ]);
+            } elseif ($request->date_filter === 'month') {
+                $attendanceQuery->whereBetween('dateFormat', [
+                    now()->startOfMonth()->format('Y-m-d'),
+                    now()->endOfMonth()->format('Y-m-d')
+                ]);
             }
-        } elseif ($request->filled('from_date')) {
-            $attendanceQuery->where('attendance.dateFormat', '>=', $request->from_date);
-            if ($request->filled('to_date')) {
-                $attendanceQuery->where('attendance.dateFormat', '<=', $request->to_date);
-            }
+        } elseif ($request->filled('from_date') && $request->filled('to_date')) {
+
+            $attendanceQuery->whereBetween('dateFormat', [
+                $request->from_date,
+                $request->to_date
+            ]);
         } else {
-            // Default: Show Today's attendance if no specific date filter is applied
-            $attendanceQuery->where('attendance.dateFormat', date('Y-m-d'));
+            // 🔥 IMPORTANT: "Overall Stats" = NO date filter
+            // 👉 Do nothing here
         }
 
-        // Execute queries cleanly
-        $totalOfficers = $totalOfficersQuery->distinct('users.id')->count('users.id');
-        $activeOfficersCount = $attendanceQuery->distinct('attendance.user_id')->count('attendance.user_id');
-        $attendanceRate = $totalGuards > 0 ? round(($activeOfficersCount / $totalGuards) * 100) : 0;
+        // ✅ FINAL COUNT
+        $activeOfficersCount = $attendanceQuery
+            ->distinct('user_id')
+            ->count('user_id');
+
+        // ✅ Total officers (unchanged)
+        $totalOfficers = $totalOfficersQuery
+            ->distinct('users.id')
+            ->count('users.id');
+
+        // ✅ Rate
+        $attendanceRate = $totalGuards > 0
+            ? round(($activeOfficersCount / $totalGuards) * 100)
+            : 0;
 
 
         // 🔥 FETCH REAL RANGES & BEATS FOR DROPDOWNS
@@ -303,7 +318,6 @@ class ForestReportConfigController extends Controller
                 // Graph 3: Trend
                 $analytics['transport']['trend_vol'][$date] = ($analytics['transport']['trend_vol'][$date] ?? 0) + $vol;
                 $analytics['transport']['trend_incidents'][$date] = ($analytics['transport']['trend_incidents'][$date] ?? 0) + 1;
-
             }
 
             //elseif ($type === 'storage') {
@@ -321,7 +335,7 @@ class ForestReportConfigController extends Controller
             //         $analytics['storage']['time_open'][$date] = ($analytics['storage']['time_open'][$date] ?? 0) + $qty;
             //     }
             //     $analytics['storage']['proportion'][$sp] = ($analytics['storage']['proportion'][$sp] ?? 0) + $qty;
-            // } 
+            // }
             elseif ($type === 'storage') {
                 $sp = $data['species'] ?? 'Unknown';
                 $raw_qty = $data['qty_cmt'] ?? 0;
@@ -1097,23 +1111,32 @@ class ForestReportConfigController extends Controller
 
             // 4. ON DUTY OFFICERS
             elseif ($category === 'onduty') {
-                $targetDate = $fromDate ? $fromDate : date('Y-m-d');
 
-                $query = \Illuminate\Support\Facades\DB::table('attendance')
+                $query = DB::table('attendance')
                     ->join('users', 'attendance.user_id', '=', 'users.id')
                     ->leftJoin('site_assign', 'users.id', '=', 'site_assign.user_id')
-                    ->where('attendance.company_id', $companyId)
-                    ->where('attendance.dateFormat', $targetDate)
-                    ->select(
-                        'users.name',
-                        'site_assign.site_name',
-                        'attendance.entry_time as in_time',
-                        'attendance.exit_time as out_time',
-                        'attendance.dateFormat as date',
-                        'attendance.geo_name as geofence_status',
-                        'attendance.location'
-                    )
-                    ->distinct('attendance.user_id');
+                    ->where('attendance.company_id', $companyId);
+
+                // ✅ DATE FILTER
+                if ($fromDate && $toDate) {
+                    $query->whereBetween('attendance.dateFormat', [$fromDate, $toDate]);
+                } elseif ($fromDate) {
+                    $query->whereDate('attendance.dateFormat', $fromDate);
+                }
+
+                $query->select(
+                    'attendance.user_id',
+                    'users.name',
+                    DB::raw('MAX(site_assign.site_name) as site_name'),
+                    DB::raw('MIN(attendance.entry_time) as in_time'),
+                    DB::raw('MAX(attendance.exit_time) as out_time'),
+                    'attendance.dateFormat as date',
+                    DB::raw('MAX(attendance.geo_name) as geofence_status'),
+                    DB::raw('MAX(attendance.location) as location')
+                );
+
+                // 🔥 FIX DUPLICATES
+                $query->groupBy('attendance.user_id', 'attendance.dateFormat');
 
                 if ($search) {
                     $query->where(function ($q) use ($search) {
@@ -1122,13 +1145,14 @@ class ForestReportConfigController extends Controller
                     });
                 }
 
-                // 🔥 NEW: Apply Range and Beat Database Filters for Officers
                 if ($rangeId)
                     $query->where('site_assign.client_id', $rangeId);
+
                 if ($beatId)
                     $query->where('site_assign.site_id', $beatId);
 
-                $orderBy = $sort ?: 'attendance.entry_time';
+                $orderBy = $sort ?: 'in_time';
+
                 $records = $query->orderBy($orderBy, $dir)->paginate($perPage);
             }
 

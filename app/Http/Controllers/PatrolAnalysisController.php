@@ -72,10 +72,11 @@ class PatrolAnalysisController extends Controller
             return $s;
         });
 
+
         // ----------------------------------------------------
         // 2️⃣ GLOBAL METRICS
         // ----------------------------------------------------
-        $totalDistance = $sessions->sum('distance_m');
+        $totalDistance = $sessions->sum('distance');
         $totalSessions = $sessions->count();
         $totalLogs = $logs->count();
 
@@ -106,8 +107,10 @@ class PatrolAnalysisController extends Controller
         return view('patrolling.dashboard', [
             'totalSessions' => $totalSessions,
             'totalLogs' => $totalLogs,
-            'totalDistance' => $totalDistance / 1000, // km
-            'avgDistance' => $totalSessions > 0 ? ($totalDistance / $totalSessions) / 1000 : 0,
+            'totalDistance' => $totalDistance,
+            'avgDistance' => $totalSessions > 0
+                ? round($totalDistance / $totalSessions, 2)
+                : 0,
             'avgLogs' => $totalSessions > 0 ? $totalLogs / $totalSessions : 0,
 
             'topUser' => $topUser,
@@ -319,6 +322,38 @@ class PatrolAnalysisController extends Controller
         }
 
         $sessions = $sessionsQ->get();
+        $sessions = $sessions->map(function ($s) {
+
+            $coords = [];
+
+            if (!empty($s->path_geojson)) {
+                $raw = is_string($s->path_geojson)
+                    ? json_decode($s->path_geojson, true)
+                    : $s->path_geojson;
+
+                if (isset($raw['coordinates'])) {
+                    $coords = $raw['coordinates'];
+                }
+            }
+
+            $distance = 0;
+
+            if (count($coords) > 1) {
+                for ($i = 1; $i < count($coords); $i++) {
+                    $lat1 = $coords[$i - 1][1];
+                    $lng1 = $coords[$i - 1][0];
+                    $lat2 = $coords[$i][1];
+                    $lng2 = $coords[$i][0];
+
+                    $distance += $this->haversineMeters($lat1, $lng1, $lat2, $lng2);
+                }
+            }
+
+            $s->distance_m = $distance;
+
+            return $s;
+        });
+        // dd($sessions->pluck('distance_m'));
         $logs = $logsQ->get();
 
         // LABEL MAPS (id -> name)
@@ -465,7 +500,7 @@ class PatrolAnalysisController extends Controller
     WEEK(started_at, 1) AS week_number,
     COUNT(*) AS sessions,
     SUM(distance) AS total_distance
-")
+     ")
             ->where('company_id', $user->company_id)
             ->groupBy('week_number')
             ->orderBy('week_number')
