@@ -60,13 +60,13 @@
     const config = {
         categories: [{
                 id: 'criminal',
-                label: 'Criminal Activity',
+                label: 'Report a Forest Crime',
                 icon: 'bi-hammer',
                 sub: ['felling', 'transport', 'storage', 'poaching', 'encroachment', 'mining']
             },
             {
                 id: 'events',
-                label: 'Events & Monitoring',
+                label: 'Forest Crime / Event',
                 icon: 'bi-eye',
                 sub: ['wildlife', 'water', 'compensation']
             },
@@ -93,10 +93,10 @@
             felling: 'Illegal Felling',
             transport: 'Timber Transport',
             storage: 'Timber Storage',
-            poaching: 'Poaching',
+            poaching: 'Wild Animal Death',
             encroachment: 'Encroachment',
             mining: 'Illegal Mining',
-            wildlife: 'Animal Sighting',
+            wildlife: 'Wild Animal Sighting',
             water: 'Water Status',
             compensation: 'Compensation',
             fire: 'Fire Alerts',
@@ -153,17 +153,23 @@
                     type: 'pie',
                     toggles: [],
                     generator: (idx, db) => {
-                        let lbls = Object.keys(db.felling?.reasons || {});
-                        let vals = Object.values(db.felling?.reasons || {});
-                        if (!lbls.length) {
-                            lbls = ['Trade', 'Fuel', 'Agri Land', 'Others'];
-                            vals = [27, 28, 21, 13];
+                        let l = Object.keys(db.felling?.reasons || {});
+                        let v = Object.values(db.felling?.reasons || {}).map(Number);
+
+                        // 🔥 FIXED: Properly check for empty data and apply a grey "No Data" state
+                        if (!l.length || v.reduce((a, b) => a + b, 0) === 0) {
+                            l = ['No Data'];
+                            v = [1]; // Set to 1 just so the grey circle actually renders
                         }
+
                         return {
-                            labels: lbls,
+                            labels: l,
                             datasets: [{
-                                data: vals,
-                                backgroundColor: ['#ef4444', '#f59e0b', '#10b981', '#64748b']
+                                data: v,
+                                // If it's No Data, make it grey (slate), otherwise use the colors
+                                backgroundColor: l[0] === 'No Data' ? [CHART_COLORS.slate] : [
+                                    '#ef4444', '#f59e0b', '#10b981', '#64748b'
+                                ]
                             }]
                         };
                     },
@@ -184,6 +190,7 @@
                         }
                     },
                     calcPill: (data) => {
+                        if (data.labels[0] === 'No Data') return 'N/A';
                         let maxIdx = data.datasets[0].data.indexOf(Math.max(...data.datasets[0].data));
                         return `Top: ${data.labels[maxIdx] || 'N/A'}`;
                     }
@@ -222,23 +229,145 @@
                     }
                 }
             ],
+            // 'criminal.transport': [{
+            //         id: 'trans-c1',
+            //         title: 'Transport Vehicle Analytics',
+            //         type: 'bar',
+            //         toggles: ['Quantity', 'Trips'],
+            //         generator: (idx, db) => {
+            //             let dataObj = idx === 0 ? db.transport?.vehicles_qty : db.transport?.vehicles_trips;
+            //             let lbls = Object.keys(dataObj || {});
+            //             let vals = Object.values(dataObj || {}).map(Number);
+            //             if (!lbls.length || vals.reduce((a, b) => a + b, 0) === 0) {
+            //                 lbls = ['No Data'];
+            //                 vals = [0];
+            //             }
+            //             return {
+            //                 labels: lbls,
+            //                 datasets: [{
+            //                     label: idx === 0 ? 'Quantity' : 'Trips',
+            //                     data: vals,
+            //                     backgroundColor: '#6366f1',
+            //                     borderRadius: 4
+            //                 }]
+            //             };
+            //         },
+            //         calcPill: (data) => `Total: ${data.datasets[0].data.reduce((a, b) => a + b, 0).toFixed(0)}`
+            //     },
+            //     {
+            //         id: 'trans-c2',
+            //         title: 'Smuggling Routes',
+            //         type: 'doughnut',
+            //         toggles: [],
+            //         generator: (idx, db) => {
+            //             let l = Object.keys(db.transport?.routes || {});
+            //             let v = Object.values(db.transport?.routes || {}).map(Number);
+            //             if (!l.length || v.reduce((a, b) => a + b, 0) === 0) return {
+            //                 labels: ['No Data'],
+            //                 datasets: [{
+            //                     data: [1],
+            //                     backgroundColor: ['#64748b']
+            //                 }]
+            //             };
+            //             return {
+            //                 labels: l,
+            //                 datasets: [{
+            //                     data: v,
+            //                     backgroundColor: COLOR_PALETTE
+            //                 }]
+            //             };
+            //         },
+            //         options: {
+            //             plugins: {
+            //                 legend: {
+            //                     display: true,
+            //                     position: 'bottom'
+            //                 }
+            //             },
+            //             scales: {
+            //                 x: {
+            //                     display: false
+            //                 },
+            //                 y: {
+            //                     display: false
+            //                 }
+            //             }
+            //         },
+            //         calcPill: (data) => `Main: ${data.labels[0] || 'N/A'}`
+            //     },
+            //     {
+            //         id: 'trans-c3',
+            //         title: '30-Day Transport Trend',
+            //         type: 'line',
+            //         toggles: [],
+            //         generator: (idx, db) => {
+            //             let l = Object.keys(db.transport?.trend || {});
+            //             let v = Object.values(db.transport?.trend || {}).map(Number);
+            //             if (!l.length) return {
+            //                 labels: ['No Data'],
+            //                 datasets: [{
+            //                     data: [0],
+            //                     backgroundColor: 'rgba(100,116,139,0.1)',
+            //                     borderColor: '#64748b'
+            //                 }]
+            //             };
+            //             return {
+            //                 labels: l,
+            //                 datasets: [{
+            //                     label: 'Quantity',
+            //                     data: v,
+            //                     borderColor: '#f43f5e',
+            //                     backgroundColor: 'rgba(244,63,94,0.1)',
+            //                     fill: true,
+            //                     tension: 0.4
+            //                 }]
+            //             };
+            //         },
+            //         options: {
+            //             plugins: {
+            //                 datalabels: {
+            //                     display: false
+            //                 }
+            //             }
+            //         },
+            //         calcPill: (data) => {
+            //             let total = data.datasets[0].data.reduce((a, b) => a + b, 0);
+            //             let avg = data.datasets[0].data.length ? (total / data.datasets[0].data.length) : 0;
+            //             return `Avg: ${avg.toFixed(1)}`;
+            //         }
+            //     }
+            // ],
             'criminal.transport': [{
                     id: 'trans-c1',
                     title: 'Transport Vehicle Analytics',
                     type: 'bar',
-                    toggles: ['Quantity', 'Trips'],
+                    toggles: ['Volume (CuM)', 'Trees', 'Trips'],
                     generator: (idx, db) => {
-                        let dataObj = idx === 0 ? db.transport?.vehicles_qty : db.transport?.vehicles_trips;
-                        let lbls = Object.keys(dataObj || {});
+                        let dataObj = idx === 0 ? db.transport?.vehicles_vol : idx === 1 ? db.transport
+                            ?.vehicles_trees : db.transport?.vehicles_trips;
+
+                        let rawLabels = Object.keys(dataObj || {});
                         let vals = Object.values(dataObj || {}).map(Number);
-                        if (!lbls.length || vals.reduce((a, b) => a + b, 0) === 0) {
-                            lbls = ['No Data'];
-                            vals = [0];
+
+                        if (!rawLabels.length || vals.reduce((a, b) => a + b, 0) === 0) {
+                            return {
+                                labels: ['No Data'],
+                                datasets: [{
+                                    data: [0],
+                                    backgroundColor: '#64748b',
+                                    borderRadius: 4
+                                }]
+                            };
                         }
+
+                        // 🔥 TRUNCATE LONG VEHICLE NAMES TO KEEP AXIS CLEAN
+                        let lbls = rawLabels.map(name => name.length > 14 ? name.substring(0, 12) + '...' :
+                            name);
+
                         return {
                             labels: lbls,
                             datasets: [{
-                                label: idx === 0 ? 'Quantity' : 'Trips',
+                                label: ['Volume', 'Trees', 'Trips'][idx],
                                 data: vals,
                                 backgroundColor: '#6366f1',
                                 borderRadius: 4
@@ -249,19 +378,42 @@
                 },
                 {
                     id: 'trans-c2',
-                    title: 'Smuggling Routes',
+                    title: 'Confiscated Produce',
                     type: 'doughnut',
                     toggles: [],
                     generator: (idx, db) => {
-                        let l = Object.keys(db.transport?.routes || {});
-                        let v = Object.values(db.transport?.routes || {}).map(Number);
-                        if (!l.length || v.reduce((a, b) => a + b, 0) === 0) return {
-                            labels: ['No Data'],
-                            datasets: [{
-                                data: [1],
-                                backgroundColor: ['#64748b']
-                            }]
-                        };
+                        let produceData = db.transport?.produce || {};
+                        let entries = Object.entries(produceData).sort((a, b) => b[1] - a[
+                            1]); // Sort highest first
+
+                        if (entries.length === 0 || entries.reduce((acc, curr) => acc + curr[1], 0) === 0) {
+                            return {
+                                labels: ['No Data'],
+                                datasets: [{
+                                    data: [1],
+                                    backgroundColor: ['#64748b']
+                                }]
+                            };
+                        }
+
+                        // 🔥 SMART GROUPING: Top 4 + "Others"
+                        let l = [];
+                        let v = [];
+                        let top = entries.slice(0, 4);
+                        let others = entries.slice(4).reduce((acc, curr) => acc + curr[1], 0);
+
+                        top.forEach(e => {
+                            // Truncate long produce names or garbage text
+                            let name = e[0].length > 15 ? e[0].substring(0, 13) + '...' : e[0];
+                            l.push(name);
+                            v.push(e[1]);
+                        });
+
+                        if (others > 0) {
+                            l.push('Others');
+                            v.push(others);
+                        }
+
                         return {
                             labels: l,
                             datasets: [{
@@ -286,16 +438,22 @@
                             }
                         }
                     },
-                    calcPill: (data) => `Main: ${data.labels[0] || 'N/A'}`
+                    calcPill: (data) => {
+                        if (data.labels[0] === 'No Data') return 'N/A';
+                        let maxIdx = data.datasets[0].data.indexOf(Math.max(...data.datasets[0].data));
+                        return `Top: ${data.labels[maxIdx] || 'N/A'}`;
+                    }
                 },
                 {
                     id: 'trans-c3',
                     title: '30-Day Transport Trend',
                     type: 'line',
-                    toggles: [],
+                    toggles: ['Volume (CuM)', 'Incidents'],
                     generator: (idx, db) => {
-                        let l = Object.keys(db.transport?.trend || {});
-                        let v = Object.values(db.transport?.trend || {}).map(Number);
+                        let dataObj = idx === 0 ? db.transport?.trend_vol : db.transport?.trend_incidents;
+                        let l = Object.keys(dataObj || {});
+                        let v = Object.values(dataObj || {}).map(Number);
+
                         if (!l.length) return {
                             labels: ['No Data'],
                             datasets: [{
@@ -304,10 +462,11 @@
                                 borderColor: '#64748b'
                             }]
                         };
+
                         return {
                             labels: l,
                             datasets: [{
-                                label: 'Quantity',
+                                label: idx === 0 ? 'Volume' : 'Incidents',
                                 data: v,
                                 borderColor: '#f43f5e',
                                 backgroundColor: 'rgba(244,63,94,0.1)',
@@ -767,14 +926,19 @@
             ],
 
             // --- EVENTS ---
-            'events.wildlife': [{
+            'events.wildlife': [
+
+
+                {
                     id: 'wl-c1',
                     title: 'Species Sighting Analysis',
                     type: 'bar',
                     toggles: ['Type', 'Gender'],
                     generator: (idx, db) => {
-                        console.log(db, "animla sighting");
                         let obj = idx === 0 ? db.wildlife?.type : db.wildlife?.gender;
+
+                        // console.log(db?.wildlife, "wildlife data");
+
                         let labels = Object.keys(obj || {});
                         if (!labels.length) return {
                             labels: ['No Data'],
@@ -789,7 +953,8 @@
                         let datasets = keys.map((k, i) => {
                             return {
                                 label: k,
-                                data: labels.map(sp => obj[sp]?.[k] || 0),
+                                // 🔥 FIX 1: Wrap in Number() so Javascript doesn't treat counts as text
+                                data: labels.map(sp => Number(obj[sp]?.[k] || 0)),
                                 backgroundColor: colors[i],
                                 borderRadius: 4
                             };
@@ -812,9 +977,13 @@
                             }
                         }
                     },
+                    // 🔥 FIX 2: Added Number() casting to the reduce loop so it does math, not word combining
                     calcPill: (data) =>
-                        `Records: ${data.datasets.reduce((sum, ds) => sum + ds.data.reduce((a, b) => a + b, 0), 0)}`
+                        `Records: ${data.datasets.reduce((sum, ds) => sum + ds.data.reduce((a, b) => Number(a) + Number(b), 0), 0)}`
                 },
+
+
+
                 {
                     id: 'wl-c2',
                     title: 'Evidence Type Distribution',
@@ -1583,7 +1752,7 @@
             {
                 id: 'poaching',
                 dbType: 'Poaching',
-                label: 'Poaching',
+                label: 'Wild Animal Death',
                 emoji: '🐾',
                 color: '#b91c1c'
             },
@@ -2020,7 +2189,7 @@
             const layers = mapLayerDefinitions[category];
             //    console.log("layers", layers);
             layers.forEach((layerDef) => {
-                console.log("layers def", layerDef);
+                // console.log("layers def", layerDef);
                 const layerRecords = dbMapData.filter(record => {
                     if (!record.report_type) return false;
                     const type = record.report_type.toLowerCase().trim();
@@ -2030,7 +2199,7 @@
 
                 let markerArray = [];
                 if (layerRecords[0]?.report_type == 'felling') {
-                    console.log(layerRecords, "layers recoreds")
+                    // console.log(layerRecords, "layers recoreds")
                 }
                 layerRecords.forEach(record => {
                     const lat = parseFloat(record.latitude);
@@ -2604,7 +2773,7 @@
             felling: 'Felling',
             transport: 'Transport',
             storage: 'Storage',
-            poaching: 'Poaching',
+            poaching: 'Animal Death',
             encroachment: 'Encroach',
             mining: 'Mining',
             wildlife: 'Wild Sighting',
@@ -2761,7 +2930,7 @@
         window.viewMode = mode;
         const overallBtn = document.getElementById('view-overall');
         const analyticalBtn = document.getElementById('view-analytical');
-        console.log(window.viewMode, "view mode");
+        // console.log(window.viewMode, "view mode");
         if (overallBtn) overallBtn.className = `view-toggle-btn ${mode === 'overall' ? 'active' : ''}`;
         if (analyticalBtn) analyticalBtn.className = `view-toggle-btn ${mode === 'analytical' ? 'active' : ''}`;
 

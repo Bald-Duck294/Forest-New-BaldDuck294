@@ -1,72 +1,64 @@
 <style>
-    /* =====================================================
-       RESPONSIVE KPI GRID — auto-fits equal columns at
-       every breakpoint, 1 → 2 → 3 → 4 → 7 columns
-    ===================================================== */
+    /* =========================================
+       7-COLUMN EXACT FIT GRID & SAAS KPI CARDS
+    ========================================= */
+    /* Desktop: Force exactly 7 equal columns */
+    @media (min-width: 1200px) {
+        .kpi-7-row {
+            display: grid !important;
+            grid-template-columns: repeat(7, 1fr) !important;
+            gap: 14px !important;
+            /* Slightly more gap */
+        }
 
-    /* Import Inter font */
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-
-    .kpi-grid-wrap {
-        /* CSS Grid: fills available width, min card = 150px, max = 1fr */
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(min(150px, 100%), 1fr));
-        gap: clamp(10px, 1.2vw, 18px);
-        width: 100%;
-    }
-
-    /* On screens wide enough to comfortably show all 7 */
-    @media (min-width: 1100px) {
-        .kpi-grid-wrap {
-            grid-template-columns: repeat(7, 1fr);
+        .kpi-7-row>.col-kpi {
+            width: 100% !important;
+            max-width: 100% !important;
+            padding: 0 !important;
+            margin: 0 !important;
         }
     }
 
-    /* 4 columns on tablet landscape */
-    @media (min-width: 768px) and (max-width: 1099px) {
-        .kpi-grid-wrap {
-            grid-template-columns: repeat(4, 1fr);
+    /* Tablet/Mobile: Allow horizontal scrolling so it doesn't break */
+    @media (max-width: 1199px) {
+        .kpi-7-row {
+            display: flex;
+            flex-wrap: nowrap;
+            overflow-x: auto;
+            padding-bottom: 12px;
+            gap: 14px;
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        .kpi-7-row::-webkit-scrollbar {
+            display: none;
+        }
+
+        .kpi-7-row>.col-kpi {
+            flex: 0 0 210px;
         }
     }
 
-    /* 2 columns on tablet portrait / large phone */
-    @media (min-width: 480px) and (max-width: 767px) {
-        .kpi-grid-wrap {
-            grid-template-columns: repeat(2, 1fr);
-        }
-    }
-
-    /* 1 column on small phones */
-    @media (max-width: 479px) {
-        .kpi-grid-wrap {
-            grid-template-columns: 1fr;
-        }
-    }
-
-    /* ── Card Base ────────────────────────────────────── */
+    /* Custom Card Styling - Modern SaaS Look */
     .kpi-card-bs {
-        font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-        background-color: var(--bg-card, #ffffff);
+        /* Force clean modern font just for the cards */
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
+        background-color: var(--bg-card);
         border-radius: 12px;
-
-        /* Fluid padding: grows slightly on wider screens */
-        padding: clamp(0.85rem, 1.5vw, 1.25rem) clamp(0.75rem, 1.2vw, 1rem);
-
-        border: 1px solid var(--border-color, rgba(0, 0, 0, 0.08));
+        padding: 1.25rem 1rem;
+        /* More vertical breathing room */
+        border: 1px solid var(--border-color);
         position: relative;
         overflow: hidden;
-        transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1),
-                    box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-
-        /* Equal height within each row */
+        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
         height: 100%;
-        min-height: clamp(110px, 12vw, 140px);
-
+        min-height: 125px;
+        /* Prevents them from looking squished */
         display: flex;
         flex-direction: column;
         justify-content: space-between;
-
-        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
     }
 
     .kpi-card-bs.clickable {
@@ -75,223 +67,235 @@
 
     .kpi-card-bs.clickable:hover {
         transform: translateY(-4px);
-        box-shadow: 0 14px 24px -10px rgba(0, 0, 0, 0.14);
+        box-shadow: 0 12px 20px -8px rgba(0, 0, 0, 0.15);
+        border-color: var(--border-color);
+        /* Keeps it subtle */
     }
 
-    /* ── Decorative corner curve ──────────────────────── */
+    /* Top Right Corner Curve (Softer Opacity) */
     .kpi-bg-curve {
         position: absolute;
         right: 0;
         top: 0;
-        width: 5rem;
-        height: 5rem;
+        width: 5.5rem;
+        height: 5.5rem;
         border-bottom-left-radius: 100%;
         z-index: 0;
         transition: transform 0.4s ease;
-        pointer-events: none;
     }
 
     .kpi-card-bs:hover .kpi-bg-curve {
-        transform: scale(1.18);
+        transform: scale(1.15);
     }
 
-    /* ── Content layer (sits above curve) ─────────────── */
     .kpi-content {
         position: relative;
         z-index: 1;
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-        height: 100%;
     }
 
-    /* ── Icon box ─────────────────────────────────────── */
+    /* Icon Container - Larger and cleaner */
     .kpi-icon-box {
-        width: clamp(32px, 3vw, 40px);
-        height: clamp(32px, 3vw, 40px);
-        flex-shrink: 0;
+        width: 38px;
+        height: 38px;
         display: flex;
         align-items: center;
         justify-content: center;
         border-radius: 8px;
-        font-size: clamp(1rem, 1.15vw, 1.2rem);
+        font-size: 1.15rem;
     }
 
-    /* ── Value number ─────────────────────────────────── */
-    .kpi-value {
-        font-size: clamp(1.3rem, 2.2vw, 1.7rem);
-        font-weight: 700;
-        color: var(--text-main, #1a1a2e);
-        letter-spacing: -0.5px;
-        line-height: 1.1;
-        margin: 0;
+    /* Exact Color Themes (Opacity dropped to 0.05 for elegant softness) */
+    .theme-blue .kpi-bg-curve {
+        background-color: rgba(59, 130, 246, 0.05);
     }
 
-    /* ── Label ────────────────────────────────────────── */
-    .kpi-label {
-        font-size: clamp(0.65rem, 0.75vw, 0.78rem);
-        font-weight: 500;
-        letter-spacing: 0.2px;
-        white-space: normal;          /* wrap instead of truncate on tiny cards */
-        overflow: hidden;
-        display: -webkit-box;
-        -webkit-line-clamp: 2;
-        -webkit-box-orient: vertical;
-        margin-bottom: 0.25rem;
-        line-height: 1.3;
+    .theme-blue .kpi-icon-box {
+        background-color: rgba(59, 130, 246, 0.15);
+        color: #3b82f6;
     }
 
-    /* ── Trend line ───────────────────────────────────── */
-    .kpi-trend {
-        font-size: clamp(0.62rem, 0.72vw, 0.72rem);
-        font-weight: 600;
-        margin: 0;
-        margin-top: 0.65rem;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
+    .theme-indigo .kpi-bg-curve {
+        background-color: rgba(99, 102, 241, 0.05);
     }
 
-    /* ── Theme colour tokens ──────────────────────────── */
-    .theme-blue   .kpi-bg-curve { background-color: rgba(59,  130, 246, 0.06); }
-    .theme-blue   .kpi-icon-box { background-color: rgba(59,  130, 246, 0.14); color: #3b82f6; }
+    .theme-indigo .kpi-icon-box {
+        background-color: rgba(99, 102, 241, 0.15);
+        color: #6366f1;
+    }
 
-    .theme-indigo .kpi-bg-curve { background-color: rgba(99,  102, 241, 0.06); }
-    .theme-indigo .kpi-icon-box { background-color: rgba(99,  102, 241, 0.14); color: #6366f1; }
+    .theme-rose .kpi-bg-curve {
+        background-color: rgba(244, 63, 94, 0.05);
+    }
 
-    .theme-rose   .kpi-bg-curve { background-color: rgba(244,  63,  94, 0.06); }
-    .theme-rose   .kpi-icon-box { background-color: rgba(244,  63,  94, 0.14); color: #f43f5e; }
+    .theme-rose .kpi-icon-box {
+        background-color: rgba(244, 63, 94, 0.15);
+        color: #f43f5e;
+    }
 
-    .theme-amber  .kpi-bg-curve { background-color: rgba(245, 158,  11, 0.06); }
-    .theme-amber  .kpi-icon-box { background-color: rgba(245, 158,  11, 0.14); color: #f59e0b; }
+    .theme-amber .kpi-bg-curve {
+        background-color: rgba(245, 158, 11, 0.05);
+    }
 
-    .theme-orange .kpi-bg-curve { background-color: rgba(249, 115,  22, 0.06); }
-    .theme-orange .kpi-icon-box { background-color: rgba(249, 115,  22, 0.14); color: #f97316; }
+    .theme-amber .kpi-icon-box {
+        background-color: rgba(245, 158, 11, 0.15);
+        color: #f59e0b;
+    }
 
-    .theme-teal   .kpi-bg-curve { background-color: rgba( 20, 184, 166, 0.06); }
-    .theme-teal   .kpi-icon-box { background-color: rgba( 20, 184, 166, 0.14); color: #14b8a6; }
+    .theme-orange .kpi-bg-curve {
+        background-color: rgba(249, 115, 22, 0.05);
+    }
 
-    .theme-emerald .kpi-bg-curve { background-color: rgba( 16, 185, 129, 0.06); }
-    .theme-emerald .kpi-icon-box { background-color: rgba( 16, 185, 129, 0.14); color: #10b981; }
+    .theme-orange .kpi-icon-box {
+        background-color: rgba(249, 115, 22, 0.15);
+        color: #f97316;
+    }
+
+    .theme-teal .kpi-bg-curve {
+        background-color: rgba(20, 184, 166, 0.05);
+    }
+
+    .theme-teal .kpi-icon-box {
+        background-color: rgba(20, 184, 166, 0.15);
+        color: #14b8a6;
+    }
+
+    .theme-emerald .kpi-bg-curve {
+        background-color: rgba(16, 185, 129, 0.05);
+    }
+
+    .theme-emerald .kpi-icon-box {
+        background-color: rgba(16, 185, 129, 0.15);
+        color: #10b981;
+    }
 </style>
 
 @php
     $items = [
         [
-            'id'          => 'officers',
-            'label'       => 'On Duty Officers',
-            'val'         => $kpis['officers'] ?? 0,
-            'url'         => url('/reports/detailed?category=onduty'),
-            'theme'       => 'theme-blue',
-            'icon'        => 'bi-people',
-            'trend_text'  => ($kpis['attendanceRate'] ?? 0) . '% (' . ($kpis['officers'] ?? 0) . '/' . ($kpis['totalOfficers'] ?? 0) . ')',
+            'id' => 'officers',
+            'label' => 'On Duty Officers',
+            'val' => $kpis['officers'] ?? 0,
+            'url' => url('/reports/detailed?category=onduty'),
+            'theme' => 'theme-blue',
+            'icon' => 'bi-people',
+            'trend_text' =>
+                ($kpis['attendanceRate'] ?? 0) .
+                '% (' .
+                ($kpis['officers'] ?? 0) .
+                '/' .
+                ($kpis['totalOfficers'] ?? 0) .
+                ')',
             'trend_color' => '#3b82f6',
-            'trend_icon'  => 'bi-graph-up-arrow',
+            'trend_icon' => 'bi-graph-up-arrow',
         ],
         [
-            'id'          => 'patrol',
-            'label'       => 'Patrol Status',
-            'val'         => $kpis['patrols'] ?? 0,
-            'url'         => url('/patrolling'),
-            'theme'       => 'theme-indigo',
-            'icon'        => 'bi-map',
-            'trend_text'  => 'View List',
+            'id' => 'patrol',
+            'label' => 'Patrol Status',
+            'val' => $kpis['patrols'] ?? 0,
+            'url' => url('/patrolling'),
+            'theme' => 'theme-indigo',
+            'icon' => 'bi-map',
+            'trend_text' => 'View List',
             'trend_color' => '#6366f1',
-            'trend_icon'  => 'bi-arrow-right',
+            'trend_icon' => 'bi-arrow-right',
         ],
         [
-            'id'          => 'criminal',
-            'label'       => 'Criminal Activity',
-            'val'         => $kpis['criminal'] ?? 0,
-            'nav'         => 'criminal',
-            'theme'       => 'theme-rose',
-            'icon'        => 'bi-exclamation-triangle',
-            'trend_text'  => 'View Analytics',
+            'id' => 'criminal',
+            'label' => 'Forest Crimes', // 🔥 UPDATED (Shortened for card fit)
+            'val' => $kpis['criminal'] ?? 0,
+            'nav' => 'criminal',
+            'theme' => 'theme-rose',
+            'icon' => 'bi-exclamation-triangle',
+            'trend_text' => 'View Analytics',
             'trend_color' => '#f43f5e',
-            'trend_icon'  => 'bi-arrow-right',
+            'trend_icon' => 'bi-arrow-right',
         ],
         [
-            'id'          => 'events',
-            'label'       => 'Events & Monitor',
-            'val'         => $kpis['events'] ?? 0,
-            'nav'         => 'events',
-            'theme'       => 'theme-amber',
-            'icon'        => 'bi-binoculars',
-            'trend_text'  => 'View Analytics',
+            'id' => 'events',
+            'label' => 'Crime / Events', // 🔥 UPDATED
+            'val' => $kpis['events'] ?? 0,
+            'nav' => 'events',
+            'theme' => 'theme-amber',
+            'icon' => 'bi-binoculars',
+            'trend_text' => 'View Analytics',
             'trend_color' => '#f59e0b',
-            'trend_icon'  => 'bi-arrow-right',
+            'trend_icon' => 'bi-arrow-right',
         ],
         [
-            'id'          => 'fire',
-            'label'       => 'Fire Alerts',
-            'val'         => $kpis['fire'] ?? 0,
-            'nav'         => 'fire',
-            'theme'       => 'theme-orange',
-            'icon'        => 'bi-fire',
-            'trend_text'  => 'View Analytics',
+            'id' => 'fire',
+            'label' => 'Fire Alerts',
+            'val' => $kpis['fire'] ?? 0,
+            'nav' => 'fire',
+            'theme' => 'theme-orange',
+            'icon' => 'bi-fire',
+            'trend_text' => 'View Analytics',
             'trend_color' => '#f97316',
-            'trend_icon'  => 'bi-arrow-right',
+            'trend_icon' => 'bi-arrow-right',
         ],
         [
-            'id'          => 'assets',
-            'label'       => 'Assets & Tools',
-            'val'         => $kpis['assets'] ?? 0,
-            'nav'         => 'assets',
-            'theme'       => 'theme-teal',
-            'icon'        => 'bi-shield-check',
-            'trend_text'  => 'View Analytics',
+            'id' => 'assets',
+            'label' => 'Assets & Tools',
+            'val' => $kpis['assets'] ?? 0,
+            'nav' => 'assets',
+            'theme' => 'theme-teal',
+            'icon' => 'bi-shield-check',
+            'trend_text' => 'View Analytics',
             'trend_color' => '#14b8a6',
-            'trend_icon'  => 'bi-arrow-right',
+            'trend_icon' => 'bi-arrow-right',
         ],
         [
-            'id'          => 'forestry',
-            'label'       => 'Plantations',
-            'val'         => $kpis['plantations'] ?? 0,
-            'nav'         => 'forestry',
-            'theme'       => 'theme-emerald',
-            'icon'        => 'bi-tree',
-            'trend_text'  => 'View Analytics',
+            'id' => 'forestry',
+            'label' => 'Plantations',
+            'val' => $kpis['plantations'] ?? 0,
+            'nav' => 'forestry',
+            'theme' => 'theme-emerald',
+            'icon' => 'bi-tree',
+            'trend_text' => 'View Analytics',
             'trend_color' => '#10b981',
-            'trend_icon'  => 'bi-arrow-right',
+            'trend_icon' => 'bi-arrow-right',
         ],
     ];
 @endphp
-
-<div id="main-kpi-grid" class="kpi-grid-wrap mb-4">
+<div id="main-kpi-grid" class="kpi-7-row mb-4">
     @foreach ($items as $item)
-        <div class="kpi-card-bs {{ $item['theme'] }}{{ (isset($item['url']) || isset($item['nav'])) ? ' clickable' : '' }}"
-            @if (isset($item['url']))
-                onclick="window.location.href='{{ $item['url'] }}'"
-            @elseif (isset($item['nav']))
-                onclick="navigateTo('{{ $item['nav'] }}')"
-            @endif>
+        <div class="col-kpi">
+            <div class="kpi-card-bs {{ $item['theme'] }} @if (isset($item['url']) || isset($item['nav'])) clickable @endif"
+                @if (isset($item['url'])) onclick="window.location.href='{{ $item['url'] }}'" @elseif(isset($item['nav']))
+                onclick="navigateTo('{{ $item['nav'] }}')" @endif>
 
-            {{-- Corner decoration --}}
-            <div class="kpi-bg-curve"></div>
+                <div class="kpi-bg-curve"></div>
 
-            <div class="kpi-content">
+                <div class="kpi-content h-100 d-flex flex-column justify-content-between">
+                    {{-- Flexbox strictly isolates the text (left) and the icon (right) --}}
+                    <div class="d-flex justify-content-between align-items-start w-100">
 
-                {{-- Top row: label + icon --}}
-                <div style="display: flex; justify-content: space-between; align-items: flex-start; width: 100%;">
+                        {{-- Text wrapper: Forces truncation and prevents touching the icon --}}
+                        <div style="min-width: 0; padding-right: 8px; flex-grow: 1;">
+                            <p class="mb-1 text-muted text-truncate"
+                                style="font-size: 0.75rem; font-weight: 500; letter-spacing: 0.2px;"
+                                title="{{ $item['label'] }}">
+                                {{ $item['label'] }}
+                            </p>
+                            <h3 class="mb-0 fw-bold"
+                                style="font-size: 1.6rem; color: var(--text-main); letter-spacing: -0.5px;"
+                                id="kpi-{{ $item['id'] }}">
+                                {{ number_format($item['val']) }}
+                            </h3>
+                        </div>
 
-                    <div style="min-width: 0; flex: 1; padding-right: 8px;">
-                        <p class="kpi-label text-muted mb-1" title="{{ $item['label'] }}">
-                            {{ $item['label'] }}
-                        </p>
-                        <p class="kpi-value" id="kpi-{{ $item['id'] }}">
-                            {{ number_format($item['val']) }}
-                        </p>
+                        {{-- Icon box explicitly will not shrink or move --}}
+                        <div class="kpi-icon-box flex-shrink-0">
+                            <i class="bi {{ $item['icon'] }}"></i>
+                        </div>
                     </div>
 
-                    <div class="kpi-icon-box">
-                        <i class="bi {{ $item['icon'] }}"></i>
-                    </div>
+                    {{-- Trend text anchored nicely to the bottom --}}
+                    <p class="mb-0 mt-3 text-truncate w-100"
+                        style="font-size: 0.70rem; font-weight: 600; color: {{ $item['trend_color'] }};"
+                        title="{{ $item['trend_text'] }}">
+                        {{ $item['trend_text'] }} <i class="bi {{ $item['trend_icon'] }} ms-1"></i>
+                    </p>
                 </div>
-
-                {{-- Trend text --}}
-                <p class="kpi-trend" style="color: {{ $item['trend_color'] }};" title="{{ $item['trend_text'] }}">
-                    {{ $item['trend_text'] }} <i class="bi {{ $item['trend_icon'] }} ms-1"></i>
-                </p>
 
             </div>
         </div>
