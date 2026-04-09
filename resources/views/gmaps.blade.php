@@ -85,6 +85,7 @@ $user = session('user');
         border-bottom: 1px solid var(--border-color);
         display: flex;
         gap: 20px;
+        align-items: center;
     }
 
     .info-item {
@@ -96,6 +97,33 @@ $user = session('user');
     .info-label {
         color: var(--text-muted);
         margin-right: 5px;
+    }
+
+    /* Action styling for Locate Me button */
+    .info-actions {
+        margin-left: auto;
+    }
+
+    .btn-locate {
+        background: var(--bg-card);
+        color: var(--text-main);
+        border: 1px solid var(--border-color);
+        padding: 6px 14px;
+        border-radius: 0.5rem;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    }
+
+    .btn-locate:hover {
+        background: var(--bg-input);
+        border-color: #3b82f6;
+        color: #3b82f6;
     }
 </style>
 
@@ -119,6 +147,12 @@ $user = session('user');
                 <div class="info-item"><span class="info-label">Radius:</span> {{ $geofence->radius }} m</div>
                 @endif
                 <div class="info-item"><span class="info-label">ID:</span> #{{ $geofence->id }}</div>
+
+                <div class="info-actions">
+                    <button type="button" class="btn-locate" onclick="locateMe()" title="Find My Location">
+                        <i class="la la-crosshairs"></i> Locate Me
+                    </button>
+                </div>
             </div>
 
             <div id="mapCanvas"></div>
@@ -129,11 +163,13 @@ $user = session('user');
 @endsection
 
 @push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
     var data = @json($geofence);
+    var map = null; // Moved map to global scope so LocateMe can access it
+    var userMarker = null; // Marker specifically for the user's live location
 
     window.initMap = function() {
-        var map;
         var centerData;
 
         // 1. Parse Center Point
@@ -150,9 +186,14 @@ $user = session('user');
             mapTypeId: 'roadmap',
             center: new google.maps.LatLng(centerData.lat, centerData.lng),
             zoom: 15,
-            mapTypeControl: false,
+            mapTypeControl: true, // <-- CHANGED: Enabled Satellite toggle
+            mapTypeControlOptions: {
+                style: google.maps.MapTypeControlStyle.HORIZONTAL_BAR,
+                position: google.maps.ControlPosition.TOP_RIGHT
+            },
             streetViewControl: false,
-            fullscreenControl: true
+            fullscreenControl: true,
+            gestureHandling: 'cooperative' // <-- CHANGED: Added Ctrl+Scroll requirement
         };
 
         map = new google.maps.Map(document.getElementById("mapCanvas"), mapOptions);
@@ -179,27 +220,24 @@ $user = session('user');
             map.fitBounds(circle.getBounds());
 
         } else if (data.type == 'Polygon') {
-            // --- Polygon Logic (The Critical Part) ---
+            // --- Polygon Logic ---
 
             var rawPath = [];
             try {
-                // Try to find the coordinates in any of the possible column names
                 var rawData = data.poly_coords || data.poly_lat_lng || data.coordinates;
                 rawPath = typeof rawData === 'string' ? JSON.parse(rawData) : rawData;
             } catch (e) {
                 console.error("JSON Parse Error:", e);
             }
 
-            // DATA NORMALIZATION: Ensure we have an array of {lat, lng}
-            // This handles cases where the data might be nested or in an unexpected format
             var cleanPath = [];
             if (Array.isArray(rawPath)) {
                 cleanPath = rawPath.map(function(pt) {
                     return {
-                        lat: parseFloat(pt.lat || pt.lat()), // handles objects or google objects
+                        lat: parseFloat(pt.lat || pt.lat()),
                         lng: parseFloat(pt.lng || pt.lng())
                     };
-                }).filter(pt => !isNaN(pt.lat)); // Remove any broken points
+                }).filter(pt => !isNaN(pt.lat));
             }
 
             if (cleanPath.length > 0) {
@@ -213,7 +251,6 @@ $user = session('user');
                     map: map
                 });
 
-                // Auto-zoom to show the whole polygon
                 var bounds = new google.maps.LatLngBounds();
                 cleanPath.forEach(function(point) {
                     bounds.extend(point);
@@ -226,12 +263,61 @@ $user = session('user');
                     infoWindow.open(map);
                 });
             } else {
-                console.error("No valid coordinates found for polygon ID:", data.id);
-                // Fallback: If polygon has no points, just show the center marker
                 map.setCenter(new google.maps.LatLng(centerData.lat, centerData.lng));
             }
         }
     };
+
+    // NEW: Locate Me Function
+    function locateMe() {
+        if (!map) return;
+
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                function(position) {
+                    var pos = {
+                        lat: position.coords.latitude,
+                        lng: position.coords.longitude
+                    };
+
+                    map.setCenter(pos);
+                    map.setZoom(16);
+
+                    // Create or move the user's live location marker (styled as a blue dot)
+                    if (userMarker) {
+                        userMarker.setPosition(pos);
+                    } else {
+                        userMarker = new google.maps.Marker({
+                            position: pos,
+                            map: map,
+                            title: "You are here",
+                            icon: {
+                                path: google.maps.SymbolPath.CIRCLE,
+                                scale: 8,
+                                fillColor: "#4285F4",
+                                fillOpacity: 1,
+                                strokeColor: "white",
+                                strokeWeight: 2,
+                            }
+                        });
+                    }
+                },
+                function() {
+                    if(typeof Swal !== 'undefined') {
+                        Swal.fire("Error", "The Geolocation service failed or permission was denied.", "error");
+                    } else {
+                        alert("The Geolocation service failed or permission was denied.");
+                    }
+                }
+            );
+        } else {
+            if(typeof Swal !== 'undefined') {
+                Swal.fire("Error", "Your browser doesn't support geolocation.", "error");
+            } else {
+                alert("Your browser doesn't support geolocation.");
+            }
+        }
+    }
 </script>
 
 <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBfBFN6L_HROTd-mS8QqUDRIqskkvHvFYk&libraries=places&callback=initMap" async defer></script>

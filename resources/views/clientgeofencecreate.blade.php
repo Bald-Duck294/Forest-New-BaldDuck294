@@ -385,6 +385,10 @@ $user = session('user');
                         <input class="range-slider__range" type="range" id="sliderRange" value="0" min="0" max="1000" step="10">
                         <span class="range-slider__value">0 m</span>
                     </div>
+
+                    <button type="button" class="btn-action btn-secondary" style="padding: 8px 16px;" onclick="locateMe()" title="Find My Location">
+                        <i class="la la-crosshairs"></i> Locate Me
+                    </button>
                 </div>
 
                 <div class="map-wrapper">
@@ -416,7 +420,7 @@ $user = session('user');
     var lat = 21.150585;
     var lng = 79.103984;
     var map = null;
-    var cityCircle = null; // This will hold either our Circle OR our Polygon
+    var cityCircle = null;
     var marker = null;
     var radius = null;
     var geoName = null;
@@ -448,8 +452,13 @@ $user = session('user');
                 lng: lng
             },
             zoom: 13,
-            mapTypeControl: false,
-            streetViewControl: false
+            mapTypeControl: true, // <-- CHANGED: Enabled Satellite/Map Toggle
+            mapTypeControlOptions: {
+                style: google.maps.MapTypeControlStyle.HORIZONTAL_BAR,
+                position: google.maps.ControlPosition.TOP_RIGHT
+            },
+            streetViewControl: false,
+            gestureHandling: 'cooperative'
         });
 
         var input = document.getElementById('searchMapInput');
@@ -525,7 +534,6 @@ $user = session('user');
         drawingManager.setMap(map);
 
         map.addListener("click", (e) => {
-            // Only place a click-marker if we are in Circle mode
             if (geoType === 'Circle') {
                 lat = e.latLng.lat();
                 lng = e.latLng.lng();
@@ -533,9 +541,7 @@ $user = session('user');
             }
         });
 
-        // FIXED: The Drawing Listener
         google.maps.event.addListener(drawingManager, 'overlaycomplete', function(event) {
-            // If a previous shape exists, remove it
             if (cityCircle) cityCircle.setMap(null);
             cityCircle = event.overlay;
 
@@ -548,7 +554,6 @@ $user = session('user');
                     return;
                 }
 
-                // Official way to get coordinates:
                 var coordsArray = [];
                 for (var i = 0; i < path.getLength(); i++) {
                     var point = path.getAt(i);
@@ -560,15 +565,6 @@ $user = session('user');
                 coord = JSON.stringify(coordsArray);
             }
         });
-
-        function placeMarkerAndPanTo(latLng, map) {
-            if (marker) marker.setMap(null);
-            marker = new google.maps.Marker({
-                position: latLng,
-                map: map,
-            });
-            map.panTo(latLng);
-        }
 
         document.getElementById("sliderRange").oninput = function() {
             if (typeof google === 'undefined') return;
@@ -592,10 +588,19 @@ $user = session('user');
         };
     };
 
+    function placeMarkerAndPanTo(latLng, map) {
+        if (marker) marker.setMap(null);
+        marker = new google.maps.Marker({
+            position: latLng,
+            map: map,
+        });
+        map.panTo(latLng);
+    }
+
     function changeGeoType(type) {
         geoType = type;
         $('.btn-toggle').removeClass('active');
-        clearMap(); // Clean map when switching modes
+        clearMap();
 
         if (type === 'Polygon') {
             $('#geo-polygon').addClass('active');
@@ -615,6 +620,41 @@ $user = session('user');
         radius = 0;
         $('#sliderRange').val(0);
         $('.range-slider__value').html('0 m');
+    }
+
+    // NEW: Locate Me Function
+    function locateMe() {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                function(position) {
+                    var pos = {
+                        lat: position.coords.latitude,
+                        lng: position.coords.longitude
+                    };
+
+                    map.setCenter(pos);
+                    map.setZoom(16);
+
+                    lat = pos.lat;
+                    lng = pos.lng;
+
+                    // Automatically place a marker if in Circle mode
+                    if (geoType === 'Circle') {
+                        placeMarkerAndPanTo(pos, map);
+
+                        // If they already drew a circle, snap it to the new location
+                        if (cityCircle && typeof cityCircle.setCenter === 'function') {
+                            cityCircle.setCenter(pos);
+                        }
+                    }
+                },
+                function() {
+                    Swal.fire("Error", "The Geolocation service failed or permission was denied.", "error");
+                }
+            );
+        } else {
+            Swal.fire("Error", "Your browser doesn't support geolocation.", "error");
+        }
     }
 
     function myFunction() {

@@ -7,9 +7,7 @@
     // dump('hi');
 @endphp
 @extends('layouts.app')
-
-@section('title', $label . ' List')
-
+@section('title', get_label('label_site', 'Sites') . ' List')
 @section('content')
 
     <style>
@@ -233,68 +231,72 @@
 
             {{-- COMPACT HEADER CONTROLS --}}
             <div class="p-3 d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3"
-                style="border-bottom: 1px solid var(--border-color); background: var(--bg-card);">
+    style="border-bottom: 1px solid var(--border-color); background: var(--bg-card);">
 
-                {{-- Title & Back Button --}}
-                <div class="d-flex align-items-center gap-3">
-                    @if ($client_id != 'playBackSites')
-                        <a href="javascript:history.back()" class="btn-sapphire-outline" style="padding: 6px 10px;"
-                            title="Go Back">
-                            <i class="bi bi-arrow-left"></i>
-                        </a>
-                    @endif
-                    <h5 class="fw-bold mb-0" style="color: var(--text-main);">
-                        @if ($client_id == 'playBackSites')
-                            <i class="bi bi-play-circle-fill me-2" style="color: var(--sapphire-primary);"></i> Playback
-                            {{ $label }}s
-                        @elseif (isset($clientName))
-                            <i class="bi bi-geo-alt-fill me-2" style="color: var(--sapphire-primary);"></i>
-                            {{ ucfirst($clientName->name) }} — {{ $label }} List
-                        @else
-                            <i class="bi bi-geo-alt-fill me-2" style="color: var(--sapphire-primary);"></i>
-                            {{ $label }} List
-                        @endif
-                    </h5>
-                </div>
+    {{-- Title & Back Button --}}
+    <div class="d-flex align-items-center gap-3">
+        @if ($client_id != 'playBackSites')
+            <a href="javascript:history.back()" class="btn-sapphire-outline" style="padding: 6px 10px;"
+                title="Go Back">
+                <i class="bi bi-arrow-left"></i>
+            </a>
+        @endif
+        <h5 class="fw-bold mb-0" style="color: var(--text-main);">
+            @if ($client_id == 'playBackSites')
+                <i class="bi bi-play-circle-fill me-2" style="color: var(--sapphire-primary);"></i> Playback
+                {{-- Pluralized override (e.g., Beats) --}}
+                {{ Str::plural(get_label('label_site', 'Site')) }}
+            @elseif (isset($clientName))
+                <i class="bi bi-geo-alt-fill me-2" style="color: var(--sapphire-primary);"></i>
+                {{ ucfirst($clientName->name) }} — {{ get_label('label_site', 'Site') }} List
+            @else
+                <i class="bi bi-geo-alt-fill me-2" style="color: var(--sapphire-primary);"></i>
+                {{ get_label('label_site', 'Site') }} List
+            @endif
+        </h5>
+    </div>
 
-                {{-- Search & Actions --}}
-                <div class="d-flex flex-column flex-md-row align-items-md-center gap-2">
-                    {{-- AJAX Search Form --}}
-                    <div class="d-flex gap-2 m-0">
-                        <div class="position-relative grow">
-                            <i class="bi bi-search position-absolute"
-                                style="left: 12px; top: 10px; color: var(--text-muted);"></i>
-                            <input type="text" id="ajaxSearch" name="search" value="{{ request('search') }}"
-                                class="custom-input" placeholder="Search..." style="padding-left: 36px; min-width: 200px;">
+    {{-- Search & Actions --}}
+    <div class="d-flex flex-column flex-md-row align-items-md-center gap-2">
+        {{-- AJAX Search Form --}}
+        <div class="d-flex gap-2 m-0">
+            <div class="position-relative grow">
+                <i class="bi bi-search position-absolute"
+                    style="left: 12px; top: 10px; color: var(--text-muted);"></i>
+                {{-- Dynamic Search Placeholder (e.g., Search beat...) --}}
+                <input type="text" id="ajaxSearch" name="search" value="{{ request('search') }}"
+                    class="custom-input"
+                    placeholder="Search {{ strtolower(get_label('label_site', 'site')) }}..."
+                    style="padding-left: 36px; min-width: 200px;">
 
-                            {{-- AJAX Clear/Reset Button --}}
-                            <button type="button" id="clearSearch" class="btn btn-link position-absolute p-0"
-                                style="right: 12px; top: 8px; color: var(--text-muted); display: none;"
-                                title="Clear Search">
-                                <i class="bi bi-x-circle-fill"></i>
-                            </button>
-                        </div>
-                    </div>
-
-                    <div class="vr d-none d-md-block mx-1" style="color: var(--border-color);"></div>
-
-                    {{-- Action Buttons --}}
-                    @if (!isset($supervisor_id) && $user->role_id != '4' && $client_id !== 'playBackSites')
-                        <a href="{{ route('sites.site_create', is_numeric($client_id) ? $client_id : 0) }}"
-                            class="btn-sapphire text-nowrap">
-                            <i class="bi bi-plus-lg"></i> Add {{ $label }}
-                        </a>
-                    @endif
-                    @if ($client_id == 0 || $client_id != 'playBackSites')
-                        <a href="{{ route('sites.export', $client_id != 'playBackSites' && is_numeric($client_id) ? $client_id : 0) }}"
-                            class="btn-sapphire-outline text-nowrap"
-                            style="color: var(--sapphire-success); border-color: var(--sapphire-success);">
-                            <i class="bi bi-download"></i> Export
-                        </a>
-                    @endif
-                </div>
-
+                {{-- AJAX Clear/Reset Button --}}
+                <button type="button" id="clearSearch" class="btn btn-link position-absolute p-0"
+                    style="right: 12px; top: 8px; color: var(--text-muted); display: none;"
+                    title="Clear Search">
+                    <i class="bi bi-x-circle-fill"></i>
+                </button>
             </div>
+        </div>
+
+        <div class="vr d-none d-md-block mx-1" style="color: var(--border-color);"></div>
+
+        {{-- Action Buttons --}}
+        @if (!isset($supervisor_id) && $user->role_id != '4' && $client_id !== 'playBackSites')
+            <a href="{{ route('sites.site_create', is_numeric($client_id) ? $client_id : 0) }}"
+                class="btn-sapphire text-nowrap">
+                <i class="bi bi-plus-lg"></i> Add {{ get_label('label_site', 'Site') }}
+            </a>
+        @endif
+        @if ($client_id == 0 || $client_id != 'playBackSites')
+            <a href="{{ route('sites.export', $client_id != 'playBackSites' && is_numeric($client_id) ? $client_id : 0) }}"
+                class="btn-sapphire-outline text-nowrap"
+                style="color: var(--sapphire-success); border-color: var(--sapphire-success);">
+                <i class="bi bi-download"></i> Export
+            </a>
+        @endif
+    </div>
+
+</div>
 
             {{-- Table Container for AJAX Updates --}}
             <div id="sitesTableContainer">

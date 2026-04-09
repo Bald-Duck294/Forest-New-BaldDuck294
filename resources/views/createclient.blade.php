@@ -223,7 +223,7 @@
                 <a href="{{ route('clients') }}" class="btn-back" title="Go Back">
                     <i class="la la-arrow-left"></i>
                 </a>
-                <h4>Add New Range</h4>
+              <h4>Add New {{ get_label('label_range', 'Range') }}</h4>
             </div>
 
             <div class="card-body">
@@ -351,9 +351,9 @@
                     </div>
 
                     <div class="form-actions">
-                        <button type="submit" class="btn-primary-action">
-                            <i class="la la-check"></i> Save Range
-                        </button>
+                       <button type="submit" class="btn-primary-action">
+    <i class="la la-check"></i> Save {{ get_label('label_range', 'Range') }}
+</button>
                         <a href="{{ route('clients') }}" class="btn-cancel">Cancel</a>
                     </div>
                 </form>

@@ -6,8 +6,7 @@
 @endphp
 @extends('layouts.app')
 
-@section('title', 'Plantation Analytics')
-
+@section('title', get_label('label_plantation', 'Plantation') . ' Analytics')
 @section('content')
 
     <style>
@@ -138,7 +137,9 @@
         <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
             <a href="{{ route('plantation.dashboard') }}" class="text-decoration-none">
                 <div>
-                    <h3 class="fw-bold mb-1" style="color: var(--text-main);">Plantation Analytics</h3>
+                   <h3 class="fw-bold mb-1" style="color: var(--text-main);">
+    {{ get_label('label_plantation', 'Plantation') }} Analytics
+</h3>
                     <p class="mb-0" style="color: var(--text-muted); font-size: 0.9rem;">
                         Real-time monitoring of crop performance and resource distribution.
                     </p>

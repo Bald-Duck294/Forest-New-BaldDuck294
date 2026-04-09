@@ -223,7 +223,7 @@ $label = session('company') && (session('company')->is_forest ?? 1) == 1 ? 'Beat
             <a href="{{ route('sites.getsites', $id) }}" class="btn-back" title="Back to {{ $label }} List">
                 <i class="la la-arrow-left"></i>
             </a>
-            <h4>Add New {{ $label }}</h4>
+           <h4>Add New {{ get_label('label_site', 'Site') }}</h4>
         </div>
 
         <div class="card-body">
@@ -234,31 +234,40 @@ $label = session('company') && (session('company')->is_forest ?? 1) == 1 ? 'Beat
                 <div class="row g-4">
                     @if ($id == '0')
                     <div class="col-md-6">
-                        <div class="form-group {{ $errors->has('client') ? 'has-error' : '' }} mb-0">
-                            <label for="client">Client <span class="text-danger">*</span></label>
-                            <select class="form-control" name="client" id="client" required>
-                                <option value="" disabled selected>-- Select Client --</option>
-                                @foreach ($clients as $client)
-                                <option value="{{ $client->id }}"
-                                    {{ old('client') == $client->id ? 'selected' : '' }}>
-                                    {{ $client->name }}
-                                </option>
-                                @endforeach
-                            </select>
-                            <span class="text-danger small">{{ $errors->first('client') }}</span>
-                        </div>
-                    </div>
+    <div class="form-group {{ $errors->has('client') ? 'has-error' : '' }} mb-0">
+        <label for="client">
+            {{ get_label('label_client', 'Client') }} <span class="text-danger">*</span>
+        </label>
+        <select class="form-control" name="client" id="client" required>
+            <option value="" disabled selected>
+                -- Select {{ get_label('label_client', 'Client') }} --
+            </option>
+            @foreach ($clients as $client)
+                <option value="{{ $client->id }}"
+                    {{ old('client') == $client->id ? 'selected' : '' }}>
+                    {{ $client->name }}
+                </option>
+            @endforeach
+        </select>
+        <span class="text-danger small">{{ $errors->first('client') }}</span>
+    </div>
+</div>
                     @endif
 
-                    <div class="col-md-6">
-                        <div class="form-group {{ $errors->has('name') ? 'has-error' : '' }} mb-0">
-                            <label for="name">{{ $label }} Name <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="name" name="name"
-                                value="{{ old('name') }}" placeholder="Enter {{ strtolower($label) }} name"
-                                required>
-                            <span class="text-danger small">{{ $errors->first('name') }}</span>
-                        </div>
-                    </div>
+                  <div class="col-md-6">
+    <div class="form-group {{ $errors->has('name') ? 'has-error' : '' }} mb-0">
+        <label for="name">
+            {{ get_label('label_site', 'Site') }} Name <span class="text-danger">*</span>
+        </label>
+
+        <input type="text" class="form-control" id="name" name="name"
+               value="{{ old('name') }}"
+               placeholder="Enter {{ strtolower(get_label('label_site', 'Site')) }} name"
+               required>
+
+        <span class="text-danger small">{{ $errors->first('name') }}</span>
+    </div>
+</div>
 
                     <div class="col-md-12">
                         <div class="form-group {{ $errors->has('address') ? 'has-error' : '' }} mb-0">
@@ -389,9 +398,9 @@ $label = session('company') && (session('company')->is_forest ?? 1) == 1 ? 'Beat
                 </div>
 
                 <div class="form-actions">
-                    <button type="submit" class="btn-primary-action">
-                        <i class="la la-check"></i> Save {{ $label }}
-                    </button>
+                  <button type="submit" class="btn-primary-action">
+    <i class="la la-check"></i> Save {{ get_label('label_site', 'Site') }}
+</button>
                     <a href="{{ route('sites.getsites', $id) }}" class="btn-cancel">Cancel</a>
                 </div>
             </form>

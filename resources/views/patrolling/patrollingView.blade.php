@@ -251,7 +251,9 @@
             <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center p-4 border-bottom"
                 style="border-color: var(--border-color) !important;">
                 <div>
-                    <h4 class="fw-bold mb-1" style="color: var(--text-main);">Patrolling Status</h4>
+                <h4 class="fw-bold mb-1" style="color: var(--text-main);">
+    {{ get_label('label_patrolling', 'Patrolling') }} Status
+</h4>
                     <p class="mb-0" style="color: var(--text-muted); font-size: 0.85rem;">Overview of patrol sessions
                         across all ranges.</p>
                 </div>
@@ -282,20 +284,27 @@
                         <input type="datetime-local" name="date_to" value="{{ request('date_to') }}" class="custom-input">
                     </div>
 
-                    <div class="col-md-3">
-                        <label class="form-label small fw-semibold" style="color: var(--text-muted);">Range</label>
-                        <select name="client_id[]" id="selectRange" class="w-100" multiple="multiple">
-                            @foreach ($clients as $client)
-                                <option value="{{ $client->id }}"
-                                    {{ in_array($client->id, (array) request('client_id')) ? 'selected' : '' }}>
-                                    {{ $client->name }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
+                   <div class="col-md-3">
+    <label class="form-label small fw-semibold" style="color: var(--text-muted);">
+        {{ get_label('label_client', 'Range') }}
+    </label>
+
+    <select name="client_id[]" id="selectRange" class="w-100" multiple="multiple"
+            data-placeholder="Select {{ get_label('label_client', 'Range') }}">
+
+        @foreach ($clients as $client)
+            <option value="{{ $client->id }}"
+                {{ in_array($client->id, (array) request('client_id')) ? 'selected' : '' }}>
+                {{ $client->name }}
+            </option>
+        @endforeach
+    </select>
+</div>
 
                     <div class="col-md-3" id="beatWrapper">
-                        <label class="form-label small fw-semibold" style="color: var(--text-muted);">Beat</label>
+                        <label class="form-label small fw-semibold" style="color: var(--text-muted);">
+    {{ get_label('label_site', 'Beat') }}
+</label>
                         <select name="site_id[]" id="selectSite" class="w-100" multiple="multiple">
                             @foreach ($sites as $site)
                                 <option value="{{ $site->id }}"
@@ -386,8 +395,9 @@
                             <div class="flex-grow-1 p-3 rounded mb-3"
                                 style="background: var(--bg-body); border: 1px solid var(--border-color);">
                                 <div class="d-flex justify-content-between mb-2">
-                                    <small
-                                        style="color: var(--text-muted); font-size: 0.75rem; text-transform: uppercase; font-weight: 600;">Range</small>
+                                <small style="color: var(--text-muted); font-size: 0.75rem; text-transform: uppercase; font-weight: 600;">
+    {{ get_label('label_range', 'Range') }}
+</small>
                                     <span
                                         style="color: var(--text-main); font-size: 0.85rem; font-weight: 500;">{{ $patrol->site->client->name ?? 'N/A' }}</span>
                                 </div>
@@ -476,8 +486,8 @@
                             <tr>
                                 <th class="ps-4" style="width: 70px;">#</th>
                                 <th>Officer Name</th>
-                                <th>Range</th>
-                                <th>Beat</th>
+                              <th>{{ get_label('label_client', 'Range') }}</th>
+<th>{{ get_label('label_site', 'Beat') }}</th>
                                 <th>Method</th>
                                 <th>Start Time</th>
                                 <th>End Time</th>

@@ -705,11 +705,11 @@ $hideBackground = true;
     <div class="dash-card">
 
         <div class="dash-card-header">
-            <h4 class="d-flex align-items-center gap-2">
-                <i class="bi bi-file-earmark-bar-graph text-primary"
-                    style="color: var(--sapphire-primary) !important;"></i>
-                Reports Optimization
-            </h4>
+       <h4 class="d-flex align-items-center gap-2">
+    <i class="bi bi-file-earmark-bar-graph text-primary"
+       style="color: var(--sapphire-primary) !important;"></i>
+    {{ get_label('label_reports_optimization', 'Reports Optimization') }}
+</h4>
             {{-- <div class="header-actions">
                     <a href="javascript:history.back()" class="btn-icon-soft" title="Close">
                         <i class="bi bi-x-lg"></i>

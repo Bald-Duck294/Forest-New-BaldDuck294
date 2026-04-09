@@ -426,7 +426,7 @@ class ForestReportConfigController extends Controller
         }
 
         // =======================================================================
-        // 5. ASSET ANALYTICS DATA 
+        // 5. ASSET ANALYTICS DATA
         // =======================================================================
         $assetDistribution = (clone $assetQuery)->select('category', DB::raw('count(*) as total'))->groupBy('category')->pluck('total', 'category')->toArray();
 
@@ -446,7 +446,7 @@ class ForestReportConfigController extends Controller
             })->toArray();
 
         // =======================================================================
-        // 6. MAIN CHART DATA FIX 
+        // 6. MAIN CHART DATA FIX
         // =======================================================================
         $chartLabels = $allReports->groupBy('report_type')->keys()->toArray();
         $chartValues = $allReports->groupBy('report_type')->map->count()->values()->toArray();
@@ -1165,7 +1165,7 @@ class ForestReportConfigController extends Controller
 
             // dd($beats , "beats");
             // 🔥 Pass ranges and beats to the view
-            // return view('reports.detailed', compact('records', 'category', 'search', 'fromDate', 'toDate', 'subType', 'viewType', 'perPage', 'sort', 'dir', 'ranges', 'beats', 'rangeId', 'beatId'));
+            // return view('reports.detailed', compact('records', 'category', 'search', 'fromDate', 'toDate', 'subType', 'viewType', 'ranges', 'beats', 'perPage', 'sort', 'dir', 'ranges', 'beats', 'rangeId', 'beatId'));
             return view('reports.detailed', compact('records', 'category', 'search', 'fromDate', 'toDate', 'subType', 'viewType', 'perPage', 'sort', 'dir', 'dropdownRanges', 'dropdownBeats', 'rangeId', 'beatId'));
         }
 

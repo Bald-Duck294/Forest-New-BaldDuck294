@@ -3,383 +3,331 @@
     $hideBackground = true;
     $user = session('user');
 @endphp
+
 @extends('layouts.app')
-<div class="content">
-    <div class="container-fluid">
-        <div class="card">
 
-            <!-- Header -->
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h4 class="mb-0">Patrol Details</h4>
-                <a href="{{ url()->previous() }}" class="btn btn-secondary btn-sm">
-                    <i class="la la-arrow-left"></i> Back
-                </a>
-            </div>
+@section('title', 'Patrol Details')
 
-            <!-- Body -->
-            <div class="card-body">
+@section('content')
+<style>
+    /* SAPPHIRE THEME VARIABLES */
+    :root {
+        --sapphire-primary: #3b82f6;
+        --bg-card: #ffffff;
+        --border-color: #e2e8f0;
+        --text-main: #1e293b;
+        --text-muted: #64748b;
+        --success-soft: rgba(16, 185, 129, 0.1);
+        --danger-soft: rgba(239, 68, 68, 0.1);
+    }
 
-                <!-- Session Info -->
-                <div class="row mb-3">
-                    <div class="col-md-6">
-                        <p><strong>Officer:</strong> {{ $patrol->user->name ?? 'N/A' }}</p>
-                        <p><strong>Site:</strong> {{ $patrol->site->name ?? 'N/A' }}</p>
-                        <p><strong>Method:</strong> {{ ucfirst($patrol->method) }}</p>
-                        <p><strong>Start:</strong> {{ $patrol->started_at?->format('d M Y h:i A') }}</p>
-                        <p><strong>End:</strong> {{ $patrol->ended_at?->format('d M Y h:i A') }}</p>
+    /* LAYOUT STYLING */
+    .patrol-header-card {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 12px;
+        border: 1px solid var(--border-color);
+        margin-bottom: 1.5rem;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    }
+
+    .info-label {
+        font-weight: 700;
+        color: var(--text-muted);
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.025em;
+    }
+
+    .info-value {
+        color: var(--text-main);
+        font-weight: 600;
+        margin-bottom: 0.75rem;
+    }
+
+    #patrolMap {
+        height: 500px;
+        width: 100%;
+        border-radius: 12px;
+        border: 1px solid var(--border-color);
+    }
+
+    .table thead th {
+        background-color: #f8fafc;
+        color: var(--text-muted);
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.75rem;
+        border-top: none;
+    }
+
+    /* GALLERY HOVER */
+    .gallery-img {
+        transition: all 0.2s ease;
+        object-fit: cover;
+    }
+    .gallery-img:hover {
+        transform: scale(1.05);
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        cursor: pointer;
+    }
+</style>
+
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="fw-bold mb-0" style="color: var(--text-main);">Patrol Analysis</h3>
+            <p class="text-muted small mb-0">Detailed tracking data for Session #{{ $patrol->id }}</p>
+        </div>
+        <a href="{{ url()->previous() }}" class="btn btn-outline-secondary btn-sm px-3 shadow-sm">
+            <i class="bi bi-arrow-left me-1"></i> Back
+        </a>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-4">
+            <div class="patrol-header-card">
+                <h6 class="fw-bold mb-3 border-bottom pb-2">Session Overview</h6>
+                <div class="row">
+                    <div class="col-6">
+                        <div class="info-label">Officer</div>
+                        <div class="info-value text-truncate">{{ $patrol->user->name ?? 'N/A' }}</div>
                     </div>
-                    <div class="col-md-6">
-                        <p><strong>Duration:</strong>
+                    <div class="col-6">
+                        <div class="info-label">Duration</div>
+                        <div class="info-value">
                             @if ($patrol->started_at && $patrol->ended_at)
                                 {{ $patrol->started_at->diffForHumans($patrol->ended_at, true) }}
-                            @else
-                                In Progress
-                            @endif
-                        </p>
-                        <p><strong>Distance:</strong> <span id="patrolDistance">Calculating...</span></p>
-                    </div>
-                </div>
-
-                <!-- Map -->
-                <div class="mb-4">
-                    <h5>Patrol Path</h5>
-                    <div id="patrolMap" style="height: 400px;" class="rounded border"></div>
-                </div>
-
-                <!-- Logs -->
-                <div class="mb-4">
-                    <h5>Logs</h5>
-                    <div class="table-responsive">
-                        <table class="table table-bordered table-sm">
-                            <thead class="thead-light">
-                                <tr>
-                                    <th>Time</th>
-                                    <th>Type</th>
-                                    <th>Notes</th>
-                                    <th>Location</th>
-                                    <th>Photos</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach ($patrol->logs as $log)
-                                    <tr>
-                                        <td>{{ $log->created_at->format('d M Y h:i A') }}</td>
-                                        <td>{{ ucfirst($log->type) }}</td>
-                                        <td>{{ $log->notes }}</td>
-                                        <td>
-                                            @if ($log->lat && $log->lng)
-                                                <a href="https://maps.google.com/?q={{ $log->lat }},{{ $log->lng }}"
-                                                    target="_blank">
-                                                    {{ $log->lat }}, {{ $log->lng }}
-                                                </a>
-                                            @else
-                                                N/A
-                                            @endif
-                                        </td>
-                                        <td>
-                                            <div class="d-flex flex-wrap">
-                                                @foreach ($log->media as $index => $media)
-                                                    <div class="p-1">
-                                                        <img src="{{ $media->url }}" alt="photo" width="60"
-                                                            class="img-thumbnail gallery-img" data-toggle="modal"
-                                                            data-target="#mediaModal"
-                                                            data-index="{{ $loop->parent->index }}-{{ $index }}">
-                                                    </div>
-                                                @endforeach
-                                            </div>
-                                        </td>
-                                    </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <!-- Session Photos -->
-                @if ($patrol->media->count())
-                    <div class="mb-4">
-                        <h5>Session Photos</h5>
-                        <div class="row">
-                            @foreach ($patrol->media as $index => $media)
-                                <div class="col-md-3 col-6 mb-3">
-                                    <img src="{{ $media->url }}" alt="Session Photo"
-                                        class="img-fluid rounded shadow-sm gallery-img"
-                                        style="max-height: 180px; object-fit: cover; width: 100%; cursor: pointer;"
-                                        data-toggle="modal" data-target="#mediaModal"
-                                        data-index="session-{{ $index }}">
-                                </div>
-                            @endforeach
+                            @else <span class="badge bg-warning text-dark">Ongoing</span> @endif
                         </div>
                     </div>
-                @endif
+                    <div class="col-12">
+                        <div class="info-label">Total Distance</div>
+                        <div class="info-value text-primary fs-5" id="patrolDistanceDisplay">Calculating...</div>
+                    </div>
+                    <div class="col-6">
+                        <div class="info-label">Start Time</div>
+                        <div class="info-value small text-muted">{{ $patrol->started_at?->format('h:i A') }}</div>
+                    </div>
+                    <div class="col-6">
+                        <div class="info-label">Method</div>
+                        <div class="info-value small">{{ ucfirst($patrol->method) }}</div>
+                    </div>
+                </div>
+            </div>
 
+            @if ($patrol->media->count())
+            <div class="patrol-header-card">
+                <h6 class="fw-bold mb-3">Session Gallery</h6>
+                <div class="row g-2">
+                    @foreach ($patrol->media as $index => $media)
+                    <div class="col-4">
+                        <img src="{{ $media->url }}" class="img-fluid rounded gallery-img"
+                             style="height: 70px; width: 100%;"
+                             data-toggle="modal" data-target="#mediaModal" data-src="{{ $media->url }}">
+                    </div>
+                    @endforeach
+                </div>
+            </div>
+            @endif
+        </div>
+
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm rounded-4 mb-4">
+                <div id="patrolMap"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+        <div class="card-header bg-white py-3 border-bottom">
+            <h6 class="mb-0 fw-bold">Live Activity Log</h6>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th class="ps-4">Time</th>
+                            <th>Type</th>
+                            <th>Notes</th>
+                            <th>Location</th>
+                            <th>Media</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach ($patrol->logs as $log)
+                        <tr>
+                            <td class="ps-4 text-muted small">{{ $log->created_at->format('h:i A') }}</td>
+                            <td>
+                                <span class="badge rounded-pill px-3 py-2 border font-weight-normal text-dark" style="background: #f1f5f9;">
+                                    {{ ucfirst($log->type) }}
+                                </span>
+                            </td>
+                            <td class="text-wrap" style="max-width: 250px;">{{ $log->notes ?: '-' }}</td>
+                            <td>
+                                @if ($log->lat)
+                                <a href="https://www.google.com/maps?q={{ $log->lat }},{{ $log->lng }}" target="_blank" class="btn btn-sm btn-link text-decoration-none">
+                                    <i class="bi bi-geo-alt-fill"></i> View
+                                </a>
+                                @else <span class="text-muted">N/A</span> @endif
+                            </td>
+                            <td>
+                                @foreach ($log->media as $m)
+                                <img src="{{ $m->url }}" width="35" height="35" class="rounded border gallery-img me-1"
+                                     data-toggle="modal" data-target="#mediaModal" data-src="{{ $m->url }}">
+                                @endforeach
+                            </td>
+                        </tr>
+                        @endforeach
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Bootstrap Modal for Media -->
 <div class="modal fade" id="mediaModal" tabindex="-1" role="dialog" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
-        <div class="modal-content bg-dark">
-            <div class="modal-body text-center p-0">
-                <img id="modalImage" src="" class="img-fluid rounded" alt="Media Preview">
+        <div class="modal-content bg-dark border-0">
+            <div class="modal-body p-0 position-relative">
+                <button type="button" class="btn-close btn-close-white position-absolute top-0 end-0 m-3" data-dismiss="modal" style="z-index: 10;"></button>
+                <img id="modalImage" src="" class="img-fluid rounded" alt="Preview">
             </div>
-            <div class="modal-footer justify-content-between">
-                <button type="button" class="btn btn-light" id="prevImage">← Prev</button>
-                <button type="button" class="btn btn-light" id="nextImage">Next →</button>
-                <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
+            <div class="modal-footer justify-content-between border-0">
+                <button type="button" class="btn btn-outline-light btn-sm" id="prevImage"><i class="bi bi-chevron-left"></i> Prev</button>
+                <button type="button" class="btn btn-outline-light btn-sm" id="nextImage">Next <i class="bi bi-chevron-right"></i></button>
             </div>
         </div>
     </div>
 </div>
+@endsection
 
-
+@push('scripts')
+{{-- 1. Load the Google Maps API --}}
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBfBFN6L_HROTd-mS8QqUDRIqskkvHvFYk&libraries=geometry"></script>
 
 <script>
-    let geofences = @json($geofences);
-    console.log(geofences);
-    let geofenceArray = [];
     $(document).ready(function() {
-        initPatrolMap();
+        console.log("Scripts pushed successfully! Starting map initialization...");
+
+        // Ensure the map container has a height even if CSS fails
+        $('#patrolMap').css('height', '500px');
+
+        if (typeof google === 'object' && typeof google.maps === 'object') {
+            initPatrolMap();
+            initGallery();
+        } else {
+            console.error("Google Maps API failed to load. Check your API key or connection.");
+            $('#patrolDistanceDisplay').text("API Error");
+        }
     });
 
-
     function initPatrolMap() {
-        let map = new google.maps.Map(document.getElementById("patrolMap"), {
-            zoom: 13,
-            center: {
-                lat: {{ $patrol->start_lat ?? 20 }},
-                lng: {{ $patrol->start_lng ?? 78 }}
-            }
+        const mapEl = document.getElementById("patrolMap");
+
+        // Safety: Parse coordinates as floats
+        const startLat = parseFloat("{{ $patrol->start_lat }}") || 20.0;
+        const startLng = parseFloat("{{ $patrol->start_lng }}") || 78.0;
+
+        const map = new google.maps.Map(mapEl, {
+            zoom: 15,
+            center: { lat: startLat, lng: startLng },
+            mapTypeId: google.maps.MapTypeId.ROADMAP,
+            disableDefaultUI: false,
+            zoomControl: true
         });
 
-        let bounds = new google.maps.LatLngBounds();
+        const bounds = new google.maps.LatLngBounds();
 
-        // --- Draw Path ---
-        @if ($patrol->path_geojson)
-            let pathCoords = [];
-            let pathData = JSON.parse(`{!! json_encode($patrol->path_geojson) !!}`);
+        // --- DRAW PATROL PATH ---
+        @if($patrol->path_geojson)
+            try {
+                // Determine if path is already an object or a JSON string
+                let rawPath = {!! is_string($patrol->path_geojson) ? $patrol->path_geojson : json_encode($patrol->path_geojson) !!};
+                let coords = [];
 
-            if (pathData.type === "LineString") {
-                pathCoords = pathData.coordinates.map(c => ({
-                    lat: c[1],
-                    lng: c[0]
-                }));
-            } else if (pathData.type === "Feature" && pathData.geometry.type === "LineString") {
-                pathCoords = pathData.geometry.coordinates.map(c => ({
-                    lat: c[1],
-                    lng: c[0]
-                }));
-            } else if (Array.isArray(pathData)) {
-                pathCoords = pathData.map(c => ({
-                    lat: c[1],
-                    lng: c[0]
-                }));
-            }
-
-            if (pathCoords.length > 0) {
-                let polyline = new google.maps.Polyline({
-                    path: pathCoords,
-                    geodesic: true,
-                    strokeColor: "#007bff",
-                    strokeOpacity: 1.0,
-                    strokeWeight: 3,
-                    map: map
-                });
-
-                pathCoords.forEach(c => bounds.extend(c));
-
-                // --- Compute distance in meters ---
-                let distanceMeters = google.maps.geometry.spherical.computeLength(polyline.getPath());
-                // let distanceKm = (distanceMeters / 1000).toFixed(2); // in km
-
-                // Show on page
-                document.getElementById("patrolDistance").innerText = distanceMeters.toFixed(2) + " m";
-
-                // Start Marker
-                new google.maps.Marker({
-                    position: pathCoords[0],
-                    map: map,
-                    title: "Start Point",
-                    zIndex: 9999,
-                    icon: {
-                        path: google.maps.SymbolPath.CIRCLE,
-                        scale: 8,
-                        fillColor: "#28a745",
-                        fillOpacity: 1,
-                        strokeWeight: 2,
-                        strokeColor: "#ffffff"
-                    }
-                });
-
-                // End Marker
-                new google.maps.Marker({
-                    position: pathCoords[pathCoords.length - 1],
-                    map: map,
-                    title: "End Point",
-                    zIndex: 9999,
-                    icon: {
-                        path: google.maps.SymbolPath.CIRCLE,
-                        scale: 8,
-                        fillColor: "#dc3545",
-                        fillOpacity: 1,
-                        strokeWeight: 2,
-                        strokeColor: "#ffffff"
-                    }
-                });
-
-                // Geofence Markers
-                geofences.forEach(geofence => {
-                    let path = JSON.parse(geofence.poly_lat_lng);
-                    const geo = new google.maps.Polygon({
-                        paths: path,
-                        strokeColor: "#FF0000",
-                        strokeOpacity: 0.8,
-                        strokeWeight: 2,
-                        fillColor: "#FF0000",
-                        fillOpacity: 0.35,
-                        map: map
-                    });
-                    const center = getPolygonCenter(path);
-                    const infowindow = new google.maps.InfoWindow({
-                        content: `<div style="font-size:13px"><strong>${geofence.name}</strong></div>`
-                    });
-                    geo.addListener('click', function() {
-                        if (infowindow) {
-                            infowindow.close();
-                        }
-                        infowindow.setPosition(center);
-                        infowindow.open(map);
-                    });
-
-                    geofenceArray.push(geo);
-                });
-            }
-        @endif
-
-        // --- Log Markers ---
-        let logType = "";
-        let iconOptions = {};
-        let contentHtml = "";
-        let marker, infowindow;
-        @foreach ($patrol->logs as $log)
-            @if ($log->lat && $log->lng)
-
-                // Decide icon color based on type
-                logType = "{{ ucfirst($log->type) }}";
-                iconOptions = {
-                    path: google.maps.SymbolPath.CIRCLE,
-                    scale: 7,
-                    fillOpacity: 1,
-                    strokeWeight: 2,
-                    strokeColor: "#ffffff"
-                };
-
-                switch (logType.toLowerCase()) {
-                    case "animal sighting":
-                        iconOptions.fillColor = "#28a745"; // green
-                        break;
-                    case "animal mortality":
-                        iconOptions.fillColor = "#dc3545"; // red
-                        break;
-                    case "water source":
-                        iconOptions.fillColor = "#007bff"; // blue
-                        break;
-                    case "human impact":
-                        iconOptions.fillColor = "#fd7e14"; // orange
-                        break;
-                    default:
-                        iconOptions.fillColor = "#6c757d"; // gray
+                // Standardize GeoJSON formats
+                if (rawPath.type === "LineString") {
+                    coords = rawPath.coordinates;
+                } else if (rawPath.geometry && rawPath.geometry.type === "LineString") {
+                    coords = rawPath.geometry.coordinates;
+                } else if (Array.isArray(rawPath)) {
+                    coords = rawPath;
                 }
 
-                // Info window content
-                contentHtml = `<strong>${logType}</strong><br>{{ $log->notes ?? '' }}`;
+                if (coords && coords.length > 0) {
+                    let pathCoords = coords.map(c => ({ lat: parseFloat(c[1]), lng: parseFloat(c[0]) }));
 
-                @if ($log->media->count())
-                    contentHtml += `<div style="margin-top:5px;">`;
-                    @foreach ($log->media as $media)
-                        contentHtml +=
-                            `<img src="{{ $media->url }}" 
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     style="max-width:100px;max-height:100px;margin:2px;
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            border:1px solid #ccc;border-radius:4px;" />`;
-                    @endforeach
-                    contentHtml += `</div>`;
-                @endif
+                    const polyline = new google.maps.Polyline({
+                        path: pathCoords,
+                        geodesic: true,
+                        strokeColor: "#3b82f6",
+                        strokeOpacity: 0.8,
+                        strokeWeight: 6,
+                        map: map
+                    });
 
-                // Marker
-                marker = new google.maps.Marker({
-                    position: {
-                        lat: {{ $log->lat }},
-                        lng: {{ $log->lng }}
-                    },
-                    map: map,
-                    title: logType,
-                    icon: iconOptions,
-                    zIndex: 9998
-                });
+                    pathCoords.forEach(p => bounds.extend(p));
 
-                // Info window
-                infowindow = new google.maps.InfoWindow({
-                    content: contentHtml
-                });
+                    // Calculate and Display Distance
+                    let distMeters = google.maps.geometry.spherical.computeLength(polyline.getPath());
+                    let distKm = (distMeters / 1000).toFixed(2);
+                    document.getElementById("patrolDistanceDisplay").innerText = distKm + " km";
 
-                marker.addListener("click", () => {
-                    infowindow.open(map, marker);
-                });
+                    // Start/End Markers
+                    new google.maps.Marker({ position: pathCoords[0], map: map, label: "S", title: "Start" });
+                    new google.maps.Marker({ position: pathCoords[pathCoords.length - 1], map: map, label: "E", title: "End" });
+                }
+            } catch (e) {
+                console.error("GeoJSON Parsing Error:", e);
+                document.getElementById("patrolDistanceDisplay").innerText = "Data Format Error";
+            }
+        @else
+            document.getElementById("patrolDistanceDisplay").innerText = "No Path Data";
+        @endif
 
-                bounds.extend(marker.getPosition());
+        // --- DRAW LOG MARKERS (Sightings, etc.) ---
+        @foreach($patrol->logs as $log)
+            @if($log->lat && $log->lng)
+                (function() {
+                    let pos = { lat: parseFloat("{{ $log->lat }}"), lng: parseFloat("{{ $log->lng }}") };
+                    let logMarker = new google.maps.Marker({
+                        position: pos,
+                        map: map,
+                        title: "{{ ucfirst($log->type) }}",
+                        icon: {
+                            path: google.maps.SymbolPath.CIRCLE,
+                            scale: 6,
+                            fillColor: "{{ $log->type == 'animal mortality' ? '#ef4444' : '#64748b' }}",
+                            fillOpacity: 1,
+                            strokeWeight: 2,
+                            strokeColor: "#fff"
+                        }
+                    });
+
+                    let info = new google.maps.InfoWindow({
+                        content: `<div style="color:black"><strong>{{ ucfirst($log->type) }}</strong><br><small>{{ $log->notes }}</small></div>`
+                    });
+
+                    logMarker.addListener("click", () => info.open(map, logMarker));
+                    bounds.extend(pos);
+                })();
             @endif
         @endforeach
 
-
+        // Automatically zoom the map to show everything
         if (!bounds.isEmpty()) {
             map.fitBounds(bounds);
         }
     }
 
-    function toggleGeofence() {
-        geofenceArray.forEach(geo => {
-            geo.setMap(map);
+    function initGallery() {
+        $('.gallery-img').on('click', function() {
+            let src = $(this).attr('data-src') || $(this).attr('src');
+            $('#modalImage').attr('src', src);
+            $('#mediaModal').modal('show'); // Force open if toggle fails
         });
-    }
-
-    const galleryImages = document.querySelectorAll('.gallery-img');
-    const modalImage = document.getElementById('modalImage');
-    let currentIndex = 0;
-    let imageSources = [];
-
-    galleryImages.forEach((img, index) => {
-        imageSources.push(img.src);
-        img.dataset.index = index;
-
-        img.addEventListener('click', () => {
-            currentIndex = index;
-            modalImage.src = imageSources[currentIndex];
-        });
-    });
-
-    document.getElementById('prevImage').addEventListener('click', () => {
-        if (currentIndex > 0) currentIndex--;
-        modalImage.src = imageSources[currentIndex];
-    });
-
-    document.getElementById('nextImage').addEventListener('click', () => {
-        if (currentIndex < imageSources.length - 1) currentIndex++;
-        modalImage.src = imageSources[currentIndex];
-    });
-
-    // Calculate the centroid of the polygon
-    function getPolygonCenter(path) {
-        let lat = 0,
-            lng = 0;
-        path.forEach(point => {
-            lat += point.lat;
-            lng += point.lng;
-        });
-        return {
-            lat: lat / path.length,
-            lng: lng / path.length
-        };
     }
 </script>
+@endpush

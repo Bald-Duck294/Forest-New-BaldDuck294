@@ -5,7 +5,7 @@ $hideBackground = true;
 @endphp
 @extends('layouts.app')
 
-@section('title', 'Know Your Area')
+@section('title', get_label('label_know_your_area', 'Know Your Area'))
 
 @section('content')
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
@@ -373,7 +373,9 @@ $hideBackground = true;
     <div class="px-4 py-3 d-flex justify-content-between align-items-center shadow-sm"
         style="background: var(--bg-card); border-bottom: 1px solid var(--border-color); z-index: 10;">
         <div>
-            <h4 class="fw-bold mb-1" style="color: var(--text-main);">Know Your Area</h4>
+           <h4 class="fw-bold mb-1" style="color: var(--text-main);">
+    {{ get_label('label_know_your_area', 'Know Your Area') }}
+</h4>
             <p class="mb-0" style="color: var(--text-muted); font-size: 0.85rem;">
                 Interactive map layers, geospatial data, and beat boundaries.
             </p>

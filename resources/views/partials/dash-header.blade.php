@@ -3,51 +3,26 @@ dd($dropdownBeats , "dpr beats");
 @endphp --}}
 
 <style>
-    /* Mini View Toggle inside Filters */
     .mini-view-toggle {
-        display: flex;
-        background: var(--bg-body, #f8f9fa);
+        display: flex; background: var(--bg-body, #f8f9fa);
         border: 1px solid var(--border-color, #dee2e6);
-        border-radius: 8px;
-        padding: 2px;
+        border-radius: 8px; padding: 2px;
     }
-
     .mini-view-toggle button {
-        background: transparent;
-        border: none;
-        color: var(--text-muted, #6c757d);
-        padding: 6px 14px;
-        font-size: 0.8rem;
-        font-weight: 600;
-        border-radius: 6px;
-        cursor: pointer;
-        transition: all 0.2s ease;
-        display: flex;
-        align-items: center;
-        gap: 6px;
+        background: transparent; border: none; color: var(--text-muted, #6c757d);
+        padding: 6px 14px; font-size: 0.8rem; font-weight: 600;
+        border-radius: 6px; cursor: pointer; transition: all 0.2s ease;
+        display: flex; align-items: center; gap: 6px;
     }
-
-    /* This active class gives it the "button" look */
     .mini-view-toggle button.active {
         background: var(--bg-card, #ffffff);
         color: var(--sapphire-primary, #0d6efd);
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
     }
-
     .custom-input {
-        background-color: var(--bg-body, #ffffff);
-        color: var(--text-main, #212529);
-        border: 1px solid var(--border-color, #dee2e6);
-        border-radius: 8px;
-        padding: 6px 12px;
-        font-size: 0.8rem;
-        font-weight: 500;
-        outline: none;
-        transition: border-color 0.2s ease;
-    }
-
-    .custom-input:focus {
-        border-color: var(--sapphire-primary, #0d6efd);
+        background-color: var(--bg-body, #ffffff); color: var(--text-main, #212529);
+        border: 1px solid var(--border-color, #dee2e6); border-radius: 8px;
+        padding: 6px 12px; font-size: 0.8rem; font-weight: 500; outline: none;
     }
 </style>
 
@@ -98,17 +73,15 @@ dd($dropdownBeats , "dpr beats");
             <option value="custom" {{ request('date_filter') == 'custom' ? 'selected' : '' }}>Custom Range</option>
         </select>
 
-        <div id="custom-date-inputs"
-            class="custom-date-container {{ request('date_filter') == 'custom' ? '' : 'd-none' }}">
-            <input type="date" id="from_date" class="custom-input" title="From Date"
-                value="{{ request('from_date') }}">
+        <div id="custom-date-inputs" class="custom-date-container {{ request('date_filter') == 'custom' ? 'd-flex' : 'd-none' }} align-items-center gap-2">
+            <input type="date" id="from_date" class="custom-input" value="{{ request('from_date') }}">
             <span class="text-muted small">to</span>
             <input type="date" id="to_date" class="custom-input" title="To Date" value="{{ request('to_date') }}">
         </div>
 
         {{-- Buttons --}}
         <button type="button" onclick="forceSyncDashboard()" class="btn btn-primary d-flex align-items-center gap-2"
-            style="background-color: var(--sapphire-primary); border: none; font-size: 0.8rem; font-weight: 600; padding: 6px 14px; border-radius: 8px;">
+            style="background-color: #0d6efd; border: none; font-size: 0.8rem; font-weight: 600; padding: 6px 14px; border-radius: 8px;">
             <i class="bi bi-arrow-repeat"></i> Sync
         </button>
 
@@ -254,6 +227,21 @@ dd($dropdownBeats , "dpr beats");
             if (beat.id == currentSelectedBeat) option.selected = true;
             beatSelect.appendChild(option);
         });
+    }
+
+    function toggleCustomDates() {
+        const filter = document.getElementById('date_filter').value;
+        const customContainer = document.getElementById('custom-date-inputs');
+
+        if (filter === 'custom') {
+            customContainer.classList.remove('d-none');
+        } else {
+            customContainer.classList.add('d-none');
+            document.getElementById('from_date').value = '';
+            document.getElementById('to_date').value = '';
+            // Auto-sync when changing standard dates
+            forceSyncDashboard();
+        }
     }
 
     function forceSyncDashboard() {
