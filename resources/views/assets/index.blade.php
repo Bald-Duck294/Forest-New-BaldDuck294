@@ -1,3 +1,9 @@
+@php
+    $hideGlobalFilters = true;
+    $hideBackground = true;
+    // $user = session('user');
+    // dump('testing', $user->company_id);
+@endphp
 @extends('layouts.app')
 
 @section('title', 'Asset Inventory')
@@ -6,8 +12,8 @@
 
     <style>
         /* =========================================
-               SAPPHIRE INDEX STYLES
-            ========================================= */
+                                                           SAPPHIRE INDEX STYLES
+                                                        ========================================= */
         .dash-card {
             background: var(--bg-card);
             border: 1px solid var(--border-color);

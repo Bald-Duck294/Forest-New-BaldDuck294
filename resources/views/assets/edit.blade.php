@@ -1,3 +1,9 @@
+@php
+    $hideGlobalFilters = true;
+    $hideBackground = true;
+    // $user = session('user');
+    // dump('testing');
+@endphp
 @extends('layouts.app')
 
 @section('title', 'Edit Asset')
@@ -6,8 +12,8 @@
 
     <style>
         /* =========================================
-                           SAPPHIRE FORM STYLES
-                        ========================================= */
+                                       SAPPHIRE FORM STYLES
+                                    ========================================= */
         .dash-card {
             background: var(--bg-card);
             border: 1px solid var(--border-color);

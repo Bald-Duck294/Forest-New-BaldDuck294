@@ -35,7 +35,7 @@ use App\Http\Controllers\WebBoundaryController;
 use App\Http\Controllers\GuardReportController;
 use App\Http\Controllers\IncidenceController;
 use App\Http\Controllers\AjaxController;
-use App\Http\Controllers\AssestController;
+use App\Http\Controllers\AssetController;
 /* Auth Routes */
 
 Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
