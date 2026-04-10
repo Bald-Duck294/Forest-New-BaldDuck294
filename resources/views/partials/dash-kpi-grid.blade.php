@@ -8,7 +8,6 @@
             display: grid !important;
             grid-template-columns: repeat(7, 1fr) !important;
             gap: 14px !important;
-            /* Slightly more gap */
         }
 
         .kpi-7-row>.col-kpi {
@@ -42,19 +41,16 @@
 
     /* Custom Card Styling - Modern SaaS Look */
     .kpi-card-bs {
-        /* Force clean modern font just for the cards */
         font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
         background-color: var(--bg-card);
         border-radius: 12px;
         padding: 1.25rem 1rem;
-        /* More vertical breathing room */
         border: 1px solid var(--border-color);
         position: relative;
         overflow: hidden;
         transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
         height: 100%;
         min-height: 125px;
-        /* Prevents them from looking squished */
         display: flex;
         flex-direction: column;
         justify-content: space-between;
@@ -69,7 +65,6 @@
         transform: translateY(-4px);
         box-shadow: 0 12px 20px -8px rgba(0, 0, 0, 0.15);
         border-color: var(--border-color);
-        /* Keeps it subtle */
     }
 
     /* Top Right Corner Curve (Softer Opacity) */
@@ -93,7 +88,7 @@
         z-index: 1;
     }
 
-    /* Icon Container - Larger and cleaner */
+    /* Icon Container */
     .kpi-icon-box {
         width: 38px;
         height: 38px;
@@ -104,7 +99,7 @@
         font-size: 1.15rem;
     }
 
-    /* Exact Color Themes (Opacity dropped to 0.05 for elegant softness) */
+    /* Exact Color Themes */
     .theme-blue .kpi-bg-curve {
         background-color: rgba(59, 130, 246, 0.05);
     }
@@ -167,26 +162,57 @@
         background-color: rgba(16, 185, 129, 0.15);
         color: #10b981;
     }
+
+    /* 🔥 Disabled KPI State */
+    .kpi-card-disabled {
+        background-color: var(--bg-body) !important;
+        border: 1px dashed var(--border-color) !important;
+        box-shadow: none !important;
+        cursor: not-allowed !important;
+        opacity: 0.85;
+        transition: all 0.2s ease;
+    }
+
+    .kpi-card-disabled .kpi-icon-box {
+        background: rgba(100, 116, 139, 0.1) !important;
+        color: var(--text-muted) !important;
+        border: 1px solid var(--border-color);
+    }
+
+    .kpi-card-disabled h3,
+    .kpi-card-disabled h6,
+    .kpi-card-disabled .kpi-bg-curve {
+        display: none !important;
+        /* Hide the curve when disabled */
+    }
 </style>
 
 @php
+    // 🔥 Check if the current filter makes "On Duty" invalid
+    $currentFilter = request('date_filter', 'month');
+    $isDutyDisabled = in_array($currentFilter, ['overall', 'week', 'custom']);
+
     $items = [
         [
             'id' => 'officers',
-            'label' => 'On Duty Officers',
+            'label' => 'On Duty Today', // Slightly updated label for clarity
             'val' => $kpis['officers'] ?? 0,
-            'url' => url('/reports/detailed?category=onduty'),
+            // 🔥 Inject logic: remove URL if disabled
+            'url' => $isDutyDisabled ? null : url('/reports/detailed?category=onduty'),
             'theme' => 'theme-blue',
             'icon' => 'bi-people',
-            'trend_text' =>
-                ($kpis['attendanceRate'] ?? 0) .
-                '% (' .
-                ($kpis['officers'] ?? 0) .
-                '/' .
-                ($kpis['totalOfficers'] ?? 0) .
-                ')',
-            'trend_color' => '#3b82f6',
-            'trend_icon' => 'bi-graph-up-arrow',
+            // 🔥 Inject logic: switch text if disabled
+            'trend_text' => $isDutyDisabled
+                ? "Select 'Today' or 'Month'"
+                : ($kpis['attendanceRate'] ?? 0) .
+                    '% (' .
+                    ($kpis['officers'] ?? 0) .
+                    '/' .
+                    ($kpis['totalOfficers'] ?? 0) .
+                    ')',
+            'trend_color' => $isDutyDisabled ? 'var(--text-muted)' : '#3b82f6',
+            'trend_icon' => $isDutyDisabled ? 'bi-info-circle' : 'bi-graph-up-arrow',
+            'disabled' => $isDutyDisabled, // Custom flag for the loop
         ],
         [
             'id' => 'patrol',
@@ -201,7 +227,7 @@
         ],
         [
             'id' => 'criminal',
-            'label' => 'Forest Crimes', // 🔥 UPDATED (Shortened for card fit)
+            'label' => 'Forest Crimes',
             'val' => $kpis['criminal'] ?? 0,
             'nav' => 'criminal',
             'theme' => 'theme-rose',
@@ -212,7 +238,7 @@
         ],
         [
             'id' => 'events',
-            'label' => 'Crime / Events', // 🔥 UPDATED
+            'label' => 'Crime / Events',
             'val' => $kpis['events'] ?? 0,
             'nav' => 'events',
             'theme' => 'theme-amber',
@@ -256,41 +282,46 @@
         ],
     ];
 @endphp
+
 <div id="main-kpi-grid" class="kpi-7-row mb-4">
     @foreach ($items as $item)
+        @php
+            $isDisabled = isset($item['disabled']) && $item['disabled'];
+        @endphp
+
         <div class="col-kpi">
-            <div class="kpi-card-bs {{ $item['theme'] }} @if (isset($item['url']) || isset($item['nav'])) clickable @endif"
-                @if (isset($item['url'])) onclick="window.location.href='{{ $item['url'] }}'" @elseif(isset($item['nav']))
-                onclick="navigateTo('{{ $item['nav'] }}')" @endif>
+            {{-- 🔥 Apply the disabled class and prevent clickability --}}
+            <div class="kpi-card-bs {{ $item['theme'] }} {{ $isDisabled ? 'kpi-card-disabled' : '' }} @if (!$isDisabled && (isset($item['url']) || isset($item['nav']))) clickable @endif"
+                @if (!$isDisabled && isset($item['url'])) onclick="window.location.href='{{ $item['url'] }}'" 
+                @elseif(!$isDisabled && isset($item['nav'])) onclick="navigateTo('{{ $item['nav'] }}')" @endif>
 
                 <div class="kpi-bg-curve"></div>
 
                 <div class="kpi-content h-100 d-flex flex-column justify-content-between">
-                    {{-- Flexbox strictly isolates the text (left) and the icon (right) --}}
                     <div class="d-flex justify-content-between align-items-start w-100">
 
-                        {{-- Text wrapper: Forces truncation and prevents touching the icon --}}
                         <div style="min-width: 0; padding-right: 8px; flex-grow: 1;">
-                            <p class="mb-1 text-muted text-truncate"
+                            <p class="mb-1 text-truncate {{ $isDisabled ? 'text-muted' : 'text-muted' }}"
                                 style="font-size: 0.75rem; font-weight: 500; letter-spacing: 0.2px;"
                                 title="{{ $item['label'] }}">
                                 {{ $item['label'] }}
                             </p>
+
+                            {{-- 🔥 Show N/A if disabled, otherwise show the number --}}
                             <h3 class="mb-0 fw-bold"
-                                style="font-size: 1.6rem; color: var(--text-main); letter-spacing: -0.5px;"
+                                style="font-size: 1.6rem; color: {{ $isDisabled ? 'var(--text-muted)' : 'var(--text-main)' }}; letter-spacing: -0.5px;"
                                 id="kpi-{{ $item['id'] }}">
-                                {{ number_format($item['val']) }}
+                                {{ $isDisabled ? 'N/A' : number_format($item['val']) }}
                             </h3>
                         </div>
 
-                        {{-- Icon box explicitly will not shrink or move --}}
                         <div class="kpi-icon-box flex-shrink-0">
                             <i class="bi {{ $item['icon'] }}"></i>
                         </div>
                     </div>
 
-                    {{-- Trend text anchored nicely to the bottom --}}
-                    <p class="mb-0 mt-3 text-truncate w-100"
+                    {{-- Trend text dynamically updates if disabled --}}
+                    <p class="mb-0 mt-3 text-truncate w-100 {{ $isDisabled ? 'fst-italic' : '' }}"
                         style="font-size: 0.70rem; font-weight: 600; color: {{ $item['trend_color'] }};"
                         title="{{ $item['trend_text'] }}">
                         {{ $item['trend_text'] }} <i class="bi {{ $item['trend_icon'] }} ms-1"></i>

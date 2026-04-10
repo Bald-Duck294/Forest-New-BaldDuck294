@@ -64,42 +64,28 @@ class ForestReportConfigController extends Controller
 
         // --- B. Date Filters (Applied to Reports, Assets, Plantations, and Attendance) ---
         // 🔥 DEFAULT TO 'MONTH' IF NO FILTER IS PROVIDED
+        // --- B. Date Filters (Applied to Reports, Assets, and Plantations) ---
+        // 🔥 DEFAULT TO 'MONTH' IF NO FILTER IS PROVIDED
         $dateFilter = $request->get('date_filter', 'month');
-
-        // Define the attendance query early so we can apply the same dates to it
-        $attendanceQuery = DB::table('attendance')
-            ->where('company_id', $companyId)
-            ->where('role_id', 3);
-
-        if ($request->filled('range_id') && $request->range_id !== '0' && $request->range_id !== 'all') {
-            $attendanceQuery->where('client_id', $request->range_id);
-        }
-        if ($request->filled('site_id') && $request->site_id !== '0' && $request->site_id !== 'all') {
-            $attendanceQuery->where('site_id', $request->site_id);
-        }
 
         // Apply strict date boundaries to ALL queries
         if ($dateFilter !== 'overall') {
             if ($dateFilter === 'today') {
                 $query->whereDate('created_at', Carbon::today());
                 $assetQuery->whereDate('created_at', Carbon::today());
-                $plantationQuery->whereDate('created_at', Carbon::today()); // 🔥 Fixed
-                $attendanceQuery->whereDate('dateFormat', Carbon::today()); // 🔥 Fixed
+                $plantationQuery->whereDate('created_at', Carbon::today());
             } elseif ($dateFilter === 'week') {
                 $query->where('created_at', '>=', Carbon::now()->subWeek());
                 $assetQuery->where('created_at', '>=', Carbon::now()->subWeek());
-                $plantationQuery->where('created_at', '>=', Carbon::now()->subWeek()); // 🔥 Fixed
-                $attendanceQuery->whereBetween('dateFormat', [Carbon::now()->subWeek()->format('Y-m-d'), Carbon::today()->format('Y-m-d')]);
+                $plantationQuery->where('created_at', '>=', Carbon::now()->subWeek());
             } elseif ($dateFilter === 'month') {
                 $query->where('created_at', '>=', Carbon::now()->subMonth());
                 $assetQuery->where('created_at', '>=', Carbon::now()->subMonth());
-                $plantationQuery->where('created_at', '>=', Carbon::now()->subMonth()); // 🔥 Fixed
-                $attendanceQuery->whereBetween('dateFormat', [Carbon::now()->subMonth()->format('Y-m-d'), Carbon::today()->format('Y-m-d')]);
+                $plantationQuery->where('created_at', '>=', Carbon::now()->subMonth());
             } elseif ($dateFilter === 'custom' && $request->filled('from_date') && $request->filled('to_date')) {
                 $query->whereDate('created_at', '>=', $request->from_date)->whereDate('created_at', '<=', $request->to_date);
                 $assetQuery->whereDate('created_at', '>=', $request->from_date)->whereDate('created_at', '<=', $request->to_date);
                 $plantationQuery->whereDate('created_at', '>=', $request->from_date)->whereDate('created_at', '<=', $request->to_date);
-                $attendanceQuery->whereBetween('dateFormat', [$request->from_date, $request->to_date]);
             }
         }
 
@@ -110,11 +96,28 @@ class ForestReportConfigController extends Controller
         $totalAssets = (clone $assetQuery)->count();
         $totalGuards = Users::where('company_id', $companyId)->count();
 
-        // ✅ FINAL COUNT FOR ON DUTY OFFICERS (Now strictly bounded by the date filter)
+        // =======================================================================
+        // 🔥 STRICT "TODAY" ATTENDANCE LOGIC (Ignores Global Date Filter)
+        // =======================================================================
+        $attendanceQuery = DB::table('attendance')
+            ->where('company_id', $companyId)
+            ->where('role_id', 3)
+            ->whereDate('dateFormat', Carbon::today()); // ALWAYS EXACTLY TODAY
+
+        // Apply Range & Beat filters to Attendance if they exist
+        if ($request->filled('range_id') && $request->range_id !== '0' && $request->range_id !== 'all') {
+            $attendanceQuery->where('client_id', $request->range_id);
+        }
+        if ($request->filled('site_id') && $request->site_id !== '0' && $request->site_id !== 'all') {
+            $attendanceQuery->where('site_id', $request->site_id);
+        }
+
+        // ✅ FINAL COUNT FOR ON DUTY OFFICERS
         $activeOfficersCount = $attendanceQuery->distinct('user_id')->count('user_id');
         $attendanceRate = $totalGuards > 0 ? round(($activeOfficersCount / $totalGuards) * 100) : 0;
-        // --- DYNAMIC ATTENDANCE LOGIC ---
-        // Denominator: Total registered guards (Role 3) assigned to these locations
+
+
+        // 🔥 FETCH REAL RANGES & BEATS FOR DROPDOWNS
         $totalOfficersQuery = DB::table('users')
             ->leftJoin('site_assign', 'users.id', '=', 'site_assign.user_id')
             ->where('users.company_id', $companyId)
