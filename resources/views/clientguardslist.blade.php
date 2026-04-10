@@ -8,7 +8,9 @@
 @section('content')
     <style>
         /* Define Theme Variables */
-        :root {
+        :root,
+        [data-theme="light"],
+        [data-bs-theme="light"] {
             /* Light Theme */
             --primary: #2563eb;
             --primary-hover: #1d4ed8;
@@ -33,9 +35,37 @@
             --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
         }
 
-        /* Dark Theme Support (Auto-detect & Manual Class Support) */
+        /* Dark Theme Support (Manual Class/Attribute) */
+        :root[data-theme="dark"],
+        [data-bs-theme="dark"],
+        .dark,
+        .dark-mode,
+        body.dark-theme {
+            --primary: #3b82f6;
+            --primary-hover: #60a5fa;
+            --border: #334155;
+            --bg-card: #1e293b;
+            --bg-body: #0f172a;
+            --bg-header: #0f172a;
+            --bg-hover: #334155;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+
+            --btn-view-bg: rgba(59, 130, 246, 0.15);
+            --btn-view-text: #60a5fa;
+            --btn-edit-bg: rgba(34, 197, 94, 0.15);
+            --btn-edit-text: #4ade80;
+            --btn-delete-bg: rgba(239, 68, 68, 0.15);
+            --btn-delete-text: #f87171;
+            --btn-back-bg: #334155;
+            --btn-back-hover: #475569;
+
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Dark Theme Support (Auto-detect OS Preference) */
         @media (prefers-color-scheme: dark) {
-            :root {
+            :root:not([data-theme="light"]):not([data-bs-theme="light"]):not(.light) {
                 --primary: #3b82f6;
                 --primary-hover: #60a5fa;
                 --border: #334155;
@@ -67,7 +97,7 @@
             background: var(--bg-card);
             margin-bottom: 24px;
             color: var(--text-main);
-            transition: background-color 0.3s, border-color 0.3s;
+            transition: background-color 0.3s, border-color 0.3s, color 0.3s;
             margin-top: 1rem;
         }
 
@@ -321,11 +351,9 @@
                                     <td><strong>{{ $row->user_name }}</strong></td>
                                     <td>
                                         @if ($dateRange)
-                                            <span
-                                                style="white-space: nowrap;">{{ date('d M Y', strtotime($dateRange->from)) }}</span>
+                                            <span style="white-space: nowrap;">{{ date('d M Y', strtotime($dateRange->from)) }}</span>
                                             <span style="color: var(--text-muted); margin: 0 4px;">&rarr;</span>
-                                            <span
-                                                style="white-space: nowrap;">{{ date('d M Y', strtotime($dateRange->to)) }}</span>
+                                            <span style="white-space: nowrap;">{{ date('d M Y', strtotime($dateRange->to)) }}</span>
                                         @else
                                             <span style="color: var(--text-muted);">—</span>
                                         @endif
@@ -336,8 +364,7 @@
                                             <div style="margin-bottom: {{ !$loop->last ? '4px' : '0' }}">
                                                 <span style="font-weight: 500;">{{ $shiftRow->shift_name }}</span>
                                                 @if ($timing)
-                                                    <span
-                                                        style="color: var(--text-muted); font-size: 0.9em; margin-left: 4px;">
+                                                    <span style="color: var(--text-muted); font-size: 0.9em; margin-left: 4px;">
                                                         ({{ $timing->start }} – {{ $timing->end }})
                                                     </span>
                                                 @endif
