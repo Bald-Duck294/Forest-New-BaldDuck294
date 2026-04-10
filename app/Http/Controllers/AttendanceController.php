@@ -37,7 +37,6 @@ class AttendanceController extends Controller
 
             $filterDate = $request->date
                 ? Carbon::parse($request->date)
-                ? Carbon::parse($request->date)
                 : now();
 
             $startDate = $filterDate->copy()->startOfDay();
