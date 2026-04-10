@@ -2,7 +2,7 @@
     $hideGlobalFilters = true;
     $hideBackground = true;
     // $user = session('user');
-    dump('testing');
+    // dump('testing');
 @endphp
 @extends('layouts.app')
 
@@ -12,9 +12,9 @@
 
     <style>
         /* =========================================
-                                   LOCAL COMPONENT STYLES
-                                   (Hooked to Global Sapphire Variables)
-                                ========================================= */
+                                       LOCAL COMPONENT STYLES
+                                       (Hooked to Global Sapphire Variables)
+                                    ========================================= */
 
         /* Cards */
         .dash-card {
@@ -300,18 +300,20 @@
                 let searchInput = document.getElementById('ajaxSearch');
                 let clearBtn = document.getElementById('clearSearch');
                 let tableContainer = document.getElementById('clientsTableContainer');
-                let currentSort = '{{ request(
-                    '
-                        sort ',
-                    '
-                        id ',
-                ) }}';
-                let currentDir = '{{ request(
-                    '
-                        dir ',
-                    '
-                        desc ',
-                ) }}';
+                let currentSort =
+                    '{{ request(
+                        '
+                                            sort ',
+                        '
+                                            id ',
+                    ) }}';
+                let currentDir =
+                    '{{ request(
+                        '
+                                            dir ',
+                        '
+                                            desc ',
+                    ) }}';
                 let debounceTimeout = null;
 
                 // Sync clear button visibility

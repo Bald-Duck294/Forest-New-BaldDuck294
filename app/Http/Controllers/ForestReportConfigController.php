@@ -62,44 +62,57 @@ class ForestReportConfigController extends Controller
             $plantationQuery->where('site_id', $request->site_id);
         }
 
-        // --- B. Date Filters (Applied to both Reports and Assets) ---
-        if ($request->filled('date_filter') && $request->date_filter !== 'overall') {
-            $dateFilter = $request->date_filter;
+        // --- B. Date Filters (Applied to Reports, Assets, Plantations, and Attendance) ---
+        // 🔥 DEFAULT TO 'MONTH' IF NO FILTER IS PROVIDED
+        $dateFilter = $request->get('date_filter', 'month');
 
+        // Define the attendance query early so we can apply the same dates to it
+        $attendanceQuery = DB::table('attendance')
+            ->where('company_id', $companyId)
+            ->where('role_id', 3);
+
+        if ($request->filled('range_id') && $request->range_id !== '0' && $request->range_id !== 'all') {
+            $attendanceQuery->where('client_id', $request->range_id);
+        }
+        if ($request->filled('site_id') && $request->site_id !== '0' && $request->site_id !== 'all') {
+            $attendanceQuery->where('site_id', $request->site_id);
+        }
+
+        // Apply strict date boundaries to ALL queries
+        if ($dateFilter !== 'overall') {
             if ($dateFilter === 'today') {
                 $query->whereDate('created_at', Carbon::today());
                 $assetQuery->whereDate('created_at', Carbon::today());
+                $plantationQuery->whereDate('created_at', Carbon::today()); // 🔥 Fixed
+                $attendanceQuery->whereDate('dateFormat', Carbon::today()); // 🔥 Fixed
             } elseif ($dateFilter === 'week') {
                 $query->where('created_at', '>=', Carbon::now()->subWeek());
                 $assetQuery->where('created_at', '>=', Carbon::now()->subWeek());
+                $plantationQuery->where('created_at', '>=', Carbon::now()->subWeek()); // 🔥 Fixed
+                $attendanceQuery->whereBetween('dateFormat', [Carbon::now()->subWeek()->format('Y-m-d'), Carbon::today()->format('Y-m-d')]);
             } elseif ($dateFilter === 'month') {
                 $query->where('created_at', '>=', Carbon::now()->subMonth());
                 $assetQuery->where('created_at', '>=', Carbon::now()->subMonth());
+                $plantationQuery->where('created_at', '>=', Carbon::now()->subMonth()); // 🔥 Fixed
+                $attendanceQuery->whereBetween('dateFormat', [Carbon::now()->subMonth()->format('Y-m-d'), Carbon::today()->format('Y-m-d')]);
+            } elseif ($dateFilter === 'custom' && $request->filled('from_date') && $request->filled('to_date')) {
+                $query->whereDate('created_at', '>=', $request->from_date)->whereDate('created_at', '<=', $request->to_date);
+                $assetQuery->whereDate('created_at', '>=', $request->from_date)->whereDate('created_at', '<=', $request->to_date);
+                $plantationQuery->whereDate('created_at', '>=', $request->from_date)->whereDate('created_at', '<=', $request->to_date);
+                $attendanceQuery->whereBetween('dateFormat', [$request->from_date, $request->to_date]);
             }
         }
 
-        // Custom Date Range
-        if ($request->filled('from_date')) {
-            $query->whereDate('created_at', '>=', $request->from_date);
-            $assetQuery->whereDate('created_at', '>=', $request->from_date);
-        }
-        if ($request->filled('to_date')) {
-            $query->whereDate('created_at', '<=', $request->to_date);
-            $assetQuery->whereDate('created_at', '<=', $request->to_date);
-        }
-
-        // =======================================================================
-        // 2. FETCH FILTERED DATA & CALCULATE DYNAMIC ATTENDANCE
-        // =======================================================================
+        // FETCH FILTERED DATA
         $allReports = $query->get();
-        // dd($allReports, "all reports");
         $allPlantations = $plantationQuery->get();
-
         $activePatrols = (clone $patrolQuery)->count();
         $totalAssets = (clone $assetQuery)->count();
-        // dd($totalAssets);
+        $totalGuards = Users::where('company_id', $companyId)->count();
 
-        $totalGuards = Users::where('company_id', $authUser->company_id)->count();
+        // ✅ FINAL COUNT FOR ON DUTY OFFICERS (Now strictly bounded by the date filter)
+        $activeOfficersCount = $attendanceQuery->distinct('user_id')->count('user_id');
+        $attendanceRate = $totalGuards > 0 ? round(($activeOfficersCount / $totalGuards) * 100) : 0;
         // --- DYNAMIC ATTENDANCE LOGIC ---
         // Denominator: Total registered guards (Role 3) assigned to these locations
         $totalOfficersQuery = DB::table('users')
@@ -530,13 +543,20 @@ class ForestReportConfigController extends Controller
         $reports = DB::table('forest_reports')->latest()->paginate(10);
         return view('events.reports_table', compact('reports'));
     }
-
     public function show($id)
     {
-        $report = DB::table('forest_reports')->where('id', $id)->first();
+        $report = DB::table('forest_reports')
+            ->leftJoin('users', 'forest_reports.user_id', '=', 'users.id')
+            ->select('forest_reports.*', 'users.name as reporter_name')
+            ->where('forest_reports.id', $id)
+            ->first();
+
+        if (!$report) {
+            abort(404, 'Report not found');
+        }
+
         return view('events.report_show', compact('report'));
     }
-
     public function updateStatus(Request $request, $id)
     {
         DB::table('forest_reports')->where('id', $id)->update([
@@ -971,8 +991,8 @@ class ForestReportConfigController extends Controller
         $companyId = session('user')->company_id ?? auth()->user()->company_id ?? 46;
         $category = $request->get('category', 'criminal');
         $search = $request->get('search');
-        $fromDate = $request->get('from_date');
-        $toDate = $request->get('to_date');
+        $fromDate = $request->get('from_date', now()->toDateString());
+        $toDate = $request->get('to_date', now()->toDateString());
         $subType = $request->get('sub_type');
         $perPage = $request->get('per_page', 10);
         $dynamicFilter = $request->get('dynamic_filter');
@@ -1178,7 +1198,7 @@ class ForestReportConfigController extends Controller
                 if ($beatId)
                     $query->where("{$tableName}.site_id", $beatId);
 
-                if ($fromDate)  
+                if ($fromDate)
                     $query->whereDate("{$tableName}.created_at", '>=', $fromDate);
                 if ($toDate)
                     $query->whereDate("{$tableName}.created_at", '<=', $toDate);

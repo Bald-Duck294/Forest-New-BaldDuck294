@@ -1,10 +1,15 @@
 @php
-    // Helper function to build clickable sort headers
-    $hideGlobalFilters = true;
 
+    // dd($beats, "beats");
+    $hideGlobalFilters = true;
+    $hideBackground = true;
+    $user = session('user');
+
+    // Sort logic
     $sort = request('sort');
     $dir = request('dir', 'desc');
 
+    // Helper function to build clickable sort headers
     $renderSortHeader = function ($label, $column) use ($sort, $dir) {
         $newDir = $sort === $column && $dir === 'asc' ? 'desc' : 'asc';
         $icon = 'bi-arrow-down-up opacity-25';
@@ -16,7 +21,7 @@
         }
         $url = request()->fullUrlWithQuery(['sort' => $column, 'dir' => $newDir]);
         return "<a href=\"{$url}\" class=\"text-decoration-none {$textClass} d-flex align-items-center gap-1\" style=\"white-space: nowrap;\">
-                {$label} <i class=\"bi {$icon}\" style=\"font-size:0.75rem;\"></i></a>";
+                                        {$label} <i class=\"bi {$icon}\" style=\"font-size:0.75rem;\"></i></a>";
     };
 
     // Badge Colors
@@ -39,7 +44,7 @@
 
     // Dynamic 'Other' value extractor
     $displayValue = function ($array, $key) {
-        if (!is_array($array)) {
+        if (!is_array($array)) {}
             return 'N/A';
         }
         $val = $array[$key] ?? 'N/A';
@@ -50,8 +55,8 @@
         return is_string($val) || is_numeric($val) ? $val : 'N/A';
     };
 
-    $hasActiveFilters =
-        $search || $fromDate || $toDate || $subType || request('dynamic_filter') || request('secondary_filter');
+    $hasActiveFilters = $search || $fromDate || $toDate || $subType || request('dynamic_filter');
+
 @endphp
 
 @extends('layouts.app')
@@ -99,7 +104,6 @@
             font-size: 0.9rem;
             white-space: nowrap;
             transition: all 0.2s ease;
-            text-decoration: none;
         }
 
         .sapphire-nav-link:hover {
@@ -111,6 +115,23 @@
             color: white;
             background-color: var(--sapphire-primary);
             box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25);
+        }
+
+        .custom-filter-input {
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 8px 12px;
+            font-size: 0.85rem;
+            width: 100%;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+
+        .custom-filter-input:focus {
+            border-color: var(--sapphire-primary);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
         }
 
         .active-filters-banner {
@@ -140,7 +161,7 @@
             color: var(--text-main);
             border: 1px solid var(--border-color);
             border-radius: 4px;
-            padding: 4px 10px;
+            padding: 2px 8px;
             font-weight: 600;
             font-size: 0.75rem;
             margin-right: 8px;
@@ -163,16 +184,11 @@
             color: var(--sapphire-danger, #ef4444);
         }
 
-        /* 🔥 Highlighted Result Count */
-        .results-count-badge {
-            background-color: var(--sapphire-primary);
-            color: white;
-            font-weight: 700;
-            font-size: 0.85rem;
-            padding: 6px 14px;
-            border-radius: 20px;
-            box-shadow: 0 4px 10px rgba(59, 130, 246, 0.3);
-            margin-left: 12px;
+        .results-count {
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            margin-left: 10px;
+            font-style: italic;
         }
 
         @keyframes slideDown {
@@ -233,6 +249,11 @@
             color: #f97316;
         }
 
+        .badge-soft-dark {
+            background: rgba(30, 41, 59, 0.15);
+            color: #4371bb;
+        }
+
         .badge-soft-purple {
             background: rgba(168, 85, 247, 0.15);
             color: #a855f7;
@@ -262,6 +283,24 @@
             background: var(--bg-body);
             color: var(--text-main);
             border: 1px solid var(--border-color);
+        }
+
+        .map-pin-btn {
+            width: 32px;
+            height: 32px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            border: 1px solid var(--border-color);
+            color: var(--sapphire-primary);
+            transition: all 0.2s;
+        }
+
+        .map-pin-btn:hover {
+            background: var(--sapphire-primary);
+            color: white;
+            border-color: var(--sapphire-primary);
         }
     </style>
 
@@ -296,7 +335,6 @@
         @if ($hasActiveFilters)
             <div class="active-filters-banner">
                 <div class="active-filters-label"><i class="bi bi-funnel-fill"></i> Active Filters:</div>
-
                 @if ($search)
                     <div class="filter-pill">Search: {{ $search }}</div>
                 @endif
@@ -318,38 +356,8 @@
                 @endif
 
                 @if (request('dynamic_filter'))
-                    @php
-                        $filterName = 'Filter';
-                        if (in_array($subType, ['felling', 'storage', 'jfmc'])) {
-                            $filterName = 'Species';
-                        } elseif (in_array($subType, ['sighting', 'poaching'])) {
-                            $filterName = 'Animal';
-                        } elseif ($subType == 'mining') {
-                            $filterName = 'Mineral';
-                        } elseif ($subType == 'water_status') {
-                            $filterName = 'Source';
-                        } elseif ($subType == 'transport') {
-                            $filterName = 'Vehicle';
-                        } elseif ($subType == 'compensation') {
-                            $filterName = 'Comp Type';
-                        }
-                    @endphp
-                    <div class="filter-pill">{{ $filterName }}: {{ request('dynamic_filter') }}</div>
+                    <div class="filter-pill">Filter: {{ request('dynamic_filter') }}</div>
                 @endif
-
-                @if (request('secondary_filter'))
-                    @php
-                        $secFilterName = 'Secondary';
-                        if ($subType == 'sighting') {
-                            $secFilterName = 'Evidence';
-                        }
-                        if ($subType == 'poaching') {
-                            $secFilterName = 'Age Class';
-                        }
-                    @endphp
-                    <div class="filter-pill">{{ $secFilterName }}: {{ request('secondary_filter') }}</div>
-                @endif
-
                 @if ($fromDate)
                     <div class="filter-pill">From: {{ \Carbon\Carbon::parse($fromDate)->format('d M Y') }}</div>
                 @endif
@@ -357,17 +365,12 @@
                     <div class="filter-pill">To: {{ \Carbon\Carbon::parse($toDate)->format('d M Y') }}</div>
                 @endif
 
-                {{-- 🔥 HIGH VISIBILITY RESULT COUNT --}}
-                <div class="results-count-badge">
-                    <i class="bi bi-list-check me-1"></i> {{ $records->total() }} Records Found
-                </div>
-
+                <div class="results-count">({{ $records->total() }} results found)</div>
                 <a href="?category={{ $category }}" class="clear-filters-btn">
                     <i class="bi bi-x-circle"></i> Clear Filters
                 </a>
             </div>
         @endif
-
         <form method="GET" action="{{ route('reports.detailed') }}" id="filterForm">
             <input type="hidden" name="category" value="{{ $category }}">
             <input type="hidden" name="sort" value="{{ $sort }}">
@@ -392,27 +395,29 @@
 
                         <div class="col d-flex flex-wrap gap-2 justify-content-md-end align-items-center">
 
+                            {{-- Range Dropdown --}}
                             <select name="range_id" class="form-select form-select-sm shadow-none"
                                 style="width: auto; min-width: 140px; background-color: var(--bg-body); color: var(--text-main); border-color: var(--border-color);"
                                 onchange="onRangeChange()">
                                 <option value="">All Ranges</option>
                                 @foreach ($dropdownRanges as $id => $name)
                                     <option value="{{ $id }}"
-                                        {{ request('range_id') == $id ? 'selected' : '' }}>{{ $name }}</option>
+                                        {{ request('range_id') == $id ? 'selected' : '' }}>{{ $name }}
+                                    </option>
                                 @endforeach
                             </select>
 
+                            {{-- Beat Dropdown --}}
                             <select name="site_id" class="form-select form-select-sm shadow-none"
                                 style="width: auto; min-width: 140px; background-color: var(--bg-body); color: var(--text-main); border-color: var(--border-color);"
                                 onchange="autoSubmit()">
                                 <option value="">All Beats</option>
                                 @foreach ($dropdownBeats as $beat)
                                     <option value="{{ $beat->id }}"
-                                        {{ request('site_id') == $beat->id ? 'selected' : '' }}>{{ $beat->name }}
-                                    </option>
+                                        {{ request('site_id') == $beat->id ? 'selected' : '' }}>
+                                        {{ $beat->name }}</option>
                                 @endforeach
                             </select>
-
                             @if (in_array($category, ['criminal', 'events']))
                                 <select name="sub_type" class="form-select form-select-sm shadow-none"
                                     style="width: auto; min-width: 140px; background-color: var(--bg-body); color: var(--text-main); border-color: var(--border-color);"
@@ -422,9 +427,11 @@
                                         <option value="felling" {{ $subType == 'felling' ? 'selected' : '' }}>Illegal
                                             Felling</option>
                                         <option value="poaching" {{ $subType == 'poaching' ? 'selected' : '' }}>Wild Animal
-                                            Death</option>
+                                            Death
+                                        </option>
                                         <option value="encroachment" {{ $subType == 'encroachment' ? 'selected' : '' }}>
-                                            Encroachment</option>
+                                            Encroachment
+                                        </option>
                                         <option value="mining" {{ $subType == 'mining' ? 'selected' : '' }}>Mining</option>
                                         <option value="storage" {{ $subType == 'storage' ? 'selected' : '' }}>Storage
                                         </option>
@@ -432,98 +439,86 @@
                                         </option>
                                     @elseif($category == 'events')
                                         <option value="sighting" {{ $subType == 'sighting' ? 'selected' : '' }}>Animal
-                                            Sighting</option>
+                                            Sighting
+                                        </option>
                                         <option value="water_status" {{ $subType == 'water_status' ? 'selected' : '' }}>
-                                            Water Source</option>
+                                            Water Source
+                                        </option>
                                         <option value="compensation" {{ $subType == 'compensation' ? 'selected' : '' }}>
-                                            Compensation</option>
+                                            Compensation
+                                        </option>
                                     @endif
                                 </select>
                             @endif
 
-                            {{-- 🔥 DYNAMIC PRIMARY FILTER (Smart Naming based on SubType) --}}
-                            @if (in_array($subType, [
-                                    'sighting',
-                                    'poaching',
-                                    'felling',
-                                    'storage',
-                                    'water_status',
-                                    'transport',
-                                    'compensation',
-                                    'mining',
-                                    'jfmc',
-                                ]))
-                                @php
-                                    $filterLabel = 'All Filters';
-                                    if (in_array($subType, ['felling', 'storage', 'jfmc'])) {
-                                        $filterLabel = 'All Species';
-                                    } elseif (in_array($subType, ['sighting', 'poaching'])) {
-                                        $filterLabel = 'All Animals';
-                                    } elseif ($subType == 'mining') {
-                                        $filterLabel = 'All Minerals';
-                                    } elseif ($subType == 'water_status') {
-                                        $filterLabel = 'All Sources';
-                                    } elseif ($subType == 'transport') {
-                                        $filterLabel = 'All Vehicles';
-                                    } elseif ($subType == 'compensation') {
-                                        $filterLabel = 'All Types';
-                                    }
-                                @endphp
-
+                            {{-- Dynamic Secondary Filter --}}
+                            @if (in_array($subType, ['sighting', 'poaching', 'felling', 'storage', 'water_status']))
                                 <select name="dynamic_filter" class="form-select form-select-sm shadow-none"
                                     style="width: auto; min-width: 140px; background-color: var(--bg-body); color: var(--text-main); border-color: var(--border-color);"
                                     onchange="autoSubmit()">
-                                    <option value="">{{ $filterLabel }}</option>
-
+                                    <option value="">All Filters</option>
                                     @if (in_array($subType, ['sighting', 'poaching']))
                                         <option value="Leopard"
-                                            {{ request('dynamic_filter') == 'Leopard' ? 'selected' : '' }}>Leopard</option>
+                                            {{ request('dynamic_filter') == 'Leopard' ? 'selected' : '' }}>Leopard
+                                        </option>
                                         <option value="Sloth Bear"
-                                            {{ request('dynamic_filter') == 'Sloth Bear' ? 'selected' : '' }}>Sloth Bear
-                                        </option>
+                                            {{ request('dynamic_filter') == 'Sloth Bear' ? 'selected' : '' }}>
+                                            Sloth Bear</option>
                                         <option value="Wild Boar"
-                                            {{ request('dynamic_filter') == 'Wild Boar' ? 'selected' : '' }}>Wild Boar
-                                        </option>
+                                            {{ request('dynamic_filter') == 'Wild Boar' ? 'selected' : '' }}>
+                                            Wild Boar</option>
                                         <option value="Jackal"
-                                            {{ request('dynamic_filter') == 'Jackal' ? 'selected' : '' }}>Jackal</option>
+                                            {{ request('dynamic_filter') == 'Jackal' ? 'selected' : '' }}>Jackal
+                                        </option>
                                         <option value="Hyena"
-                                            {{ request('dynamic_filter') == 'Hyena' ? 'selected' : '' }}>Hyena</option>
+                                            {{ request('dynamic_filter') == 'Hyena' ? 'selected' : '' }}>Hyena
+                                        </option>
                                         <option value="Spotted Deer"
                                             {{ request('dynamic_filter') == 'Spotted Deer' ? 'selected' : '' }}>Spotted
                                             Deer</option>
                                         <option value="Sambar"
-                                            {{ request('dynamic_filter') == 'Sambar' ? 'selected' : '' }}>Sambar</option>
+                                            {{ request('dynamic_filter') == 'Sambar' ? 'selected' : '' }}>Sambar
+                                        </option>
                                     @elseif(in_array($subType, ['felling', 'storage', 'jfmc']))
                                         <option value="Sal" {{ request('dynamic_filter') == 'Sal' ? 'selected' : '' }}>
                                             Sal</option>
                                         <option value="Saja"
                                             {{ request('dynamic_filter') == 'Saja' ? 'selected' : '' }}>Saja</option>
                                         <option value="Sagaon"
-                                            {{ request('dynamic_filter') == 'Sagaon' ? 'selected' : '' }}>Sagaon</option>
+                                            {{ request('dynamic_filter') == 'Sagaon' ? 'selected' : '' }}>Sagaon
+                                        </option>
                                         <option value="Beeja"
-                                            {{ request('dynamic_filter') == 'Beeja' ? 'selected' : '' }}>Beeja</option>
+                                            {{ request('dynamic_filter') == 'Beeja' ? 'selected' : '' }}>Beeja
+                                        </option>
                                         <option value="Haldu"
-                                            {{ request('dynamic_filter') == 'Haldu' ? 'selected' : '' }}>Haldu</option>
+                                            {{ request('dynamic_filter') == 'Haldu' ? 'selected' : '' }}>Haldu
+                                        </option>
                                         <option value="Dhawda"
-                                            {{ request('dynamic_filter') == 'Dhawda' ? 'selected' : '' }}>Dhawda</option>
+                                            {{ request('dynamic_filter') == 'Dhawda' ? 'selected' : '' }}>Dhawda
+                                        </option>
                                         <option value="Safed Siris"
                                             {{ request('dynamic_filter') == 'Safed Siris' ? 'selected' : '' }}>Safed Siris
                                         </option>
                                         <option value="Kala Siris"
-                                            {{ request('dynamic_filter') == 'Kala Siris' ? 'selected' : '' }}>Kala Siris
-                                        </option>
+                                            {{ request('dynamic_filter') == 'Kala Siris' ? 'selected' : '' }}>
+                                            Kala Siris</option>
                                         <option value="Jamun"
-                                            {{ request('dynamic_filter') == 'Jamun' ? 'selected' : '' }}>Jamun</option>
+                                            {{ request('dynamic_filter') == 'Jamun' ? 'selected' : '' }}>Jamun
+                                        </option>
                                         <option value="Aam" {{ request('dynamic_filter') == 'Aam' ? 'selected' : '' }}>
                                             Aam</option>
                                         <option value="Semal"
-                                            {{ request('dynamic_filter') == 'Semal' ? 'selected' : '' }}>Semal</option>
+                                            {{ request('dynamic_filter') == 'Semal' ? 'selected' : '' }}>Semal
+                                        </option>
                                         <option value="Mahua"
-                                            {{ request('dynamic_filter') == 'Mahua' ? 'selected' : '' }}>Mahua</option>
+                                            {{ request('dynamic_filter') == 'Mahua' ? 'selected' : '' }}>Mahua
+                                        </option>
                                         <option value="Tendu"
-                                            {{ request('dynamic_filter') == 'Tendu' ? 'selected' : '' }}>Tendu</option>
+                                            {{ request('dynamic_filter') == 'Tendu' ? 'selected' : '' }}>Tendu
+                                        </option>
                                         <option value="Nilgiri"
-                                            {{ request('dynamic_filter') == 'Nilgiri' ? 'selected' : '' }}>Nilgiri</option>
+                                            {{ request('dynamic_filter') == 'Nilgiri' ? 'selected' : '' }}>Nilgiri
+                                        </option>
                                     @elseif($subType == 'water_status')
                                         <option value="Natural pond"
                                             {{ request('dynamic_filter') == 'Natural pond' ? 'selected' : '' }}>Natural
@@ -532,11 +527,11 @@
                                             {{ request('dynamic_filter') == 'Earthen dam' ? 'selected' : '' }}>Earthen dam
                                         </option>
                                         <option value="Check dam"
-                                            {{ request('dynamic_filter') == 'Check dam' ? 'selected' : '' }}>Check dam
-                                        </option>
+                                            {{ request('dynamic_filter') == 'Check dam' ? 'selected' : '' }}>
+                                            Check dam</option>
                                         <option value="Stop dam"
-                                            {{ request('dynamic_filter') == 'Stop dam' ? 'selected' : '' }}>Stop dam
-                                        </option>
+                                            {{ request('dynamic_filter') == 'Stop dam' ? 'selected' : '' }}>Stop
+                                            dam</option>
                                         <option value="Concrete water hole"
                                             {{ request('dynamic_filter') == 'Concrete water hole' ? 'selected' : '' }}>
                                             Concrete water hole</option>
@@ -544,90 +539,26 @@
                                             {{ request('dynamic_filter') == 'River stream' ? 'selected' : '' }}>River
                                             stream</option>
                                         <option value="Open well"
-                                            {{ request('dynamic_filter') == 'Open well' ? 'selected' : '' }}>Open well
-                                        </option>
+                                            {{ request('dynamic_filter') == 'Open well' ? 'selected' : '' }}>
+                                            Open well</option>
                                         <option value="Closed well"
                                             {{ request('dynamic_filter') == 'Closed well' ? 'selected' : '' }}>Closed well
                                         </option>
-                                    @elseif($subType == 'mining')
-                                        <option value="Sand"
-                                            {{ request('dynamic_filter') == 'Sand' ? 'selected' : '' }}>Sand</option>
-                                        <option value="Stone"
-                                            {{ request('dynamic_filter') == 'Stone' ? 'selected' : '' }}>Stone</option>
-                                        <option value="Murrum"
-                                            {{ request('dynamic_filter') == 'Murrum' ? 'selected' : '' }}>Murrum</option>
-                                    @elseif($subType == 'transport')
-                                        <option value="Truck"
-                                            {{ request('dynamic_filter') == 'Truck' ? 'selected' : '' }}>Truck</option>
-                                        <option value="Tractor"
-                                            {{ request('dynamic_filter') == 'Tractor' ? 'selected' : '' }}>Tractor</option>
-                                        <option value="Tempo"
-                                            {{ request('dynamic_filter') == 'Tempo' ? 'selected' : '' }}>Tempo</option>
-                                        <option value="Bullock Cart"
-                                            {{ request('dynamic_filter') == 'Bullock Cart' ? 'selected' : '' }}>Bullock
-                                            Cart</option>
-                                        <option value="Two-Wheeler"
-                                            {{ request('dynamic_filter') == 'Two-Wheeler' ? 'selected' : '' }}>Two-Wheeler
-                                        </option>
-                                    @elseif($subType == 'compensation')
-                                        <option value="Human death"
-                                            {{ request('dynamic_filter') == 'Human death' ? 'selected' : '' }}>Human death
-                                        </option>
-                                        <option value="Permanent disability"
-                                            {{ request('dynamic_filter') == 'Permanent disability' ? 'selected' : '' }}>
-                                            Permanent disability</option>
-                                        <option value="Human injury"
-                                            {{ request('dynamic_filter') == 'Human injury' ? 'selected' : '' }}>Human
-                                            injury</option>
-                                        <option value="Cattle death"
-                                            {{ request('dynamic_filter') == 'Cattle death' ? 'selected' : '' }}>Cattle
-                                            death</option>
-                                        <option value="Crop damage"
-                                            {{ request('dynamic_filter') == 'Crop damage' ? 'selected' : '' }}>Crop damage
-                                        </option>
-                                        <option value="House damage"
-                                            {{ request('dynamic_filter') == 'House damage' ? 'selected' : '' }}>House
-                                            damage</option>
                                     @endif
                                 </select>
-                            @endif
-
-                            {{-- 🔥 DYNAMIC SECONDARY FILTER --}}
-                            @if (in_array($subType, ['sighting', 'poaching']))
-                                @php
-                                    $secFilterLabel = $subType == 'sighting' ? 'All Evidence Types' : 'All Age Classes';
-                                @endphp
-                                <select name="secondary_filter" class="form-select form-select-sm shadow-none"
+                            @elseif($subType == 'mining')
+                                <select name="dynamic_filter" class="form-select form-select-sm shadow-none"
                                     style="width: auto; min-width: 140px; background-color: var(--bg-body); color: var(--text-main); border-color: var(--border-color);"
                                     onchange="autoSubmit()">
-                                    <option value="">{{ $secFilterLabel }}</option>
-
-                                    @if ($subType == 'sighting')
-                                        <option value="Photo"
-                                            {{ request('secondary_filter') == 'Photo' ? 'selected' : '' }}>Photo</option>
-                                        <option value="Pugmark"
-                                            {{ request('secondary_filter') == 'Pugmark' ? 'selected' : '' }}>Pugmark
-                                        </option>
-                                        <option value="Scratch"
-                                            {{ request('secondary_filter') == 'Scratch' ? 'selected' : '' }}>Scratch
-                                        </option>
-                                        <option value="Scat"
-                                            {{ request('secondary_filter') == 'Scat' ? 'selected' : '' }}>Scat</option>
-                                        <option value="Body Part"
-                                            {{ request('secondary_filter') == 'Body Part' ? 'selected' : '' }}>Body Part
-                                        </option>
-                                        <option value="Den"
-                                            {{ request('secondary_filter') == 'Den' ? 'selected' : '' }}>Den</option>
-                                    @elseif($subType == 'poaching')
-                                        <option value="Adult"
-                                            {{ request('secondary_filter') == 'Adult' ? 'selected' : '' }}>Adult</option>
-                                        <option value="Sub-Adult"
-                                            {{ request('secondary_filter') == 'Sub-Adult' ? 'selected' : '' }}>Sub-Adult
-                                        </option>
-                                        <option value="Juvenile"
-                                            {{ request('secondary_filter') == 'Juvenile' ? 'selected' : '' }}>Juvenile
-                                        </option>
-                                    @endif
+                                    <option value="">All Minerals</option>
+                                    <option value="Sand" {{ request('dynamic_filter') == 'Sand' ? 'selected' : '' }}>
+                                        Sand</option>
+                                    <option value="Stone" {{ request('dynamic_filter') == 'Stone' ? 'selected' : '' }}>
+                                        Stone
+                                    </option>
+                                    <option value="Murrum" {{ request('dynamic_filter') == 'Murrum' ? 'selected' : '' }}>
+                                        Murrum
+                                    </option>
                                 </select>
                             @endif
 
@@ -657,6 +588,7 @@
                     </div>
                 </div>
 
+                {{-- 🔥 RESTORED TABLE AREA 🔥 --}}
                 <div class="table-responsive">
                     <table class="table table-sapphire mb-0">
                         <thead>
@@ -674,7 +606,7 @@
                                         <th>Vol (CuM)</th>
                                     @elseif($subType == 'transport')
                                         <th>Produce</th>
-                                        <th>Vehicle Type</th>
+                                        <th>Vehicle No.</th>
                                         <th>Vol (CuM)</th>
                                     @elseif($subType == 'encroachment')
                                         <th>Encroach Type</th>
@@ -690,11 +622,11 @@
                                         <th>Qty (CMT)</th>
                                     @elseif($subType == 'sighting')
                                         <th>Species</th>
-                                        <th>Evidence Type</th>
+                                        <th>Sighting Type</th>
                                         <th>Count</th>
                                     @elseif($subType == 'poaching')
                                         <th>Species</th>
-                                        <th>Age Class</th>
+                                        <th>Gender / Age</th>
                                         <th>Cause of Death</th>
                                     @elseif($subType == 'water_status')
                                         <th>Source Type</th>
@@ -714,7 +646,7 @@
                                         <th>Key Detail</th>
                                     @endif
 
-                                    {{-- 🔥 Status Header Removed for Reports --}}
+                                    <th class="text-end pe-4">{!! $renderSortHeader('Status', 'status') !!}</th>
                                 @elseif($viewType == 'assets')
                                     <th>{!! $renderSortHeader('Asset ID', 'id') !!}</th>
                                     <th>{!! $renderSortHeader('Category', 'category') !!}</th>
@@ -732,6 +664,7 @@
                                     <th>{!! $renderSortHeader('Compartment', 'attendance.status') !!}</th>
                                     <th>{!! $renderSortHeader('Date', 'attendance.dateFormat') !!}</th>
                                     <th>{!! $renderSortHeader('Entry', 'attendance.in_time') !!}</th>
+                                    {{-- <th>{!! $renderSortHeader('Exit', 'attendance.out_time') !!}</th> --}}
                                     <th class="text-center pe-4">Location</th>
                                 @endif
                             </tr>
@@ -773,7 +706,8 @@
                                             <div class="fw-bold">
                                                 {{ $row->resolved_range ?? ($row->range ?? 'Unknown Range') }}</div>
                                             <div class="text-muted small">
-                                                {{ $row->resolved_beat ?? ($row->beat ?? 'Unknown Beat') }}</div>
+                                                {{ $row->resolved_beat ?? ($row->beat ?? 'Unknown Beat') }}
+                                            </div>
                                         </td>
 
                                         @if (in_array($subType, ['felling', 'jfmc']))
@@ -808,8 +742,7 @@
                                                     array_map('floatval', array_column($speciesGroup, 'volume')),
                                                 );
                                             @endphp
-                                            <td class="fw-bold text-danger">{{ $primarySpecies }}
-                                                @if (count($speciesGroup) > 1)
+                                            <td class="fw-bold text-danger">{{ $primarySpecies }} @if (count($speciesGroup) > 1)
                                                     <span
                                                         class="badge bg-light text-dark border ms-1">+{{ count($speciesGroup) - 1 }}</span>
                                                 @endif
@@ -819,7 +752,7 @@
                                         @elseif($subType == 'transport')
                                             <td class="fw-bold text-warning">{{ $data['produce_name'] ?? 'N/A' }}</td>
                                             <td><span
-                                                    class="badge badge-soft-neutral">{{ $displayValue($data, 'vehicle_type') }}</span>
+                                                    class="badge badge-soft-neutral">{{ $data['vehicle_no'] ?? 'N/A' }}</span>
                                             </td>
                                             <td>{{ $data['qty_volume'] ?? ($data['qty_final'] ?? 0) }}</td>
                                         @elseif($subType == 'encroachment')
@@ -853,11 +786,11 @@
                                             <td>{{ $data['qty_cmt'] ?? 0 }}</td>
                                         @elseif($subType == 'sighting')
                                             <td class="fw-bold text-success">{{ $displayValue($data, 'species') }}</td>
-                                            <td>{{ $displayValue($data, 'evidence_type') }}</td>
+                                            <td>{{ $data['sighting_type'] ?? 'N/A' }}</td>
                                             <td>{{ $data['num_animals'] ?? 1 }}</td>
                                         @elseif($subType == 'poaching')
                                             <td class="fw-bold text-danger">{{ $displayValue($data, 'species') }}</td>
-                                            <td>{{ $data['age_class'] ?? 'Unk' }}</td>
+                                            <td>{{ $data['gender'] ?? 'Unk' }}, {{ $data['age_class'] ?? 'Unk' }}</td>
                                             <td>{{ $data['cause_death'] ?? 'Unknown' }}</td>
                                         @elseif($subType == 'water_status')
                                             <td class="fw-bold text-primary">{{ $displayValue($data, 'source_type') }}
@@ -874,7 +807,8 @@
                                             <td class="fw-bold text-teal">{{ $displayValue($data, 'comp_type') }}</td>
                                             <td>{{ $data['victim_name'] ?? 'N/A' }}</td>
                                             <td class="text-danger fw-bold">
-                                                ₹{{ number_format((float) ($data['amount_claimed'] ?? 0)) }}</td>
+                                                ₹{{ number_format((float) ($data['amount_claimed'] ?? 0)) }}
+                                            </td>
                                         @elseif($category == 'fire' || $subType == 'fire')
                                             <td class="fw-bold text-danger">{{ $data['fire_cause'] ?? 'Unknown' }}</td>
                                             <td class="text-danger">{{ $data['area_burnt'] ?? 0 }}</td>
@@ -962,7 +896,12 @@
                                             </td>
                                         @endif
 
-                                        {{-- 🔥 Status Data Cell Removed for Reports --}}
+                                        <td class="text-end pe-4">
+                                            <span
+                                                class="badge {{ strcasecmp($row->status ?? '', 'Pending') === 0 ? 'badge-soft-warning' : 'badge-soft-success' }} px-3 py-2 rounded-pill">
+                                                {{ $row->status ?? 'Unknown' }}
+                                            </span>
+                                        </td>
                                     @elseif($viewType == 'assets')
                                         <td class="fw-bold" style="color: var(--sapphire-primary);">
                                             AST-{{ $row->id }}</td>
@@ -987,6 +926,8 @@
                                         <td>{{ $row->date ? \Carbon\Carbon::parse($row->date)->format('d M Y') : 'N/A' }}
                                         </td>
                                         <td>{{ $row->in_time ? \Carbon\Carbon::parse($row->in_time)->format('h:i a') : 'N/A' }}
+                                        </td>
+                                        <td>{{ $row->out_time ? \Carbon\Carbon::parse($row->out_time)->format('h:i a') : 'N/A' }}
                                         </td>
                                         <td class="text-center pe-4">
                                             @if (!empty($row->location))
@@ -1037,19 +978,16 @@
         }
 
         function onRangeChange() {
+            // Clear the beat selection when range changes, then submit
             const beatSelect = document.querySelector('select[name="site_id"]');
             if (beatSelect) beatSelect.value = '';
             autoSubmit();
         }
 
         function onSubTypeChange() {
+            // Clear dynamic filter when sub type changes
             const dynamicFilter = document.querySelector('select[name="dynamic_filter"]');
             if (dynamicFilter) dynamicFilter.value = '';
-
-            // 🔥 Clear the Secondary Filter when Sub-Type changes
-            const secondaryFilter = document.querySelector('select[name="secondary_filter"]');
-            if (secondaryFilter) secondaryFilter.value = '';
-
             autoSubmit();
         }
 
@@ -1062,4 +1000,36 @@
             }, 600);
         }
     </script>
+
+    {{--
+    <script>
+        function autoSubmit() {
+            document.getElementById('filterForm').submit();
+        }
+
+        // 🔥 FIXED: Clears the dynamic filter when switching sub-types to prevent conflicts!
+        function onSubTypeChange() {
+            const dynamicFilter = document.querySelector('select[name="dynamic_filter"]');
+            if (dynamicFilter) {
+                dynamicFilter.value = ''; // Wipe the old filter (e.g., 'Sloth Bear')
+            }
+            autoSubmit(); // Now submit the form cleanly
+        }
+
+        function onRangeChange() {
+            const beatSelect = document.querySelector('select[name="site_id"]');
+            if (beatSelect) {
+                beatSelect.value = ''; // Clear the Beat selection
+            }
+            autoSubmit();
+        }
+
+        let searchTimeout = null;
+        function debounceSearch() {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                autoSubmit();
+            }, 600);
+        }
+    </script> --}}
 @endsection
