@@ -1178,7 +1178,7 @@ class ForestReportConfigController extends Controller
                 if ($beatId)
                     $query->where("{$tableName}.site_id", $beatId);
 
-                if ($fromDate)
+                if ($fromDate)  
                     $query->whereDate("{$tableName}.created_at", '>=', $fromDate);
                 if ($toDate)
                     $query->whereDate("{$tableName}.created_at", '<=', $toDate);
