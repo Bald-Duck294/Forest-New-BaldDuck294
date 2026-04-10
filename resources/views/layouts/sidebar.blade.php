@@ -649,6 +649,12 @@ $isSimulating = $isGlobalAdmin && !$isGlobalRoute;
                     class="sidebar-sublink {{ request()->routeIs('patrolling.analytics.pro.advanced') ? 'active' : '' }}">{{ get_label('label_advance_analytics', 'Advanced Analytics') }}</a>
             </div>
         </div>
+             <a href="{{ route('assets.index') }}"
+            class="sidebar-link {{ request()->routeIs('assets.*') ? 'active' : '' }}"
+            title="Asset Management">
+            <i class="bi bi-box-seam"></i>
+            <span class="link-text">Asset Management</span>
+        </a>
 
         <div class="sidebar-section-title">Reports & Analytics</div>
 
@@ -668,12 +674,7 @@ $isSimulating = $isGlobalAdmin && !$isGlobalRoute;
         </a>
 
         {{-- Camera Tracking --}}
-        <a href="{{ route('assets.index') }}"
-            class="sidebar-link {{ request()->routeIs('assets.*') ? 'active' : '' }}"
-            title="Asset Management">
-            <i class="bi bi-box-seam"></i>
-            <span class="link-text">Asset Management</span>
-        </a>
+
         @endif
 
     </div>
