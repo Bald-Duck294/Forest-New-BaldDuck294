@@ -50,8 +50,19 @@
         return is_string($val) || is_numeric($val) ? $val : 'N/A';
     };
 
+    // $hasActiveFilters =
+    //     $search || $fromDate || $toDate || $subType || request('dynamic_filter') || request('secondary_filter');
+
+    // 🔥 FIX: Only trigger the banner if parameters actually exist in the URL request
     $hasActiveFilters =
-        $search || $fromDate || $toDate || $subType || request('dynamic_filter') || request('secondary_filter');
+        request('search') ||
+        request('from_date') ||
+        request('to_date') ||
+        request('sub_type') ||
+        request('dynamic_filter') ||
+        request('secondary_filter') ||
+        request('range_id') ||
+        request('site_id');
 @endphp
 
 @extends('layouts.app')
@@ -297,8 +308,16 @@
             <div class="active-filters-banner">
                 <div class="active-filters-label"><i class="bi bi-funnel-fill"></i> Active Filters:</div>
 
-                @if ($search)
-                    <div class="filter-pill">Search: {{ $search }}</div>
+                @if (request('search'))
+                    <div class="filter-pill">Search: {{ request('search') }}</div>
+                @endif
+
+                @if (request('range_id'))
+                    <div class="filter-pill">Range Filtered</div>
+                @endif
+
+                @if (request('site_id'))
+                    <div class="filter-pill">Beat Filtered</div>
                 @endif
 
                 @if ($subType)
@@ -350,14 +369,15 @@
                     <div class="filter-pill">{{ $secFilterName }}: {{ request('secondary_filter') }}</div>
                 @endif
 
-                @if ($fromDate)
-                    <div class="filter-pill">From: {{ \Carbon\Carbon::parse($fromDate)->format('d M Y') }}</div>
+                {{-- 🔥 FIX: Now strictly checks request() instead of the controller's default fallback --}}
+                @if (request('from_date'))
+                    <div class="filter-pill">From: {{ \Carbon\Carbon::parse(request('from_date'))->format('d M Y') }}</div>
                 @endif
-                @if ($toDate)
-                    <div class="filter-pill">To: {{ \Carbon\Carbon::parse($toDate)->format('d M Y') }}</div>
+                @if (request('to_date'))
+                    <div class="filter-pill">To: {{ \Carbon\Carbon::parse(request('to_date'))->format('d M Y') }}</div>
                 @endif
 
-                {{-- 🔥 HIGH VISIBILITY RESULT COUNT --}}
+                {{-- HIGH VISIBILITY RESULT COUNT --}}
                 <div class="results-count-badge">
                     <i class="bi bi-list-check me-1"></i> {{ $records->total() }} Records Found
                 </div>

@@ -12,9 +12,9 @@
 
     <style>
         /* =========================================
-                                       LOCAL COMPONENT STYLES
-                                       (Hooked to Global Sapphire Variables)
-                                    ========================================= */
+                                           LOCAL COMPONENT STYLES
+                                           (Hooked to Global Sapphire Variables)
+                                        ========================================= */
 
         /* Cards */
         .dash-card {
@@ -303,16 +303,16 @@
                 let currentSort =
                     '{{ request(
                         '
-                                            sort ',
+                                                                sort ',
                         '
-                                            id ',
+                                                                id ',
                     ) }}';
                 let currentDir =
                     '{{ request(
                         '
-                                            dir ',
+                                                                dir ',
                         '
-                                            desc ',
+                                                                desc ',
                     ) }}';
                 let debounceTimeout = null;
 

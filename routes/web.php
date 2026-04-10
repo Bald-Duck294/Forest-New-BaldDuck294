@@ -35,6 +35,7 @@ use App\Http\Controllers\WebBoundaryController;
 use App\Http\Controllers\GuardReportController;
 use App\Http\Controllers\IncidenceController;
 use App\Http\Controllers\AjaxController;
+use App\Http\Controllers\AssestController;
 /* Auth Routes */
 
 Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
@@ -827,3 +828,21 @@ Route::prefix('ajax')->controller(AjaxController::class)->group(function () {
 
 
 Route::get('/attendance-map', [AttendanceController::class, 'showAttendanceMap'])->name('attendanceMap');
+
+
+Route::prefix('asset-management')
+    ->name('assets.')
+    ->controller(AssetController::class)
+    ->group(function () {
+
+        Route::get('/', 'index')->name('index');
+        Route::get('/create', 'create')->name('create');
+        Route::post('/', 'store')->name('store');
+        Route::get('/{asset}', 'show')->name('show');
+        Route::get('/{asset}/edit', 'edit')->name('edit');
+        Route::put('/{asset}', 'update')->name('update');
+        Route::delete('/{asset}', 'destroy')->name('destroy');
+
+        Route::get('/export/excel', 'exportExcel')->name('export.excel');
+        Route::get('/export/pdf', 'exportPdf')->name('export.pdf');
+    });
