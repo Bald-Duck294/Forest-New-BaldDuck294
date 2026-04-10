@@ -4,25 +4,43 @@ dd($dropdownBeats , "dpr beats");
 
 <style>
     .mini-view-toggle {
-        display: flex; background: var(--bg-body, #f8f9fa);
+        display: flex;
+        background: var(--bg-body, #f8f9fa);
         border: 1px solid var(--border-color, #dee2e6);
-        border-radius: 8px; padding: 2px;
+        border-radius: 8px;
+        padding: 2px;
     }
+
     .mini-view-toggle button {
-        background: transparent; border: none; color: var(--text-muted, #6c757d);
-        padding: 6px 14px; font-size: 0.8rem; font-weight: 600;
-        border-radius: 6px; cursor: pointer; transition: all 0.2s ease;
-        display: flex; align-items: center; gap: 6px;
+        background: transparent;
+        border: none;
+        color: var(--text-muted, #6c757d);
+        padding: 6px 14px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        gap: 6px;
     }
+
     .mini-view-toggle button.active {
         background: var(--bg-card, #ffffff);
         color: var(--sapphire-primary, #0d6efd);
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
     }
+
     .custom-input {
-        background-color: var(--bg-body, #ffffff); color: var(--text-main, #212529);
-        border: 1px solid var(--border-color, #dee2e6); border-radius: 8px;
-        padding: 6px 12px; font-size: 0.8rem; font-weight: 500; outline: none;
+        background-color: var(--bg-body, #ffffff);
+        color: var(--text-main, #212529);
+        border: 1px solid var(--border-color, #dee2e6);
+        border-radius: 8px;
+        padding: 6px 12px;
+        font-size: 0.8rem;
+        font-weight: 500;
+        outline: none;
     }
 </style>
 
@@ -62,18 +80,21 @@ dd($dropdownBeats , "dpr beats");
         <select id="site_id" class="custom-input" style="width: auto; min-width: 150px;">
             <option value="">All Beats</option>
         </select>
-
         {{-- Date Filters --}}
+        @php
+            $currentDateFilter = request('date_filter', 'month'); // 🔥 Defaults to month in UI
+        @endphp
         <select id="date_filter" class="custom-input" style="width: auto; min-width: 130px;"
             onchange="toggleCustomDates()">
-            <option value="overall" {{ request('date_filter') == 'overall' ? 'selected' : '' }}>Overall Stats</option>
-            <option value="today" {{ request('date_filter') == 'today' ? 'selected' : '' }}>Today</option>
-            <option value="week" {{ request('date_filter') == 'week' ? 'selected' : '' }}>This Week</option>
-            <option value="month" {{ request('date_filter') == 'month' ? 'selected' : '' }}>This Month</option>
-            <option value="custom" {{ request('date_filter') == 'custom' ? 'selected' : '' }}>Custom Range</option>
+            <option value="overall" {{ $currentDateFilter == 'overall' ? 'selected' : '' }}>Overall Stats</option>
+            <option value="today" {{ $currentDateFilter == 'today' ? 'selected' : '' }}>Today</option>
+            <option value="week" {{ $currentDateFilter == 'week' ? 'selected' : '' }}>This Week</option>
+            <option value="month" {{ $currentDateFilter == 'month' ? 'selected' : '' }}>This Month</option>
+            <option value="custom" {{ $currentDateFilter == 'custom' ? 'selected' : '' }}>Custom Range</option>
         </select>
 
-        <div id="custom-date-inputs" class="custom-date-container {{ request('date_filter') == 'custom' ? 'd-flex' : 'd-none' }} align-items-center gap-2">
+        <div id="custom-date-inputs"
+            class="custom-date-container {{ $currentDateFilter == 'custom' ? 'd-flex' : 'd-none' }} align-items-center gap-2">
             <input type="date" id="from_date" class="custom-input" value="{{ request('from_date') }}">
             <span class="text-muted small">to</span>
             <input type="date" id="to_date" class="custom-input" title="To Date" value="{{ request('to_date') }}">
@@ -93,11 +114,8 @@ dd($dropdownBeats , "dpr beats");
 </div>
 
 <script>
-    // 🔥 Use $dropdownBeats and raw json_encode
     const allBeats = @json($dropdownBeats);
     const currentSelectedBeat = "{{ request('site_id') }}";
-
-    console.log(allBeats, "All Beats Loaded!"); // This will now print your actual data!
 
     function filterBeats() {
         const rangeSelect = document.getElementById('range_id');
@@ -109,12 +127,12 @@ dd($dropdownBeats , "dpr beats");
         // Wipe the dropdown clean
         beatSelect.innerHTML = '<option value="">All Beats</option>';
 
-        // If a range is selected, filter the beats. Otherwise, show all.
+        // 🔥 FIX: Only show beats that belong to the selected range. 
+        // If no range is selected, show ALL beats.
         const filteredBeats = selectedRangeId ?
             allBeats.filter(beat => beat.client_id == selectedRangeId) :
             allBeats;
 
-        // Rebuild the HTML instantly
         filteredBeats.forEach(beat => {
             const option = document.createElement('option');
             option.value = beat.id;
@@ -127,14 +145,28 @@ dd($dropdownBeats , "dpr beats");
     function toggleCustomDates() {
         const filter = document.getElementById('date_filter').value;
         const customContainer = document.getElementById('custom-date-inputs');
+        const fromDateInput = document.getElementById('from_date');
+        const toDateInput = document.getElementById('to_date');
 
         if (filter === 'custom') {
             customContainer.classList.remove('d-none');
+            customContainer.classList.add('d-flex');
+
+            // 🔥 SMART DEFAULT: If empty, set to exactly 1 month back
+            if (!fromDateInput.value || !toDateInput.value) {
+                let today = new Date();
+                let lastMonth = new Date();
+                lastMonth.setMonth(today.getMonth() - 1);
+
+                toDateInput.value = today.toISOString().split('T')[0];
+                fromDateInput.value = lastMonth.toISOString().split('T')[0];
+            }
         } else {
+            customContainer.classList.remove('d-flex');
             customContainer.classList.add('d-none');
-            document.getElementById('from_date').value = '';
-            document.getElementById('to_date').value = '';
-            // Auto-sync when changing standard dates
+            // 🔥 CLEAR: Wipes the custom dates if they switch back to "This Month"
+            fromDateInput.value = '';
+            toDateInput.value = '';
             forceSyncDashboard();
         }
     }
@@ -144,7 +176,7 @@ dd($dropdownBeats , "dpr beats");
 
         let rangeId = document.getElementById('range_id')?.value || '';
         let siteId = document.getElementById('site_id')?.value || '';
-        let dateFilter = document.getElementById('date_filter')?.value || 'overall';
+        let dateFilter = document.getElementById('date_filter')?.value || 'month';
 
         if (rangeId) url.searchParams.set('range_id', rangeId);
         else url.searchParams.delete('range_id');
@@ -179,7 +211,6 @@ dd($dropdownBeats , "dpr beats");
         window.location.href = url.toString();
     }
 
-    // Run filterBeats() instantly when the page loads so the dropdown populates correctly!
     document.addEventListener('DOMContentLoaded', () => {
         filterBeats();
     });

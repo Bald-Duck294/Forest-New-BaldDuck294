@@ -1,19 +1,19 @@
 @php
-use App\Models\User;
-use Illuminate\Support\Facades\Auth;
+    use App\Models\User;
+    use Illuminate\Support\Facades\Auth;
 
-$user = Auth::user() ?? session('user');
-$company = session('company');
-$notificationsCount = 3; // Mocked for demonstration
+    $user = Auth::user() ?? session('user');
+    $company = session('company');
+    $notificationsCount = 3; // Mocked for demonstration
 
-$isForest = $company?->is_forest ?? false;
-$roles = [
-1 => $isForest ? 'DFO' : 'Superadmin',
-2 => $isForest ? 'Ranger' : 'Supervisor',
-7 => $isForest ? 'ACF' : 'Admin',
-4 => 'Client',
-8 => 'Global Admin',
-];
+    $isForest = $company?->is_forest ?? false;
+    $roles = [
+        1 => $isForest ? 'DFO' : 'Superadmin',
+        2 => $isForest ? 'Ranger' : 'Supervisor',
+        7 => $isForest ? 'ACF' : 'Admin',
+        4 => 'Client',
+        8 => 'Global Admin',
+    ];
 @endphp
 
 <style>
@@ -262,11 +262,11 @@ $roles = [
 
             <div class="header-breadcrumb d-none d-md-flex">
                 @if ($user->role_id == 8)
-                <span class="brand-accent"><i class="bi bi-globe me-1"></i>
-                    {{ $company?->name ?? 'Global Admin' }}</span>
+                    <span class="brand-accent"><i class="bi bi-globe me-1"></i>
+                        {{ $company?->name ?? 'Global Admin' }}</span>
                 @else
-                <span
-                    class="brand-accent">{{ $user?->company_name ?? ($company?->name ?? 'Patrol Analytics') }}</span>
+                    <span
+                        class="brand-accent">{{ $user?->company_name ?? ($company?->name ?? 'Patrol Analytics') }}</span>
                 @endif
                 <span class="separator">/</span>
                 <span class="current-page" id="dynamicPageTitle">@yield('title', 'Dashboard')</span>
@@ -278,73 +278,73 @@ $roles = [
 
             {{-- 🟢 ADMIN ONLY FEATURES (Role 8) --}}
             @if ($user?->role_id == 8)
-            {{-- Search (Command Palette Trigger) --}}
-            <button class="nav-icon-btn" id="searchTrigger" title="Search (Ctrl+K)">
-                <i class="bi bi-search"></i>
-            </button>
-
-            {{-- Browser Fullscreen Toggle --}}
-            <button class="nav-icon-btn d-none d-md-flex" id="fullscreenToggle" title="Toggle Fullscreen">
-                <i class="bi bi-arrows-fullscreen" id="fullscreenIcon"></i>
-            </button>
-
-            {{-- Appearance & Settings Dropdown --}}
-            <div class="dropdown">
-                <button class="nav-icon-btn" data-bs-toggle="dropdown" aria-expanded="false"
-                    title="Display Settings">
-                    <i class="bi bi-sliders2"></i>
+                {{-- Search (Command Palette Trigger) --}}
+                <button class="nav-icon-btn" id="searchTrigger" title="Search (Ctrl+K)">
+                    <i class="bi bi-search"></i>
                 </button>
-                <div class="dropdown-menu dropdown-menu-end sapphire-dropdown-menu">
-                    <div class="dropdown-section-title">Focus & Layout</div>
-                    <button class="sapphire-dropdown-item" id="zenModeToggle">
-                        <div class="d-flex align-items-center gap-2"><i
-                                class="bi bi-layout-sidebar-inset-reverse"></i> Zen Mode (Focus)</div>
-                    </button>
-                    <div class="my-2 border-bottom" style="border-color: var(--border-color);"></div>
 
-                    <div class="dropdown-section-title">Header Style</div>
-                    <button class="sapphire-dropdown-item layout-option" data-layout="sticky"
-                        onclick="setHeaderLayout('sticky')">
-                        <div class="d-flex align-items-center gap-2"><i class="bi bi-layout-top"></i> Sticky Top
-                        </div>
-                        <i class="bi bi-check2 theme-check-icon"></i>
-                    </button>
-                    <button class="sapphire-dropdown-item layout-option" data-layout="floating"
-                        onclick="setHeaderLayout('floating')">
-                        <div class="d-flex align-items-center gap-2"><i class="bi bi-capsule"></i> Floating Pill
-                        </div>
-                        <i class="bi bi-check2 theme-check-icon"></i>
-                    </button>
-                    <button class="sapphire-dropdown-item layout-option" data-layout="autohide"
-                        onclick="setHeaderLayout('autohide')">
-                        <div class="d-flex align-items-center gap-2"><i class="bi bi-arrows-collapse"></i> Auto-Hide
-                            Scroll</div>
-                        <i class="bi bi-check2 theme-check-icon"></i>
-                    </button>
-                    <button class="sapphire-dropdown-item layout-option" data-layout="minimal"
-                        onclick="setHeaderLayout('minimal')">
-                        <div class="d-flex align-items-center gap-2"><i class="bi bi-border-bottom"></i> Minimal
-                            Edge</div>
-                        <i class="bi bi-check2 theme-check-icon"></i>
-                    </button>
+                {{-- Browser Fullscreen Toggle --}}
+                <button class="nav-icon-btn d-none d-md-flex" id="fullscreenToggle" title="Toggle Fullscreen">
+                    <i class="bi bi-arrows-fullscreen" id="fullscreenIcon"></i>
+                </button>
 
-                    <div class="my-2 border-bottom" style="border-color: var(--border-color);"></div>
+                {{-- Appearance & Settings Dropdown --}}
+                <div class="dropdown">
+                    <button class="nav-icon-btn" data-bs-toggle="dropdown" aria-expanded="false"
+                        title="Display Settings">
+                        <i class="bi bi-sliders2"></i>
+                    </button>
+                    <div class="dropdown-menu dropdown-menu-end sapphire-dropdown-menu">
+                        <div class="dropdown-section-title">Focus & Layout</div>
+                        <button class="sapphire-dropdown-item" id="zenModeToggle">
+                            <div class="d-flex align-items-center gap-2"><i
+                                    class="bi bi-layout-sidebar-inset-reverse"></i> Zen Mode (Focus)</div>
+                        </button>
+                        <div class="my-2 border-bottom" style="border-color: var(--border-color);"></div>
 
-                    <div class="dropdown-section-title">UI Density</div>
-                    <button class="sapphire-dropdown-item density-option" data-density="comfortable"
-                        onclick="setUIDensity('comfortable')">
-                        <div class="d-flex align-items-center gap-2"><i class="bi bi-view-list"></i> Comfortable
-                        </div>
-                        <i class="bi bi-check2 theme-check-icon"></i>
-                    </button>
-                    <button class="sapphire-dropdown-item density-option" data-density="compact"
-                        onclick="setUIDensity('compact')">
-                        <div class="d-flex align-items-center gap-2"><i class="bi bi-view-stacked"></i> Compact
-                        </div>
-                        <i class="bi bi-check2 theme-check-icon"></i>
-                    </button>
+                        <div class="dropdown-section-title">Header Style</div>
+                        <button class="sapphire-dropdown-item layout-option" data-layout="sticky"
+                            onclick="setHeaderLayout('sticky')">
+                            <div class="d-flex align-items-center gap-2"><i class="bi bi-layout-top"></i> Sticky Top
+                            </div>
+                            <i class="bi bi-check2 theme-check-icon"></i>
+                        </button>
+                        <button class="sapphire-dropdown-item layout-option" data-layout="floating"
+                            onclick="setHeaderLayout('floating')">
+                            <div class="d-flex align-items-center gap-2"><i class="bi bi-capsule"></i> Floating Pill
+                            </div>
+                            <i class="bi bi-check2 theme-check-icon"></i>
+                        </button>
+                        <button class="sapphire-dropdown-item layout-option" data-layout="autohide"
+                            onclick="setHeaderLayout('autohide')">
+                            <div class="d-flex align-items-center gap-2"><i class="bi bi-arrows-collapse"></i> Auto-Hide
+                                Scroll</div>
+                            <i class="bi bi-check2 theme-check-icon"></i>
+                        </button>
+                        <button class="sapphire-dropdown-item layout-option" data-layout="minimal"
+                            onclick="setHeaderLayout('minimal')">
+                            <div class="d-flex align-items-center gap-2"><i class="bi bi-border-bottom"></i> Minimal
+                                Edge</div>
+                            <i class="bi bi-check2 theme-check-icon"></i>
+                        </button>
+
+                        <div class="my-2 border-bottom" style="border-color: var(--border-color);"></div>
+
+                        <div class="dropdown-section-title">UI Density</div>
+                        <button class="sapphire-dropdown-item density-option" data-density="comfortable"
+                            onclick="setUIDensity('comfortable')">
+                            <div class="d-flex align-items-center gap-2"><i class="bi bi-view-list"></i> Comfortable
+                            </div>
+                            <i class="bi bi-check2 theme-check-icon"></i>
+                        </button>
+                        <button class="sapphire-dropdown-item density-option" data-density="compact"
+                            onclick="setUIDensity('compact')">
+                            <div class="d-flex align-items-center gap-2"><i class="bi bi-view-stacked"></i> Compact
+                            </div>
+                            <i class="bi bi-check2 theme-check-icon"></i>
+                        </button>
+                    </div>
                 </div>
-            </div>
             @endif
             {{-- 🔴 END ADMIN ONLY FEATURES --}}
 
@@ -377,7 +377,7 @@ $roles = [
             <button class="nav-icon-btn" title="Notifications">
                 <i class="bi bi-bell"></i>
                 @if ($notificationsCount > 0)
-                <div class="notification-dot"></div>
+                    <div class="notification-dot"></div>
                 @endif
             </button>
 
@@ -388,11 +388,11 @@ $roles = [
                 <div data-bs-toggle="dropdown" aria-expanded="false" title="{{ $user?->name }}"
                     style="cursor: pointer;">
                     @if ($user?->profile_pic)
-                    <img src="{{ $user->profile_pic }}" class="profile-avatar shadow-sm" alt="Avatar">
+                        <img src="{{ $user->profile_pic }}" class="profile-avatar shadow-sm" alt="Avatar">
                     @else
-                    <div class="profile-avatar shadow-sm">
-                        {{ substr($user?->name ?? 'U', 0, 1) }}
-                    </div>
+                        <div class="profile-avatar shadow-sm">
+                            {{ substr($user?->name ?? 'U', 0, 1) }}
+                        </div>
                     @endif
                 </div>
 
@@ -433,7 +433,7 @@ $roles = [
 
         // Check if Admin scripts should be initialized
         // Check if Admin scripts should be initialized
-        const isAdmin = @json($user?->role_id==8);
+        const isAdmin = @json($user?->role_id == 8);
 
         if (isAdmin) {
             /* =========================================================
