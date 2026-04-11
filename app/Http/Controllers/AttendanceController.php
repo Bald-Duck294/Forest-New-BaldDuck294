@@ -61,21 +61,7 @@ class AttendanceController extends Controller
                     'site_assign.site_id',
                     'site_assign.site_name'
                 )
-                    'users.id',
-                    'users.name',
-                    'users.profile_pic',
-                    'site_assign.client_name as range',
-                    'site_assign.site_id',
-                    'site_assign.site_name'
-                )
                 ->groupBy(
-                    'users.id',
-                    'users.name',
-                    'users.profile_pic',
-                    'site_assign.client_name',
-                    'site_assign.site_id',
-                    'site_assign.site_name'
-                )
                     'users.id',
                     'users.name',
                     'users.profile_pic',
@@ -98,10 +84,6 @@ class AttendanceController extends Controller
                 ->select('user_id', DB::raw('DATE(dateFormat) as date'))
                 ->get()
                 ->mapWithKeys(function ($r) {
-                    return [
-                        $r->user_id . '_' . $r->date => true
-                    ];
-                });
                     return [
                         $r->user_id . '_' . $r->date => true
                     ];
@@ -156,14 +138,6 @@ class AttendanceController extends Controller
 
             $defaulters = collect($grid)
                 ->map(function ($g) {
-
-                    return [
-                        'user_id' => $g['user']->id,
-                        'name' => $g['user']->name,
-                        'days_present' => $g['summary']['present'],
-                        'days_absent' => $g['summary']['total'] - $g['summary']['present']
-                    ];
-                })
                     return [
                         'user_id' => $g['user']->id,
                         'name' => $g['user']->name,
@@ -211,7 +185,6 @@ class AttendanceController extends Controller
 
             $pendingRequests = \Illuminate\Support\Facades\Schema::hasTable('leave_requests')
                 ? DB::table('leave_requests')->where('status', 'pending')->count()
-                ? DB::table('leave_requests')->where('status', 'pending')->count()
                 : 0;
 
             $recentCheckins = DB::table('attendance')
@@ -226,15 +199,10 @@ class AttendanceController extends Controller
                     DB::raw("TIME(attendance.entryDateTime) as time"),
                     'attendance.site_id as site'
                 )
-                    'users.name',
-                    'users.profile_pic',
-                    DB::raw("TIME(attendance.entryDateTime) as time"),
-                    'attendance.site_id as site'
-                )
                 ->get();
 
 
-            /* ================= WEEKLY TREND ================= */
+            /* ================= DAILY TREND ================= */
 
             $dailyTrend = collect([
                 [
@@ -244,6 +212,7 @@ class AttendanceController extends Controller
                     'absent' => $absentToday
                 ]
             ]);
+
             /* ================= WEEKLY TREND ================= */
 
             $weekStart = $filterDate->copy()->subDays(6)->startOfDay();
@@ -251,9 +220,6 @@ class AttendanceController extends Controller
 
             $weeklyData = DB::table('attendance')
                 ->select(
-                    DB::raw('DATE(dateFormat) as date'),
-                    DB::raw('COUNT(DISTINCT user_id) as present')
-                )
                     DB::raw('DATE(dateFormat) as date'),
                     DB::raw('COUNT(DISTINCT user_id) as present')
                 )
@@ -280,7 +246,6 @@ class AttendanceController extends Controller
                 $weeklyAbsent[] = $absent;
             }
             $filterData = $this->filterData();
-        } catch (\Exception $e) {
         } catch (\Exception $e) {
 
             $grid = [];
@@ -309,27 +274,6 @@ class AttendanceController extends Controller
         return view('attendance.explorer', array_merge(
             $filterData,
             compact(
-                'grid',
-                'dates',
-                'totalGuards',
-                'presentPct',
-                'totalPresentManDays',
-                'totalAbsentManDays',
-                'dailyTrend',
-                'defaulters',
-                'startDate',
-                'endDate',
-                'presentToday',
-                'absentToday',
-                'lateToday',
-                'activeSites',
-                'pendingRequests',
-                'recentCheckins',
-                'weeklyLabels',
-                'weeklyPresent',
-                'weeklyAbsent',
-                'filterDate'
-            )
                 'grid',
                 'dates',
                 'totalGuards',
@@ -440,10 +384,12 @@ class AttendanceController extends Controller
         $incidents = (clone $query)
             ->where('emergency_attend', 1)
             ->count();
+
         $sites = DB::table('site_details')
             ->where('company_id', $companyId)
             ->select('id', 'name')
             ->get();
+
         $employees = DB::table('users')
             ->where('company_id', $companyId)
             ->where('isActive', 1)
@@ -475,13 +421,9 @@ class AttendanceController extends Controller
         $companyId = $user->company_id;
 
         $cutoff = Carbon::now()->subDays(2)->startOfDay();
-        $companyId = $user->company_id;
-
-        $cutoff = Carbon::now()->subDays(2)->startOfDay();
 
         $requests = DB::table('attendance_requests')
             ->where('company_id', $companyId)
-            ->where('entryDateTime', '>=', $cutoff)
             ->where('entryDateTime', '>=', $cutoff)
             ->orderByDesc('entryDateTime')
             ->paginate(10);
@@ -557,10 +499,6 @@ class AttendanceController extends Controller
             'status' => 'Rejected',
             'remark' => $request->remark
         ]);
-
-        if (!$updated) {
-            return back()->with('error', 'Request not found');
-        }
 
         if (!$updated) {
             return back()->with('error', 'Request not found');
@@ -663,12 +601,12 @@ class AttendanceController extends Controller
         $fromDate = $request->input('fromDate');
         $toDate = $request->input('toDate');
         $user = session('user');
+
         // Fetch attendance data for the guard
         if ($guardId == 0) {
             $attendanceData = Attendance::where('company_id', $user->company_id)
                 ->whereBetween('dateFormat', [$fromDate, $toDate])
                 ->get();
-        } else {
         } else {
             $attendanceData = Attendance::where('user_id', $guardId)
                 ->whereBetween('dateFormat', [$fromDate, $toDate])

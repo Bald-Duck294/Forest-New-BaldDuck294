@@ -468,264 +468,240 @@ $isSimulating = $isGlobalAdmin && !$isGlobalRoute;
 
 <div class="sidebar" id="sidebar">
 
-    {{-- ===== HEADER / LOGO ===== --}}
-    {{-- <div class="sidebar-header">
-        <div class="sidebar-logo-icon">
-            <img src="{{ asset('images/logo1.png') }}" alt="Logo">
-</div>
-<div class="sidebar-logo-text">
-    <h6>PUGARCH</h6>
-    <span>AI Intel</span>
-</div>
-</div> --}}
 
-<div class="sidebar-header">
 
-    <!-- ICON -->
-    <div class="sidebar-logo-icon forest-icon">
-        <!-- Forest SVG -->
-        <svg viewBox="0 0 24 24" fill="none">
-            <path d="M12 2L6 10H10L5 18H19L14 10H18L12 2Z" fill="white" />
-        </svg>
-    </div>
-
-    <!-- TEXT -->
-    <div class="sidebar-logo-text">
-        <div class="font-headline font-black text-xl tracking-tight text-primary">
-            Pugarch
-        </div>
-        <div class="font-label text-[10px] font-semibold uppercase tracking-widest text-on-surface-variant">
-            Forest Intelligence
+    <div class="sidebar-header">
+        <div class="sidebar-logo" style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;">
+            <img src="{{ asset('images/Pugarch.png') }}" alt="Pugarch Logo" style="max-width: 100%; max-height: 60px; object-fit: contain; display: block;">
         </div>
     </div>
+    {{-- ===== SCROLLABLE CONTENT ===== --}}
+    <div class="sidebar-content">
 
-</div>
-{{-- ===== SCROLLABLE CONTENT ===== --}}
-<div class="sidebar-content">
-
-    @if ($isGlobalAdmin && $isGlobalRoute)
-    {{-- ==============================================
+        @if ($isGlobalAdmin && $isGlobalRoute)
+        {{-- ==============================================
                  GLOBAL ADMIN DASHBOARD (Provider View)
             ============================================== --}}
-    <div class="sidebar-section-title">Global Management</div>
+        <div class="sidebar-section-title">Global Management</div>
 
-    <a href="{{ route('global.companies') }}"
-        class="sidebar-link {{ request()->routeIs('global.companies*') ? 'active' : '' }}"
-        title="{{ get_label('label_company', 'Companies') }}">
-        <i class="bi bi-buildings"></i>
-        <span class="link-text">{{ get_label('label_company', 'Companies') }}</span>
-    </a>
+        <a href="{{ route('global.companies') }}"
+            class="sidebar-link {{ request()->routeIs('global.companies*') ? 'active' : '' }}"
+            title="{{ get_label('label_company', 'Companies') }}">
+            <i class="bi bi-buildings"></i>
+            <span class="link-text">{{ get_label('label_company', 'Companies') }}</span>
+        </a>
 
-    <a href="{{ route('global.superadmins') }}"
-        class="sidebar-link {{ request()->routeIs('global.superadmins*') ? 'active' : '' }}"
-        title="Super Admins">
-        <i class="bi bi-person-badge"></i>
-        <span class="link-text">Super Admins</span>
-    </a>
+        <a href="{{ route('global.superadmins') }}"
+            class="sidebar-link {{ request()->routeIs('global.superadmins*') ? 'active' : '' }}"
+            title="Super Admins">
+            <i class="bi bi-person-badge"></i>
+            <span class="link-text">Super Admins</span>
+        </a>
 
-    <a href="{{ route('global.admins') }}"
-        class="sidebar-link {{ request()->routeIs('global.admins*') ? 'active' : '' }}"
-        title="Admins">
-        <i class="bi bi-person-gear"></i>
-        <span class="link-text">Admins</span>
-    </a>
+        <a href="{{ route('global.admins') }}"
+            class="sidebar-link {{ request()->routeIs('global.admins*') ? 'active' : '' }}"
+            title="Admins">
+            <i class="bi bi-person-gear"></i>
+            <span class="link-text">Admins</span>
+        </a>
 
-    <a href="/global/dynamic-labels"
-        class="sidebar-link {{ request()->is('/global/dynamic-labels*') ? 'active' : '' }}"
-        title="{{ get_label('label_dynamic', 'Dynamic Labels') }}">
-        <i class="bi bi-tags"></i>
-        <span class="link-text">{{ get_label('label_dynamic', 'Dynamic Labels') }}</span>
-    </a>
-    @else
-    {{-- ==============================================
+        <a href="/global/dynamic-labels"
+            class="sidebar-link {{ request()->is('/global/dynamic-labels*') ? 'active' : '' }}"
+            title="{{ get_label('label_dynamic', 'Dynamic Labels') }}">
+            <i class="bi bi-tags"></i>
+            <span class="link-text">{{ get_label('label_dynamic', 'Dynamic Labels') }}</span>
+        </a>
+        @else
+        {{-- ==============================================
                  COMPANY SPECIFIC DASHBOARD (Client View)
             ============================================== --}}
 
-    @if ($isSimulating)
-    {{-- Exit Simulation Button for Global Admins --}}
-    <a href="{{ route('global.exit_simulation') }}" class="sidebar-link btn-exit-sim mb-3"
-        title="Back to Global">
-        <i class="bi bi-box-arrow-left"></i>
-        <span class="link-text fw-bold">Back to Global</span>
-    </a>
-    @endif
-
-    <div class="sidebar-section-title">Company Menu</div>
-
-    {{-- Dashboard --}}
-    <a href="{{ route('report-configs.dashboard') }}"
-        class="sidebar-link {{ request()->is('report-configs*') ? 'active' : '' }}"
-        title="Dashboard">
-        <i class="bi bi-speedometer2"></i>
-        <span class="link-text">Dashboard</span>
-    </a>
-
-    <a href="{{ route('reports.detailed') }}"
-        class="sidebar-link {{ request()->is('report.detailed*') ? 'active' : '' }}"
-        title="Dashboard List view">
-        <i class="bi bi-speedometer2"></i>
-        <span class="link-text">Dashboard List view</span>
-    </a>
-
-    {{-- Clients / Ranges --}}
-    <a href="{{ route('clients') }}" class="sidebar-link {{ request()->routeIs('clients*') ? 'active' : '' }}"
-        title="{{ get_label('label_client', 'Clients') }}">
-        <i class="bi bi-building"></i>
-        <span class="link-text">{{ get_label('label_client', 'Clients') }}</span>
-    </a>
-
-    {{-- Sites / Beats --}}
-    <a href="{{ route('sites.getsites', 0) }}"
-        class="sidebar-link {{ request()->routeIs('sites*') ? 'active' : '' }}"
-        title="{{ get_label('label_site', 'Sites') }}">
-        <i class="bi bi-geo-alt"></i>
-        <span class="link-text">{{ get_label('label_site', 'Sites') }}</span>
-    </a>
-
-    {{-- Dropdown: Users --}}
-    <div class="sidebar-dropdown">
-        <a href="#"
-            class="sidebar-link dropdown-toggle {{ request()->routeIs('guards*') || request()->routeIs('registrations*') ? 'active' : '' }}"
-            title="{{ get_label('label_user', 'Users') }}" onclick="toggleDropdown(event, 'users-menu')">
-            <i class="bi bi-people"></i>
-            <span class="link-text">{{ get_label('label_user', 'Users') }}</span>
-            <i class="bi bi-chevron-down dropdown-arrow"></i>
+        @if ($isSimulating)
+        {{-- Exit Simulation Button for Global Admins --}}
+        <a href="{{ route('global.exit_simulation') }}" class="sidebar-link btn-exit-sim mb-3"
+            title="Back to Global">
+            <i class="bi bi-box-arrow-left"></i>
+            <span class="link-text fw-bold">Back to Global</span>
         </a>
-        <div class="sidebar-submenu" id="users-menu"
-            style="{{ request()->routeIs('guards*') || request()->routeIs('registrations*') ? 'display: block;' : 'display: none;' }}">
-            <a href="{{ route('guards') }}"
-                class="sidebar-sublink {{ request()->routeIs('guards*') ? 'active' : '' }}">{{ get_label('label_all_user', 'All Users') }}</a>
-            <a href="{{ route('registrations.index') }}"
-                class="sidebar-sublink {{ request()->routeIs('registrations*') ? 'active' : '' }}">{{ get_label('label_registration', 'Registrations') }}</a>
-        </div>
-    </div>
+        @endif
 
-    {{-- Dynamic Labels --}}
-    <a href="/dynamic-labels" class="sidebar-link {{ request()->is('dynamic-labels*') ? 'active' : '' }}"
-        title="{{ get_label('label_dynamic', 'Dynamic Labels') }}">
-        <i class="bi bi-tags"></i>
-        <span class="link-text">{{ get_label('label_dynamic', 'Dynamic Labels') }}</span>
-    </a>
+        <div class="sidebar-section-title">Company Menu</div>
 
-    {{-- Dropdown: Attendance --}}
-    <div class="sidebar-dropdown">
-        <a href="#"
-            class="sidebar-link dropdown-toggle {{ request()->is('attendance/*') ? 'active' : '' }}"
-            title="{{ get_label('label_attendance', 'Attendance') }}" onclick="toggleDropdown(event, 'attendance-menu')">
-            <i class="bi bi-calendar-check"></i>
-            <span class="link-text">{{ get_label('label_attendance', 'Attendance') }}</span>
-            <i class="bi bi-chevron-down dropdown-arrow"></i>
+        {{-- Dashboard --}}
+        <a href="{{ route('report-configs.dashboard') }}"
+            class="sidebar-link {{ request()->is('report-configs*') ? 'active' : '' }}"
+            title="Dashboard">
+            <i class="bi bi-speedometer2"></i>
+            <span class="link-text">Dashboard</span>
         </a>
-        <div class="sidebar-submenu" id="attendance-menu"
-            style="{{ request()->is('attendance/*') ? 'display: block;' : 'display: none;' }}">
-            <a href="/attendance/explorer"
-                class="sidebar-sublink {{ request()->is('attendance/explorer') ? 'active' : '' }}">{{ get_label('label_overview', 'Overview') }}</a>
-            <a href="/attendance/logs"
-                class="sidebar-sublink {{ request()->is('attendance/logs') ? 'active' : '' }}">{{ get_label('label_logs', 'Logs') }}</a>
-            <a href="/attendance/requests"
-                class="sidebar-sublink {{ request()->is('attendance/requests') ? 'active' : '' }}">{{ get_label('label_request', 'Requests') }}</a>
-        </div>
-    </div>
 
-    {{-- Know Your Area --}}
-    <a href="{{ route('know-your-area.normal') }}"
-        class="sidebar-link {{ request()->is('know-your-area.normal') ? 'active' : '' }}"
-        title="{{ get_label('label_know_your_area', 'Know Your Area') }}">
-        <i class="bi bi-map"></i>
-        <span class="link-text">{{ get_label('label_know_your_area', 'Know Your Area') }}</span>
-    </a>
-
-    {{-- Dropdown: Plantation --}}
-    <div class="sidebar-dropdown">
-        <a href="#"
-            class="sidebar-link dropdown-toggle {{ request()->is('plantation*') ? 'active' : '' }}"
-            title="{{ get_label('label_plantation', 'Plantation') }}" onclick="toggleDropdown(event, 'plantation-menu')">
-            <i class="bi bi-tree"></i>
-            <span class="link-text">{{ get_label('label_plantation', 'Plantation') }}</span>
-            <i class="bi bi-chevron-down dropdown-arrow"></i>
+        <a href="{{ route('reports.detailed') }}"
+            class="sidebar-link {{ request()->is('report.detailed*') ? 'active' : '' }}"
+            title="Dashboard List view">
+            <i class="bi bi-speedometer2"></i>
+            <span class="link-text">Dashboard List view</span>
         </a>
-        <div class="sidebar-submenu" id="plantation-menu"
-            style="{{ request()->is('plantation*') ? 'display: block;' : 'display: none;' }}">
-            <a href="/plantation/dashboard"
-                class="sidebar-sublink {{ request()->is('plantation/dashboard') ? 'active' : '' }}">Dashboard</a>
-            <a href="/plantation/analytics"
-                class="sidebar-sublink {{ request()->is('plantation/analytics') ? 'active' : '' }}">Analytics</a>
-        </div>
-    </div>
 
-    {{-- Dropdown: Patrolling --}}
-    <div class="sidebar-dropdown">
-        <a href="#"
-            class="sidebar-link dropdown-toggle {{ request()->routeIs('patrolling.*') || (request()->is('patrol*') && !request()->is('patrol/maps')) ? 'active' : '' }}"
-            title="{{ get_label('label_patrolling', 'Patrolling') }}" onclick="toggleDropdown(event, 'patrolling-menu')">
-            <i class="bi bi-shield-check"></i>
-            <span class="link-text">{{ get_label('label_patrolling', 'Patrolling') }}</span>
-            <i class="bi bi-chevron-down dropdown-arrow"></i>
+        {{-- Clients / Ranges --}}
+        <a href="{{ route('clients') }}" class="sidebar-link {{ request()->routeIs('clients*') ? 'active' : '' }}"
+            title="{{ get_label('label_client', 'Clients') }}">
+            <i class="bi bi-building"></i>
+            <span class="link-text">{{ get_label('label_client', 'Clients') }}</span>
         </a>
-        <div class="sidebar-submenu" id="patrolling-menu"
-            style="{{ request()->routeIs('patrolling.*') || (request()->is('patrol*') && !request()->is('patrol/maps')) ? 'display: block;' : 'display: none;' }}">
-            <a href="{{ route('patrolling.log', ['flag' => 'all']) }}"
-                class="sidebar-sublink {{ request()->routeIs('patrolling.log') ? 'active' : '' }}">{{ get_label('label_patrol_logs', 'Patrol Logs') }}</a>
-            <a href="{{ route('patrolling') }}"
-                class="sidebar-sublink {{ request()->routeIs('patrolling') ? 'active' : '' }}">{{ get_label('label_all_patrolling', 'All Patrolling') }}</a>
-            <a href="{{ route('patrolling.analysis') }}"
-                class="sidebar-sublink {{ request()->routeIs('patrolling.analysis') ? 'active' : '' }}">{{ get_label('label_map_view', 'Map View') }}</a>
-            <a href="{{ route('patrolling.analytics.pro.advanced') }}"
-                class="sidebar-sublink {{ request()->routeIs('patrolling.analytics.pro.advanced') ? 'active' : '' }}">{{ get_label('label_advance_analytics', 'Advanced Analytics') }}</a>
+
+        {{-- Sites / Beats --}}
+        <a href="{{ route('sites.getsites', 0) }}"
+            class="sidebar-link {{ request()->routeIs('sites*') ? 'active' : '' }}"
+            title="{{ get_label('label_site', 'Sites') }}">
+            <i class="bi bi-geo-alt"></i>
+            <span class="link-text">{{ get_label('label_site', 'Sites') }}</span>
+        </a>
+
+        {{-- Dropdown: Users --}}
+        <div class="sidebar-dropdown">
+            <a href="#"
+                class="sidebar-link dropdown-toggle {{ request()->routeIs('guards*') || request()->routeIs('registrations*') ? 'active' : '' }}"
+                title="{{ get_label('label_user', 'Users') }}" onclick="toggleDropdown(event, 'users-menu')">
+                <i class="bi bi-people"></i>
+                <span class="link-text">{{ get_label('label_user', 'Users') }}</span>
+                <i class="bi bi-chevron-down dropdown-arrow"></i>
+            </a>
+            <div class="sidebar-submenu" id="users-menu"
+                style="{{ request()->routeIs('guards*') || request()->routeIs('registrations*') ? 'display: block;' : 'display: none;' }}">
+                <a href="{{ route('guards') }}"
+                    class="sidebar-sublink {{ request()->routeIs('guards*') ? 'active' : '' }}">{{ get_label('label_all_user', 'All Users') }}</a>
+                <a href="{{ route('registrations.index') }}"
+                    class="sidebar-sublink {{ request()->routeIs('registrations*') ? 'active' : '' }}">{{ get_label('label_registration', 'Registrations') }}</a>
+            </div>
         </div>
+
+        {{-- Dynamic Labels --}}
+        <a href="/dynamic-labels" class="sidebar-link {{ request()->is('dynamic-labels*') ? 'active' : '' }}"
+            title="{{ get_label('label_dynamic', 'Dynamic Labels') }}">
+            <i class="bi bi-tags"></i>
+            <span class="link-text">{{ get_label('label_dynamic', 'Dynamic Labels') }}</span>
+        </a>
+
+        {{-- Dropdown: Attendance --}}
+        <div class="sidebar-dropdown">
+            <a href="#"
+                class="sidebar-link dropdown-toggle {{ request()->is('attendance/*') ? 'active' : '' }}"
+                title="{{ get_label('label_attendance', 'Attendance') }}" onclick="toggleDropdown(event, 'attendance-menu')">
+                <i class="bi bi-calendar-check"></i>
+                <span class="link-text">{{ get_label('label_attendance', 'Attendance') }}</span>
+                <i class="bi bi-chevron-down dropdown-arrow"></i>
+            </a>
+            <div class="sidebar-submenu" id="attendance-menu"
+                style="{{ request()->is('attendance/*') ? 'display: block;' : 'display: none;' }}">
+                <a href="/attendance/explorer"
+                    class="sidebar-sublink {{ request()->is('attendance/explorer') ? 'active' : '' }}">{{ get_label('label_overview', 'Overview') }}</a>
+                <a href="/attendance/logs"
+                    class="sidebar-sublink {{ request()->is('attendance/logs') ? 'active' : '' }}">{{ get_label('label_logs', 'Logs') }}</a>
+                <a href="/attendance/requests"
+                    class="sidebar-sublink {{ request()->is('attendance/requests') ? 'active' : '' }}">{{ get_label('label_request', 'Requests') }}</a>
+            </div>
+        </div>
+
+        {{-- Know Your Area --}}
+        <a href="{{ route('know-your-area.normal') }}"
+            class="sidebar-link {{ request()->is('know-your-area.normal') ? 'active' : '' }}"
+            title="{{ get_label('label_know_your_area', 'Know Your Area') }}">
+            <i class="bi bi-map"></i>
+            <span class="link-text">{{ get_label('label_know_your_area', 'Know Your Area') }}</span>
+        </a>
+
+        {{-- Dropdown: Plantation --}}
+        <div class="sidebar-dropdown">
+            <a href="#"
+                class="sidebar-link dropdown-toggle {{ request()->is('plantation*') ? 'active' : '' }}"
+                title="{{ get_label('label_plantation', 'Plantation') }}" onclick="toggleDropdown(event, 'plantation-menu')">
+                <i class="bi bi-tree"></i>
+                <span class="link-text">{{ get_label('label_plantation', 'Plantation') }}</span>
+                <i class="bi bi-chevron-down dropdown-arrow"></i>
+            </a>
+            <div class="sidebar-submenu" id="plantation-menu"
+                style="{{ request()->is('plantation*') ? 'display: block;' : 'display: none;' }}">
+                <a href="/plantation/dashboard"
+                    class="sidebar-sublink {{ request()->is('plantation/dashboard') ? 'active' : '' }}">Dashboard</a>
+                <a href="/plantation/analytics"
+                    class="sidebar-sublink {{ request()->is('plantation/analytics') ? 'active' : '' }}">Analytics</a>
+            </div>
+        </div>
+
+        {{-- Dropdown: Patrolling --}}
+        <div class="sidebar-dropdown">
+            <a href="#"
+                class="sidebar-link dropdown-toggle {{ request()->routeIs('patrolling.*') || (request()->is('patrol*') && !request()->is('patrol/maps')) ? 'active' : '' }}"
+                title="{{ get_label('label_patrolling', 'Patrolling') }}" onclick="toggleDropdown(event, 'patrolling-menu')">
+                <i class="bi bi-shield-check"></i>
+                <span class="link-text">{{ get_label('label_patrolling', 'Patrolling') }}</span>
+                <i class="bi bi-chevron-down dropdown-arrow"></i>
+            </a>
+            <div class="sidebar-submenu" id="patrolling-menu"
+                style="{{ request()->routeIs('patrolling.*') || (request()->is('patrol*') && !request()->is('patrol/maps')) ? 'display: block;' : 'display: none;' }}">
+                <a href="{{ route('patrolling.log', ['flag' => 'all']) }}"
+                    class="sidebar-sublink {{ request()->routeIs('patrolling.log') ? 'active' : '' }}">{{ get_label('label_patrol_logs', 'Patrol Logs') }}</a>
+                <a href="{{ route('patrolling') }}"
+                    class="sidebar-sublink {{ request()->routeIs('patrolling') ? 'active' : '' }}">{{ get_label('label_all_patrolling', 'All Patrolling') }}</a>
+                <a href="{{ route('patrolling.analysis') }}"
+                    class="sidebar-sublink {{ request()->routeIs('patrolling.analysis') ? 'active' : '' }}">{{ get_label('label_map_view', 'Map View') }}</a>
+                <a href="{{ route('patrolling.analytics.pro.advanced') }}"
+                    class="sidebar-sublink {{ request()->routeIs('patrolling.analytics.pro.advanced') ? 'active' : '' }}">{{ get_label('label_advance_analytics', 'Advanced Analytics') }}</a>
+            </div>
+        </div>
+             <a href="{{ route('assets.index') }}"
+            class="sidebar-link {{ request()->routeIs('assets.*') ? 'active' : '' }}"
+            title="Asset Management">
+            <i class="bi bi-box-seam"></i>
+            <span class="link-text">Asset Management</span>
+        </a>
+
+        <div class="sidebar-section-title">Reports & Analytics</div>
+
+        {{-- Reports --}}
+        <a href="/report/view" class="sidebar-link {{ request()->is('report/view') ? 'active' : '' }}"
+            title="{{ get_label('label_report', 'Reports') }}">
+            <i class="bi bi-file-earmark-text"></i>
+            <span class="link-text">{{ get_label('label_report', 'Reports') }}</span>
+        </a>
+
+        {{-- Anukampa --}}
+        <a href="{{ route('anukampa.dashboard') }}"
+            class="sidebar-link {{ request()->is('anukampa*') ? 'active' : '' }}"
+            title="{{ get_label('label_anukampa', 'Anukampa') }}">
+            <i class="bi bi-heart-pulse"></i>
+            <span class="link-text">{{ get_label('label_anukampa', 'Anukampa') }}</span>
+        </a>
+
+        {{-- Camera Tracking --}}
+
+        @endif
+
     </div>
 
-    <div class="sidebar-section-title">Reports & Analytics</div>
+    {{-- ===== FOOTER / USER & THEME TOGGLER ===== --}}
+    <div class="sidebar-footer">
 
-    {{-- Reports --}}
-    <a href="/report/view" class="sidebar-link {{ request()->is('report/view') ? 'active' : '' }}"
-        title="{{ get_label('label_report', 'Reports') }}">
-        <i class="bi bi-file-earmark-text"></i>
-        <span class="link-text">{{ get_label('label_report', 'Reports') }}</span>
-    </a>
-
-    {{-- Anukampa --}}
-    <a href="{{ route('anukampa.dashboard') }}"
-        class="sidebar-link {{ request()->is('anukampa*') ? 'active' : '' }}"
-        title="{{ get_label('label_anukampa', 'Anukampa') }}">
-        <i class="bi bi-heart-pulse"></i>
-        <span class="link-text">{{ get_label('label_anukampa', 'Anukampa') }}</span>
-    </a>
-
-    {{-- Camera Tracking --}}
-    <a href="/reports/camera-tracking"
-        class="sidebar-link {{ request()->is('reports/camera-tracking') ? 'active' : '' }}"
-        title="Camera Tracking">
-        <i class="bi bi-camera-video"></i>
-        <span class="link-text">Camera Tracking</span>
-    </a>
-    @endif
-
-</div>
-
-{{-- ===== FOOTER / USER & THEME TOGGLER ===== --}}
-<div class="sidebar-footer">
-
-    {{-- Theme Controls --}}
-    <div class="theme-controls">
-        <div class="d-flex gap-2">
-            <div class="theme-swatch" style="background: #3B82F6;" onclick="setThemeAccent('#3B82F6')"
-                title="Sapphire"></div>
-            <div class="theme-swatch" style="background: #10B981;" onclick="setThemeAccent('#10B981')"
-                title="Emerald"></div>
-            <div class="theme-swatch" style="background: #8B5CF6;" onclick="setThemeAccent('#8B5CF6')"
-                title="Amethyst"></div>
-            <div class="theme-swatch" style="background: #EF4444;" onclick="setThemeAccent('#EF4444')"
-                title="Ruby"></div>
-            <div class="theme-swatch" style="background: #F59E0B;" onclick="setThemeAccent('#F59E0B')"
-                title="Amber"></div>
+        {{-- Theme Controls --}}
+        <div class="theme-controls">
+            <div class="d-flex gap-2">
+                <div class="theme-swatch" style="background: #3B82F6;" onclick="setThemeAccent('#3B82F6')"
+                    title="Sapphire"></div>
+                <div class="theme-swatch" style="background: #10B981;" onclick="setThemeAccent('#10B981')"
+                    title="Emerald"></div>
+                <div class="theme-swatch" style="background: #8B5CF6;" onclick="setThemeAccent('#8B5CF6')"
+                    title="Amethyst"></div>
+                <div class="theme-swatch" style="background: #EF4444;" onclick="setThemeAccent('#EF4444')"
+                    title="Ruby"></div>
+                <div class="theme-swatch" style="background: #F59E0B;" onclick="setThemeAccent('#F59E0B')"
+                    title="Amber"></div>
+            </div>
+            <button class="mode-toggle" id="themeModeToggle" onclick="toggleLightDarkMode()"
+                title="Toggle Light/Dark Mode">
+                <i class="bi bi-moon-stars-fill"></i>
+            </button>
         </div>
-        <button class="mode-toggle" id="themeModeToggle" onclick="toggleLightDarkMode()"
-            title="Toggle Light/Dark Mode">
-            <i class="bi bi-moon-stars-fill"></i>
-        </button>
     </div>
-</div>
 
 </div>
 
