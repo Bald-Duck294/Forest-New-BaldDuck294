@@ -12,8 +12,8 @@
 
     <style>
         /* =========================================
-                                                           SAPPHIRE INDEX STYLES
-                                                        ========================================= */
+                                                               SAPPHIRE INDEX STYLES
+                                                            ========================================= */
         .dash-card {
             background: var(--bg-card);
             border: 1px solid var(--border-color);
