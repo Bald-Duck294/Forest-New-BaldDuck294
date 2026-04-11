@@ -211,6 +211,48 @@ dd($dropdownBeats , "dpr beats");
         window.location.href = url.toString();
     }
 
+
+    // 🔥 SMART NAVIGATION: Carries over all active filters to the Detailed List
+    window.goToDetailedList = function(category) {
+        let url = new URL(window.location.origin + '/reports/detailed');
+        url.searchParams.set('category', category);
+
+        // 1. Grab Range and Beat
+        let rangeId = document.getElementById('range_id')?.value;
+        let siteId = document.getElementById('site_id')?.value;
+        if (rangeId) url.searchParams.set('range_id', rangeId);
+        if (siteId) url.searchParams.set('site_id', siteId);
+
+        // 2. Grab and Calculate Exact Dates
+        let dateFilter = document.getElementById('date_filter')?.value || 'month';
+
+        if (dateFilter !== 'overall') {
+            let today = new Date();
+            let fromDateStr = '';
+            let toDateStr = today.toISOString().split('T')[0]; // YYYY-MM-DD
+
+            if (dateFilter === 'today') {
+                fromDateStr = toDateStr;
+            } else if (dateFilter === 'week') {
+                let lastWeek = new Date();
+                lastWeek.setDate(today.getDate() - 7);
+                fromDateStr = lastWeek.toISOString().split('T')[0];
+            } else if (dateFilter === 'month') {
+                let lastMonth = new Date();
+                lastMonth.setMonth(today.getMonth() - 1);
+                fromDateStr = lastMonth.toISOString().split('T')[0];
+            } else if (dateFilter === 'custom') {
+                fromDateStr = document.getElementById('from_date')?.value;
+                toDateStr = document.getElementById('to_date')?.value;
+            }
+
+            if (fromDateStr) url.searchParams.set('from_date', fromDateStr);
+            if (toDateStr) url.searchParams.set('to_date', toDateStr);
+        }
+
+        // 3. Go to the new URL with all filters applied!
+        window.location.href = url.toString();
+    };
     document.addEventListener('DOMContentLoaded', () => {
         filterBeats();
     });

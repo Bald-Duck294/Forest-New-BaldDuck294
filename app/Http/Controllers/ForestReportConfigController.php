@@ -568,8 +568,8 @@ class ForestReportConfigController extends Controller
     //     ]);
     // }
 
-    
-    
+
+
     public function reportsDashboard(Request $request)
     {
         $authUser = session('user') ?? auth()->user();
@@ -585,7 +585,7 @@ class ForestReportConfigController extends Controller
         // =======================================================================
         $query = DB::table('forest_reports')->where('company_id', $companyId);
         $assetQuery = Asset::where('company_id', $companyId);
-        $plantationQuery = Plantation::where('user_id', '!=', 0); 
+        $plantationQuery = Plantation::where('user_id', '!=', 0);
         $patrolQuery = PatrolSession::where('company_id', $authUser->company_id)
             ->whereDate('created_at', \Carbon\Carbon::today());
 
@@ -946,7 +946,7 @@ class ForestReportConfigController extends Controller
             ])
         ]);
     }
-    
+
     public function reportsTable()
     {
         $reports = DB::table('forest_reports')->latest()->paginate(10);
@@ -1400,6 +1400,8 @@ class ForestReportConfigController extends Controller
         $companyId = session('user')->company_id ?? auth()->user()->company_id ?? 46;
         $category = $request->get('category', 'criminal');
         $search = $request->get('search');
+        // 🔥 FIX: Only default to "Today" if the category is 'onduty'
+        $defaultDate = ($category === 'onduty') ? now()->toDateString() : null;
         $fromDate = $request->get('from_date', now()->toDateString());
         $toDate = $request->get('to_date', now()->toDateString());
         $subType = $request->get('sub_type');

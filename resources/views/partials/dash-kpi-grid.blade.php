@@ -2,7 +2,6 @@
     /* =========================================
        7-COLUMN EXACT FIT GRID & SAAS KPI CARDS
     ========================================= */
-    /* Desktop: Force exactly 7 equal columns */
     @media (min-width: 1200px) {
         .kpi-7-row {
             display: grid !important;
@@ -18,7 +17,6 @@
         }
     }
 
-    /* Tablet/Mobile: Allow horizontal scrolling so it doesn't break */
     @media (max-width: 1199px) {
         .kpi-7-row {
             display: flex;
@@ -39,7 +37,6 @@
         }
     }
 
-    /* Custom Card Styling - Modern SaaS Look */
     .kpi-card-bs {
         font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
         background-color: var(--bg-card);
@@ -67,7 +64,6 @@
         border-color: var(--border-color);
     }
 
-    /* Top Right Corner Curve (Softer Opacity) */
     .kpi-bg-curve {
         position: absolute;
         right: 0;
@@ -88,7 +84,6 @@
         z-index: 1;
     }
 
-    /* Icon Container */
     .kpi-icon-box {
         width: 38px;
         height: 38px;
@@ -183,7 +178,6 @@
     .kpi-card-disabled h6,
     .kpi-card-disabled .kpi-bg-curve {
         display: none !important;
-        /* Hide the curve when disabled */
     }
 </style>
 
@@ -195,13 +189,12 @@
     $items = [
         [
             'id' => 'officers',
-            'label' => 'On Duty Today', // Slightly updated label for clarity
+            'label' => 'On Duty Today',
             'val' => $kpis['officers'] ?? 0,
-            // 🔥 Inject logic: remove URL if disabled
-            'url' => $isDutyDisabled ? null : url('/reports/detailed?category=onduty'),
+            // 🔥 UNIQUE LOGIC: Uses the custom smart function for the list
+            'custom_click' => $isDutyDisabled ? null : "goToDetailedList('onduty')",
             'theme' => 'theme-blue',
             'icon' => 'bi-people',
-            // 🔥 Inject logic: switch text if disabled
             'trend_text' => $isDutyDisabled
                 ? "Select 'Today' or 'Month'"
                 : ($kpis['attendanceRate'] ?? 0) .
@@ -212,7 +205,7 @@
                     ')',
             'trend_color' => $isDutyDisabled ? 'var(--text-muted)' : '#3b82f6',
             'trend_icon' => $isDutyDisabled ? 'bi-info-circle' : 'bi-graph-up-arrow',
-            'disabled' => $isDutyDisabled, // Custom flag for the loop
+            'disabled' => $isDutyDisabled,
         ],
         [
             'id' => 'patrol',
@@ -229,7 +222,7 @@
             'id' => 'criminal',
             'label' => 'Forest Crimes',
             'val' => $kpis['criminal'] ?? 0,
-            'nav' => 'criminal',
+            'nav' => 'criminal', // 🔥 Restored: Triggers navigateTo() Analytics scrolling
             'theme' => 'theme-rose',
             'icon' => 'bi-exclamation-triangle',
             'trend_text' => 'View Analytics',
@@ -240,7 +233,7 @@
             'id' => 'events',
             'label' => 'Crime / Events',
             'val' => $kpis['events'] ?? 0,
-            'nav' => 'events',
+            'nav' => 'events', // 🔥 Restored: Triggers navigateTo() Analytics scrolling
             'theme' => 'theme-amber',
             'icon' => 'bi-binoculars',
             'trend_text' => 'View Analytics',
@@ -251,7 +244,7 @@
             'id' => 'fire',
             'label' => 'Fire Alerts',
             'val' => $kpis['fire'] ?? 0,
-            'nav' => 'fire',
+            'nav' => 'fire', // 🔥 Restored: Triggers navigateTo() Analytics scrolling
             'theme' => 'theme-orange',
             'icon' => 'bi-fire',
             'trend_text' => 'View Analytics',
@@ -262,7 +255,7 @@
             'id' => 'assets',
             'label' => 'Assets & Tools',
             'val' => $kpis['assets'] ?? 0,
-            'nav' => 'assets',
+            'nav' => 'assets', // 🔥 Restored: Triggers navigateTo() Analytics scrolling
             'theme' => 'theme-teal',
             'icon' => 'bi-shield-check',
             'trend_text' => 'View Analytics',
@@ -273,7 +266,7 @@
             'id' => 'forestry',
             'label' => 'Plantations',
             'val' => $kpis['plantations'] ?? 0,
-            'nav' => 'forestry',
+            'nav' => 'plantations', // 🔥 Restored: Triggers navigateTo() Analytics scrolling
             'theme' => 'theme-emerald',
             'icon' => 'bi-tree',
             'trend_text' => 'View Analytics',
@@ -290,10 +283,13 @@
         @endphp
 
         <div class="col-kpi">
-            {{-- 🔥 Apply the disabled class and prevent clickability --}}
-            <div class="kpi-card-bs {{ $item['theme'] }} {{ $isDisabled ? 'kpi-card-disabled' : '' }} @if (!$isDisabled && (isset($item['url']) || isset($item['nav']))) clickable @endif"
-                @if (!$isDisabled && isset($item['url'])) onclick="window.location.href='{{ $item['url'] }}'" 
-                @elseif(!$isDisabled && isset($item['nav'])) onclick="navigateTo('{{ $item['nav'] }}')" @endif>
+            {{-- 🔥 FIXED: Perfectly isolates custom_click (List), url (Redirect), and nav (Chart Scrolling) --}}
+            <div class="kpi-card-bs {{ $item['theme'] }} {{ $isDisabled ? 'kpi-card-disabled' : '' }} @if (!$isDisabled && (isset($item['url']) || isset($item['nav']) || isset($item['custom_click']))) clickable @endif"
+                @if (!$isDisabled && isset($item['custom_click'])) onclick="{!! $item['custom_click'] !!}" 
+                @elseif (!$isDisabled && isset($item['url'])) 
+                    onclick="window.location.href='{{ $item['url'] }}'" 
+                @elseif(!$isDisabled && isset($item['nav'])) 
+                    onclick="navigateTo('{{ $item['nav'] }}')" @endif>
 
                 <div class="kpi-bg-curve"></div>
 
@@ -307,7 +303,6 @@
                                 {{ $item['label'] }}
                             </p>
 
-                            {{-- 🔥 Show N/A if disabled, otherwise show the number --}}
                             <h3 class="mb-0 fw-bold"
                                 style="font-size: 1.6rem; color: {{ $isDisabled ? 'var(--text-muted)' : 'var(--text-main)' }}; letter-spacing: -0.5px;"
                                 id="kpi-{{ $item['id'] }}">
@@ -320,7 +315,6 @@
                         </div>
                     </div>
 
-                    {{-- Trend text dynamically updates if disabled --}}
                     <p class="mb-0 mt-3 text-truncate w-100 {{ $isDisabled ? 'fst-italic' : '' }}"
                         style="font-size: 0.70rem; font-weight: 600; color: {{ $item['trend_color'] }};"
                         title="{{ $item['trend_text'] }}">
