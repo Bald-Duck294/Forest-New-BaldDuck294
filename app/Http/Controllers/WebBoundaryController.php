@@ -31,6 +31,11 @@ class WebBoundaryController extends Controller
             return redirect('/login');
         }
 
+
+
+
+        
+
         $rangeId = $request->range_id;
         $siteId = $request->site_id;
         $year = $request->year;
@@ -42,14 +47,14 @@ class WebBoundaryController extends Controller
 
         // Fetch boundary hierarchy ranges, sections, beats for filters
         $allRanges = DB::table('boundary_hierarchies')
-            ->where('company_id', self::BOUNDARY_COMPANY_ID)
+            ->where('company_id', $authUser->company_id)
             ->where('level', 'range')
             ->get(['id', 'name']);
         $availableRanges = $allRanges;
 
         if ($rangeId) {
             $availableSections = DB::table('boundary_hierarchies')
-                ->where('company_id', self::BOUNDARY_COMPANY_ID)
+                ->where('company_id', $authUser->company_id)
                 ->where('level', 'section')
                 ->where('parent_id', $rangeId)
                 ->get(['id', 'name']);
@@ -58,18 +63,17 @@ class WebBoundaryController extends Controller
         $sectionId = $request->section_id;
         if ($sectionId) {
             $availableBeats = DB::table('boundary_hierarchies')
-                ->where('company_id', self::BOUNDARY_COMPANY_ID)
+                ->where('company_id', $authUser->company_id)
                 ->where('level', 'beat')
                 ->where('parent_id', $sectionId)
                 ->get(['id', 'name']);
-        }
-        elseif ($rangeId) {
+        } elseif ($rangeId) {
             // Get all beats under this range (through sections)
             $sectionIds = DB::table('boundary_hierarchies')
                 ->where('parent_id', $rangeId)->where('level', 'section')
                 ->pluck('id');
             $availableBeats = DB::table('boundary_hierarchies')
-                ->where('company_id', self::BOUNDARY_COMPANY_ID)
+                ->where('company_id', $authUser->company_id)
                 ->where('level', 'beat')
                 ->whereIn('parent_id', $sectionIds)
                 ->get(['id', 'name']);
@@ -95,10 +99,10 @@ class WebBoundaryController extends Controller
             return response()->json([]);
         return response()->json(
             DB::table('boundary_hierarchies')
-            ->where('company_id', self::BOUNDARY_COMPANY_ID)
-            ->where('level', 'section')
-            ->where('parent_id', $rangeId)
-            ->get(['id', 'name'])
+                ->where('company_id', $authUser->company_id)
+                ->where('level', 'section')
+                ->where('parent_id', $rangeId)
+                ->get(['id', 'name'])
         );
     }
 
@@ -109,10 +113,10 @@ class WebBoundaryController extends Controller
             return response()->json([]);
         return response()->json(
             DB::table('boundary_hierarchies')
-            ->where('company_id', self::BOUNDARY_COMPANY_ID)
-            ->where('level', 'beat')
-            ->where('parent_id', $sectionId)
-            ->get(['id', 'name'])
+                ->where('company_id', $authUser->company_id)
+                ->where('level', 'beat')
+                ->where('parent_id', $sectionId)
+                ->get(['id', 'name'])
         );
     }
 
@@ -137,14 +141,12 @@ class WebBoundaryController extends Controller
         if ($siteId) {
             // Beat selected - just that beat
             $allDescendantIds[] = (int)$siteId;
-        }
-        elseif ($sectionId) {
+        } elseif ($sectionId) {
             // Section selected - section + all its beats
             $allDescendantIds[] = (int)$sectionId;
             $beats = DB::table('boundary_hierarchies')->where('parent_id', $sectionId)->pluck('id')->toArray();
             $allDescendantIds = array_merge($allDescendantIds, $beats);
-        }
-        elseif ($rangeId) {
+        } elseif ($rangeId) {
             // Range selected - range + sections + beats
             $allDescendantIds[] = (int)$rangeId;
             $sections = DB::table('boundary_hierarchies')->where('parent_id', $rangeId)->get();
@@ -158,14 +160,14 @@ class WebBoundaryController extends Controller
         // If no specific scope, load ALL boundaries for the company
         if (empty($allDescendantIds)) {
             $allDescendantIds = DB::table('boundary_hierarchies')
-                ->where('company_id', self::BOUNDARY_COMPANY_ID)
+                ->where('company_id', $authUser->company_id)
                 ->pluck('id')->toArray();
         }
 
         // Administrative Boundaries Layer Request
         if ($layerTypesRequested && in_array('administrative_boundaries', $layerTypesRequested)) {
             $adminFeatures = DB::table('boundary_hierarchies')
-                ->where('company_id', self::BOUNDARY_COMPANY_ID)
+                ->where('company_id', $authUser->company_id)
                 ->whereIn('id', $allDescendantIds)
                 ->get();
 
@@ -192,7 +194,7 @@ class WebBoundaryController extends Controller
         }
 
         // Other Features
-        $query = DB::table('boundary_features')->where('company_id', self::BOUNDARY_COMPANY_ID);
+        $query = DB::table('boundary_features')->where('company_id', $authUser->company_id);
         if (!empty($allDescendantIds)) {
             $query->whereIn('boundary_id', $allDescendantIds);
         }
@@ -203,8 +205,7 @@ class WebBoundaryController extends Controller
             });
             if (count($filteredLayers) > 0) {
                 $query->whereIn('type', $filteredLayers);
-            }
-            else {
+            } else {
                 // If only administrative_boundaries requested, dummy query to avoid getting all features
                 $query->where('id', -1);
             }
@@ -218,7 +219,7 @@ class WebBoundaryController extends Controller
 
             // Add count for administrative bounds
             $adminCount = DB::table('boundary_hierarchies')
-                ->where('company_id', self::BOUNDARY_COMPANY_ID)
+                ->where('company_id', $authUser->company_id)
                 ->whereIn('id', $allDescendantIds)
                 ->count();
             $counts['administrative_boundaries'] = $adminCount;
@@ -264,15 +265,13 @@ class WebBoundaryController extends Controller
     {
         if (is_string($data)) {
             return mb_convert_encoding($data, 'UTF-8', 'UTF-8');
-        }
-        elseif (is_array($data)) {
+        } elseif (is_array($data)) {
             $cleaned = [];
             foreach ($data as $key => $value) {
                 $cleaned[$key] = $this->cleanUtf8($value);
             }
             return $cleaned;
-        }
-        elseif (is_object($data)) {
+        } elseif (is_object($data)) {
             if ($data instanceof \Illuminate\Support\Collection) {
                 return $data->map(function ($item) {
                     return $this->cleanUtf8($item);
@@ -292,7 +291,7 @@ class WebBoundaryController extends Controller
         return is_array($item) && (
             (isset($item[0]) && !is_array($item[0])) ||
             isset($item['lat']) || isset($item['lng'])
-            );
+        );
     }
 
     protected function normalizeCoordinates($type, $coords)
@@ -303,8 +302,7 @@ class WebBoundaryController extends Controller
             $decoded = json_decode($coords, true);
             if ($decoded !== null) {
                 $coords = $decoded;
-            }
-            else {
+            } else {
                 // Try KML-style format: "lng,lat,alt lng,lat,alt ..."
                 $coords = $this->parseKmlCoordinates($coords);
             }
@@ -339,8 +337,7 @@ class WebBoundaryController extends Controller
                 if ($this->isPointCoords($coords[0])) {
                     // It's a single ring, wrap to Polygon and then to MultiPolygon
                     $coords = [[$coords]];
-                }
-                elseif (isset($coords[0][0]) && $this->isPointCoords($coords[0][0])) {
+                } elseif (isset($coords[0][0]) && $this->isPointCoords($coords[0][0])) {
                     // It's a single polygon (array of rings), wrap to MultiPolygon
                     $coords = [$coords];
                 }
@@ -348,13 +345,15 @@ class WebBoundaryController extends Controller
             return array_map(function ($polygon) {
                 if (!is_array($polygon))
                     return [];
-                return array_map(function ($ring) {
+                return array_map(
+                    function ($ring) {
                         if (!is_array($ring))
                             return [];
                         return array_map([$this, 'swapLatLog'], $ring);
-                    }
-                        , $polygon);
-                }, $coords);
+                    },
+                    $polygon
+                );
+            }, $coords);
         }
 
         return $coords;
@@ -393,12 +392,10 @@ class WebBoundaryController extends Controller
             // Already an associative array, convert to numerically indexed [lng, lat]
             $val1 = floatval($pair['lng']);
             $val2 = floatval($pair['lat']);
-        }
-        elseif (isset($pair[0]) && isset($pair[1])) {
+        } elseif (isset($pair[0]) && isset($pair[1])) {
             $val1 = floatval($pair[0]);
             $val2 = floatval($pair[1]);
-        }
-        else {
+        } else {
             return $pair; // Unknown format
         }
 

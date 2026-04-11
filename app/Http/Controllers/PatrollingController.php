@@ -287,7 +287,7 @@ class PatrollingController extends Controller
             ->latest('created_at')
             ->paginate($request->per_page ?? 50);
 
-        if ($user->role_id == 1|| $user->role_id == 8) {
+        if ($user->role_id == 1 || $user->role_id == 8) {
             // Admin: full access to company data
             $clients = ClientDetails::where('company_id', $user->company_id)->get();
 
@@ -526,8 +526,13 @@ class PatrollingController extends Controller
         /**
          * Stats
          */
+        $completedSessions = $sessions->whereNotNull('ended_at')->count();
+        $ongoingSessions = $sessions->whereNull('ended_at')->count();
+
         $stats = [
             'total_sessions' => $sessions->count(),
+            'completed_sessions' => $completedSessions,
+            'ongoing_sessions' => $ongoingSessions,
             'total_logs' => $logs->count(),
             'total_distance_m' => $totalDistanceMeters,
             'start' => $start->toDateString(),

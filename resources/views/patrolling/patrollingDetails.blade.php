@@ -1,11 +1,7 @@
-{{-- resources/views/patrolingDetails.blade.php --}}
-
-
-
 @php
-    $hideGlobalFilters = true;
-    $hideBackground = true;
-    $user = session('user');
+$hideGlobalFilters = true;
+$hideBackground = true;
+$user = session('user');
 @endphp
 @extends('layouts.app')
 {{-- Page-specific styles for the map container --}}
@@ -39,9 +35,9 @@
                 </div>
 
                 @if (!$patrol->path_geojson && !$patrol->start_lat)
-                    <div class="alert alert-warning mt-3" role="alert">
-                        No location data is available to display on the map for this patrol.
-                    </div>
+                <div class="alert alert-warning mt-3" role="alert">
+                    No location data is available to display on the map for this patrol.
+                </div>
                 @endif
 
                 <hr>
@@ -106,7 +102,7 @@
                             <td>
                                 <textarea class="form-control" rows="4"
                                     readonly>{{ $patrol->path_geojson ?? 'No path data.' }}</textarea>
-                            </td>
+                        </td>
                         </tr> --}}
                     </tbody>
                 </table>

@@ -586,9 +586,9 @@ class ForestReportConfigController extends Controller
         $query = DB::table('forest_reports')->where('company_id', $companyId);
         $assetQuery = Asset::where('company_id', $companyId);
         $plantationQuery = Plantation::where('user_id', '!=', 0);
-        $patrolQuery = PatrolSession::where('company_id', $authUser->company_id)
-            ->whereDate('created_at', \Carbon\Carbon::today());
-
+        // $patrolQuery = PatrolSession::where('company_id', $authUser->company_id)
+        //     ->whereDate('created_at', \Carbon\Carbon::today());
+        $patrolQuery = PatrolSession::where('company_id', $authUser->company_id);
         // --- A. Range/Beat Filters ---
         if ($request->filled('range_id') && $request->range_id !== '0' && $request->range_id !== 'all') {
             $query->where('client_id', $request->range_id);
@@ -607,29 +607,40 @@ class ForestReportConfigController extends Controller
 
         // --- B. Date Filters (Applied to Reports, Assets, and Plantations ONLY) ---
         $dateFilter = $request->get('date_filter', 'month');
+        // --- B. Date Filters (Applied to Reports, Assets, Plantations, AND PATROLS) ---
+        $dateFilter = $request->get('date_filter', 'month');
 
         if ($dateFilter !== 'overall') {
             if ($dateFilter === 'today') {
                 $query->whereDate('created_at', \Carbon\Carbon::today());
                 $assetQuery->whereDate('created_at', \Carbon\Carbon::today());
                 $plantationQuery->whereDate('created_at', \Carbon\Carbon::today());
+                $patrolQuery->whereDate('started_at', \Carbon\Carbon::today()); // Added
             } elseif ($dateFilter === 'week') {
+                // dd('here');
                 $query->where('created_at', '>=', \Carbon\Carbon::now()->subWeek());
                 $assetQuery->where('created_at', '>=', \Carbon\Carbon::now()->subWeek());
                 $plantationQuery->where('created_at', '>=', \Carbon\Carbon::now()->subWeek());
+                $patrolQuery->where('started_at', '>=', \Carbon\Carbon::now()->subWeek()); // Added
             } elseif ($dateFilter === 'month') {
+
                 $query->where('created_at', '>=', \Carbon\Carbon::now()->subMonth());
                 $assetQuery->where('created_at', '>=', \Carbon\Carbon::now()->subMonth());
                 $plantationQuery->where('created_at', '>=', \Carbon\Carbon::now()->subMonth());
+                $patrolQuery->where('started_at', '>=', \Carbon\Carbon::now()->subMonth()); // Added
             } elseif ($dateFilter === 'custom' && $request->filled('from_date') && $request->filled('to_date')) {
                 $query->whereDate('created_at', '>=', $request->from_date)->whereDate('created_at', '<=', $request->to_date);
                 $assetQuery->whereDate('created_at', '>=', $request->from_date)->whereDate('created_at', '<=', $request->to_date);
                 $plantationQuery->whereDate('created_at', '>=', $request->from_date)->whereDate('created_at', '<=', $request->to_date);
+                $patrolQuery->whereDate('started_at', '>=', $request->from_date)->whereDate('started_at', '<=', $request->to_date); // Added
             }
         }
-
         // FETCH FILTERED DATA
         $allReports = $query->get();
+
+        // dd($allReports->whereIn('category', ['events', 'Events & Monitoring', 'Wildlife Sighting', 'Water Body', 'Public Grievance'])->where('report_type', '!=', 'jfmc')
+        //     ->where('report_type',  '!=', 'fire')
+        //     ->toArray());
         $allPlantations = $plantationQuery->get();
         $activePatrols = (clone $patrolQuery)->count();
         $totalAssets = (clone $assetQuery)->count();
@@ -668,9 +679,9 @@ class ForestReportConfigController extends Controller
         // 4. KPI CALCULATIONS (With JFMC fixes applied)
         // =======================================================================
         $stats = (object) [
-            'criminal_count' => $allReports->whereIn('report_type', ['felling', 'illegal_felling', 'transport', 'storage', 'poaching', 'encroachment', 'mining', 'jfmc'])->count(),
+            'criminal_count' => $allReports->whereIn('report_type', ['felling', 'illegal_felling', 'transport', 'storage', 'poaching', 'encroachment', 'mining'])->count(),
             'events_count' => $allReports->whereIn('category', ['events', 'Events & Monitoring', 'Wildlife Sighting', 'Water Body', 'Public Grievance'])->where('report_type', '!=', 'jfmc')->count(),
-            'fire_count' => $allReports->whereIn('category', ['fire', 'Fire Incident'])->count(),
+            'fire_count' => $allReports->whereIn('report_type', ['fire', 'Fire Incident', 'fire_cause'])->count(),
             'felling' => $allReports->whereIn('report_type', ['felling', 'illegal_felling'])->count(),
             'transport' => $allReports->where('report_type', 'transport')->count(),
             'storage' => $allReports->where('report_type', 'storage')->count(),
@@ -731,6 +742,7 @@ class ForestReportConfigController extends Controller
         $isRangeSelected = $request->filled('range_id') && $request->range_id !== '0' && $request->range_id !== 'all';
         $locationLabel = $isRangeSelected ? 'Beat' : 'Range';
 
+        // dd($allReports);
         foreach ($allReports as $r) {
             $data = json_decode($r->report_data, true) ?? [];
             $type = strtolower(trim($r->report_type));
@@ -765,6 +777,8 @@ class ForestReportConfigController extends Controller
                         'volume'  => $data['volume'] ?? 0
                     ]
                 ];
+
+
 
                 // 4. Safely loop through the array
                 foreach ($speciesList as $item) {
@@ -1640,5 +1654,12 @@ class ForestReportConfigController extends Controller
         }
 
         return redirect()->back()->with('error', 'Invalid Category');
+    }
+
+
+    public function ReportConfig(Request $request)
+    {
+        // dd('in this page ');
+        return view('events.report_config');
     }
 }

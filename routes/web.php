@@ -519,6 +519,8 @@ Route::prefix('global')->group(function () {
         }
     );
 });
+
+
 Route::prefix('report-configs')
     ->name('report-configs.')
     ->controller(ForestReportConfigController::class)
@@ -535,6 +537,7 @@ Route::prefix('report-configs')
         Route::get('/reports/{id}', 'show')->name('show');
         Route::post('/reports/{id}/update-status', 'updateStatus')->name('updateStatus');
         Route::get('/reports-dashboard', 'reportsDashboard')->name('dashboard');
+        Route::get('/report-config', 'ReportConfig')->name('config');
     });
 
 Route::prefix('registrations')->group(function () {

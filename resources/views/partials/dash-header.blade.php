@@ -44,8 +44,9 @@ dd($dropdownBeats , "dpr beats");
     }
 </style>
 
-<div class="d-flex flex-column flex-md-row justify-content-between align-items-center w-100 mb-4 gap-3"
-    id="dynamic-header-top">
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-center w-100 mb-4"
+    id="dynamic-header-top"
+    style="margin-top: -15px; margin-bottom: 0px">
 
     {{-- Left Side: View Toggle --}}
     <div class="d-flex align-items-center" id="dynamic-header-bottom">
@@ -113,8 +114,10 @@ dd($dropdownBeats , "dpr beats");
     </div>
 </div>
 
+
+
 <script>
-    const allBeats = @json($dropdownBeats);
+    const allBeats = @json($beats ?? []);
     const currentSelectedBeat = "{{ request('site_id') }}";
 
     function filterBeats() {
@@ -123,12 +126,8 @@ dd($dropdownBeats , "dpr beats");
         if (!rangeSelect || !beatSelect) return;
 
         const selectedRangeId = rangeSelect.value;
-
-        // Wipe the dropdown clean
         beatSelect.innerHTML = '<option value="">All Beats</option>';
 
-        // 🔥 FIX: Only show beats that belong to the selected range. 
-        // If no range is selected, show ALL beats.
         const filteredBeats = selectedRangeId ?
             allBeats.filter(beat => beat.client_id == selectedRangeId) :
             allBeats;
@@ -145,38 +144,32 @@ dd($dropdownBeats , "dpr beats");
     function toggleCustomDates() {
         const filter = document.getElementById('date_filter').value;
         const customContainer = document.getElementById('custom-date-inputs');
-        const fromDateInput = document.getElementById('from_date');
-        const toDateInput = document.getElementById('to_date');
 
         if (filter === 'custom') {
             customContainer.classList.remove('d-none');
             customContainer.classList.add('d-flex');
-
-            // 🔥 SMART DEFAULT: If empty, set to exactly 1 month back
-            if (!fromDateInput.value || !toDateInput.value) {
-                let today = new Date();
-                let lastMonth = new Date();
-                lastMonth.setMonth(today.getMonth() - 1);
-
-                toDateInput.value = today.toISOString().split('T')[0];
-                fromDateInput.value = lastMonth.toISOString().split('T')[0];
-            }
         } else {
             customContainer.classList.remove('d-flex');
             customContainer.classList.add('d-none');
-            // 🔥 CLEAR: Wipes the custom dates if they switch back to "This Month"
-            fromDateInput.value = '';
-            toDateInput.value = '';
+            document.getElementById('from_date').value = '';
+            document.getElementById('to_date').value = '';
+            // Auto-sync when changing standard dates
             forceSyncDashboard();
         }
     }
 
     function forceSyncDashboard() {
+        console.log("--- Sync Button Clicked ---");
+
         let url = new URL(window.location.href.split('#')[0]);
 
         let rangeId = document.getElementById('range_id')?.value || '';
         let siteId = document.getElementById('site_id')?.value || '';
-        let dateFilter = document.getElementById('date_filter')?.value || 'month';
+        let dateFilter = document.getElementById('date_filter')?.value || 'overall';
+
+        // 🔥 THE FIX: Grab the active view mode and attach it!
+        let activeView = window.viewMode || new URLSearchParams(window.location.search).get('view') || 'overall';
+        url.searchParams.set('view', activeView);
 
         if (rangeId) url.searchParams.set('range_id', rangeId);
         else url.searchParams.delete('range_id');
@@ -200,167 +193,38 @@ dd($dropdownBeats , "dpr beats");
             url.searchParams.delete('to_date');
         }
 
+        console.log("Final URL:", url.toString());
         window.location.href = url.toString();
     }
 
-    function resetFilters() {
+  function resetFilters() {
+        // 1. Look at the actual button on the screen to see what is currently active
+        const analyticalBtn = document.getElementById('view-analytical');
+        const isAnalytical = analyticalBtn && analyticalBtn.classList.contains('active');
+        const targetView = isAnalytical ? 'analytical' : 'overall';
+
+        // 2. Get the base URL and strip away all the messy date/range filters
         let url = new URL(window.location.href.split('?')[0]);
-        if (new URLSearchParams(window.location.search).has('view')) {
-            url.searchParams.set('view', new URLSearchParams(window.location.search).get('view'));
-        }
+
+        // 3. Put ONLY the view parameter back
+        url.searchParams.set('view', targetView);
+
+        // 4. Reload the page with clean filters but the correct tab
         window.location.href = url.toString();
     }
 
+    // Run this on page load to initialize everything correctly
+  document.addEventListener('DOMContentLoaded', () => {
+        // 1. Check the URL the moment the page loads
+        const urlParams = new URLSearchParams(window.location.search);
+        const currentView = urlParams.get('view') || 'overall';
 
-    // 🔥 SMART NAVIGATION: Carries over all active filters to the Detailed List
-    window.goToDetailedList = function(category) {
-        let url = new URL(window.location.origin + '/reports/detailed');
-        url.searchParams.set('category', category);
-
-        // 1. Grab Range and Beat
-        let rangeId = document.getElementById('range_id')?.value;
-        let siteId = document.getElementById('site_id')?.value;
-        if (rangeId) url.searchParams.set('range_id', rangeId);
-        if (siteId) url.searchParams.set('site_id', siteId);
-
-        // 2. Grab and Calculate Exact Dates
-        let dateFilter = document.getElementById('date_filter')?.value || 'month';
-
-        if (dateFilter !== 'overall') {
-            let today = new Date();
-            let fromDateStr = '';
-            let toDateStr = today.toISOString().split('T')[0]; // YYYY-MM-DD
-
-            if (dateFilter === 'today') {
-                fromDateStr = toDateStr;
-            } else if (dateFilter === 'week') {
-                let lastWeek = new Date();
-                lastWeek.setDate(today.getDate() - 7);
-                fromDateStr = lastWeek.toISOString().split('T')[0];
-            } else if (dateFilter === 'month') {
-                let lastMonth = new Date();
-                lastMonth.setMonth(today.getMonth() - 1);
-                fromDateStr = lastMonth.toISOString().split('T')[0];
-            } else if (dateFilter === 'custom') {
-                fromDateStr = document.getElementById('from_date')?.value;
-                toDateStr = document.getElementById('to_date')?.value;
-            }
-
-            if (fromDateStr) url.searchParams.set('from_date', fromDateStr);
-            if (toDateStr) url.searchParams.set('to_date', toDateStr);
+        // 2. FORCE the page to switch to that view immediately!
+        if (typeof setViewMode === 'function') {
+            setViewMode(currentView);
         }
 
-        // 3. Go to the new URL with all filters applied!
-        window.location.href = url.toString();
-    };
-    document.addEventListener('DOMContentLoaded', () => {
+        // 3. Load your beat dropdown
         filterBeats();
     });
 </script>
-{{--
-<script>
-    const allBeats = @json($beats ?? []);
-    const currentSelectedBeat = "{{ request('site_id') }}";
-
-    function toggleCustomDates() {
-        const filter = document.getElementById('date_filter').value;
-        const customContainer = document.getElementById('custom-date-inputs');
-
-        if (filter === 'custom') {
-            customContainer.classList.remove('d-none');
-        } else {
-            customContainer.classList.add('d-none');
-            // Clear out the dates when hiding them
-            document.getElementById('from_date').value = '';
-            document.getElementById('to_date').value = '';
-        }
-
-        // If they switch back to week/month/today, auto-refresh to apply it immediately
-        if (filter !== 'custom') {
-            refreshData();
-        }
-    }
-
-    function filterBeats() {
-        const rangeSelect = document.getElementById('range_id');
-        const beatSelect = document.getElementById('site_id');
-        if (!rangeSelect || !beatSelect) return;
-
-        const selectedRangeId = rangeSelect.value;
-        beatSelect.innerHTML = '<option value="">All Beats</option>';
-
-        const filteredBeats = selectedRangeId ?
-            allBeats.filter(beat => beat.client_id == selectedRangeId) :
-            allBeats;
-
-        filteredBeats.forEach(beat => {
-            const option = document.createElement('option');
-            option.value = beat.id;
-            option.textContent = beat.name || 'Unnamed Beat';
-            if (beat.id == currentSelectedBeat) option.selected = true;
-            beatSelect.appendChild(option);
-        });
-    }
-
-    function toggleCustomDates() {
-        const filter = document.getElementById('date_filter').value;
-        const customContainer = document.getElementById('custom-date-inputs');
-
-        if (filter === 'custom') {
-            customContainer.classList.remove('d-none');
-        } else {
-            customContainer.classList.add('d-none');
-            document.getElementById('from_date').value = '';
-            document.getElementById('to_date').value = '';
-            // Auto-sync when changing standard dates
-            forceSyncDashboard();
-        }
-    }
-
-    function forceSyncDashboard() {
-
-        console.log("--- Sync Button Clicked ---");
-
-        let url = new URL(window.location.href.split('#')[0]);
-
-        let rangeId = document.getElementById('range_id')?.value || '';
-        let siteId = document.getElementById('site_id')?.value || '';
-        let dateFilter = document.getElementById('date_filter')?.value || 'overall';
-
-        url.searchParams.set('range_id', rangeId);
-        url.searchParams.set('site_id', siteId);
-        url.searchParams.set('date_filter', dateFilter);
-
-        if (dateFilter === 'custom') {
-            let fromDate = document.getElementById('from_date')?.value;
-            let toDate = document.getElementById('to_date')?.value;
-
-            if (fromDate) url.searchParams.set('from_date', fromDate);
-            else url.searchParams.delete('from_date');
-
-            if (toDate) url.searchParams.set('to_date', toDate);
-            else url.searchParams.delete('to_date');
-        }
-
-        console.log("Final URL:", url.toString());
-
-        // 🛑 LEAVE THIS COMMENTED OUT UNTIL YOU SEE THE ALERT 🛑
-        window.location.href = url.toString();
-    }
-
-    function resetFilters() {
-        let url = new URL(window.location.href.split('?')[0]); // Strip all query params
-
-        // Preserve the view mode if they are in analytical mode
-        if (new URLSearchParams(window.location.search).has('view')) {
-            url.searchParams.set('view', new URLSearchParams(window.location.search).get('view'));
-        }
-
-        window.location.href = url.toString();
-    }
-
-    // Run this on page load to initialize the beat dropdown correctly
-    document.addEventListener('DOMContentLoaded', () => {
-        filterBeats();
-    });
-</script> --}}

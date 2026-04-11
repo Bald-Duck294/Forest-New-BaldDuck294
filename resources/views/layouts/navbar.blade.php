@@ -34,7 +34,7 @@
         align-items: center;
         justify-content: space-between;
         padding: 0 1.5rem;
-        height: var(--header-height, 65px);
+        height: var(--header-height, 48px);
         background-color: rgba(255, 255, 255, 0.85);
         backdrop-filter: blur(16px);
         -webkit-backdrop-filter: blur(16px);

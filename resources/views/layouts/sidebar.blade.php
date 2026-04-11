@@ -81,7 +81,7 @@ $isSimulating = $isGlobalAdmin && !$isGlobalRoute;
         display: flex;
         align-items: center;
         padding: 0 18px;
-        height: 70px;
+        height: 48px;
         flex-shrink: 0;
         background: var(--bg-card);
         border-bottom: 1px solid var(--border-color);
@@ -471,10 +471,10 @@ $isSimulating = $isGlobalAdmin && !$isGlobalRoute;
 
 
     <div class="sidebar-header">
-        <div class="sidebar-logo" style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;">
-            <img src="{{ asset('images/Pugarch.png') }}" alt="Pugarch Logo" style="max-width: 100%; max-height: 60px; object-fit: contain; display: block;">
-        </div>
+    <div class="sidebar-logo" style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;">
+        <img src="{{ asset('images/Pugarch.png') }}" alt="Pugarch Logo" style="max-width: 90%; max-height: 35px; width: auto; object-fit: contain; display: block;">
     </div>
+</div>
     {{-- ===== SCROLLABLE CONTENT ===== --}}
     <div class="sidebar-content">
 

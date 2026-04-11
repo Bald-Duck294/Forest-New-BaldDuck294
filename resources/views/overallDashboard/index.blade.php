@@ -1,4 +1,4 @@
-<div id="overall-container" class="row g-4">
+<div id="overall-container" class="row g-4 ana-font">
 
     {{-- ==========================================
          65% MAP AREA WITH GLASS SIDEBAR OVERLAY

@@ -40,20 +40,21 @@
     .ana-chart-toggle-btn:not(.active):hover { color: #1e293b; }
     .ana-chart-body { position: relative; flex-grow: 1; width: 100%; margin-top: auto; }
 </style>
-
 <div id="analytical-container" class="d-none ana-font">
 
     <div class="ana-main-tabs-container hide-scrollbar" id="main-tabs-nav">
-        </div>
-
-    <div id="breakdown-header" class="mb-3 d-none">
-        <h2 id="breakdown-title" class="ana-header-title">Category Breakdown</h2>
-        <p class="ana-header-sub">Detailed view of selected category status</p>
     </div>
 
-    <div id="sub-tabs-container" class="ana-tile-container hide-scrollbar">
+    <div class="d-flex align-items-start justify-content-between w-100">
+
+        <div id="sub-tabs-container" class="ana-tile-container hide-scrollbar flex-grow-1">
         </div>
 
-    <div id="charts-grid" class="row g-3">
-        </div>
+        <div id="kpi-action-button" class="ms-3 flex-shrink-0"></div>
+
+    </div>
+
+    <div id="charts-grid" class="row    ">
+    </div>
+
 </div>

@@ -72,6 +72,8 @@
 @section('content')
 
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+        .container-fluid { font-family: 'Inter', sans-serif !important; }
         .detailed-header-btn {
             background-color: var(--bg-card);
             color: var(--text-main);
@@ -274,35 +276,106 @@
             color: var(--text-main);
             border: 1px solid var(--border-color);
         }
+
+        /* 🔥 MOBILE & TABLET FILTER RESPONSIVENESS 🔥 */
+        @media (max-width: 991.98px) {
+            /* Switch from flex-wrap to a clean 2-column grid on tablets */
+            .responsive-filters {
+                display: grid !important;
+                grid-template-columns: repeat(2, 1fr);
+                gap: 12px !important;
+                width: 100%;
+                margin-top: 10px;
+            }
+
+            /* Force dropdowns to fill their grid cells */
+            .responsive-filters > select {
+                width: 100% !important;
+                min-width: 0 !important;
+            }
+
+            /* Make date inputs share a row nicely */
+            .date-btn-group {
+                grid-column: span 2;
+                display: flex;
+                width: 100%;
+                gap: 8px !important;
+            }
+
+            .date-btn-group input {
+                flex: 1;
+                width: 100% !important;
+            }
+
+            /* Make search bar span full width */
+            .search-container {
+                grid-column: span 2;
+                width: 100% !important;
+            }
+        }
+
+        @media (max-width: 575.98px) {
+            /* Switch to a 1-column stack for small mobile phones */
+            .responsive-filters {
+                grid-template-columns: 1fr;
+            }
+
+            /* Stack the date inputs and filter button vertically */
+            .date-btn-group {
+                grid-column: span 1;
+                flex-direction: column;
+                align-items: stretch !important;
+            }
+
+            .date-btn-group button {
+                width: 100%;
+            }
+
+            .search-container {
+                grid-column: span 1;
+            }
+
+            /* Push "Show 10" to take full width and separate from filters */
+            .show-entries-wrapper {
+                width: 100%;
+                border-bottom: 1px dashed var(--border-color);
+                padding-bottom: 10px;
+                margin-bottom: 5px;
+            }
+        }
     </style>
 
     <div class="container-fluid py-4">
 
-        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
-            <div>
-                <h3 class="fw-bold mb-1" style="color: var(--text-main);">Detailed Data Records</h3>
-                <p class="mb-0 text-muted" style="font-size: 0.9rem;">View, filter, and export all system records.</p>
-            </div>
-            <a href="/report-configs/reports-dashboard"
-                class="btn detailed-header-btn shadow-sm d-flex align-items-center gap-2 px-4 py-2">
-                <i class="bi bi-arrow-left"></i> Back to Dashboard
-            </a>
-        </div>
+        <div class="d-flex flex-column flex-xl-row justify-content-between align-items-xl-center mb-4 gap-3 border-bottom pb-2 pb-xl-0 border-0">
 
-        <nav class="sapphire-nav-pills mb-4">
-            <a class="sapphire-nav-link {{ $category == 'onduty' ? 'active' : '' }}" href="?category=onduty"><i
-                    class="bi bi-people me-2"></i>On Duty</a>
-            <a class="sapphire-nav-link {{ $category == 'criminal' ? 'active' : '' }}" href="?category=criminal"><i
-                    class="bi bi-hammer me-2"></i>Report a Forest Crime</a>
-            <a class="sapphire-nav-link {{ $category == 'events' ? 'active' : '' }}" href="?category=events"><i
-                    class="bi bi-eye me-2"></i>Forest Crime / Event</a>
-            <a class="sapphire-nav-link {{ $category == 'fire' ? 'active' : '' }}" href="?category=fire"><i
-                    class="bi bi-fire me-2"></i>Fire Incidents</a>
-            <a class="sapphire-nav-link {{ $category == 'assets' ? 'active' : '' }}" href="?category=assets"><i
-                    class="bi bi-shield-check me-2"></i>Assets & Tools</a>
-            <a class="sapphire-nav-link {{ $category == 'plantations' ? 'active' : '' }}" href="?category=plantations"><i
-                    class="bi bi-tree me-2"></i>Plantations</a>
-        </nav>
+    <nav class="sapphire-nav-pills mb-0 flex-grow-1 overflow-auto hide-scrollbar d-flex">
+        <a class="sapphire-nav-link {{ $category == 'onduty' ? 'active' : '' }}" href="?category=onduty">
+            <i class="bi bi-people me-2"></i>On Duty
+        </a>
+        <a class="sapphire-nav-link {{ $category == 'criminal' ? 'active' : '' }}" href="?category=criminal">
+            <i class="bi bi-hammer me-2"></i>Report a Forest Crime
+        </a>
+        <a class="sapphire-nav-link {{ $category == 'events' ? 'active' : '' }}" href="?category=events">
+            <i class="bi bi-eye me-2"></i>Forest Crime / Event
+        </a>
+        <a class="sapphire-nav-link {{ $category == 'fire' ? 'active' : '' }}" href="?category=fire">
+            <i class="bi bi-fire me-2"></i>Fire Incidents
+        </a>
+        <a class="sapphire-nav-link {{ $category == 'assets' ? 'active' : '' }}" href="?category=assets">
+            <i class="bi bi-shield-check me-2"></i>Assets & Tools
+        </a>
+        <a class="sapphire-nav-link {{ $category == 'plantations' ? 'active' : '' }}" href="?category=plantations">
+            <i class="bi bi-tree me-2"></i>Plantations
+        </a>
+    </nav>
+
+    <a href="/report-configs/reports-dashboard"
+        class="btn detailed-header-btn shadow-sm d-flex align-items-center justify-content-center gap-2 px-4 py-2 flex-shrink-0" style="white-space: nowrap;">
+        <i class="bi bi-arrow-left"></i> Back to Dashboard
+    </a>
+
+</div>
 
         @if ($hasActiveFilters)
             <div class="active-filters-banner">
@@ -396,7 +469,7 @@
             <div class="dash-card p-0 overflow-hidden" style="border: 1px solid var(--border-color); border-radius: 12px;">
                 <div class="p-3 border-bottom" style="border-color: var(--border-color); background: var(--bg-card);">
                     <div class="row g-3 align-items-center">
-                        <div class="col-auto">
+                      <div class="col-auto show-entries-wrapper">
                             <div class="d-flex align-items-center gap-2">
                                 <span class="text-muted small fw-bold">Show</span>
                                 <select name="per_page" class="form-select form-select-sm shadow-none"
@@ -410,7 +483,7 @@
                             </div>
                         </div>
 
-                        <div class="col d-flex flex-wrap gap-2 justify-content-md-end align-items-center">
+                       <div class="col d-flex flex-wrap gap-2 justify-content-md-end align-items-center responsive-filters">
 
                             <select name="range_id" class="form-select form-select-sm shadow-none"
                                 style="width: auto; min-width: 140px; background-color: var(--bg-body); color: var(--text-main); border-color: var(--border-color);"
@@ -651,7 +724,7 @@
                                 </select>
                             @endif
 
-                            <div class="d-flex align-items-center gap-1">
+                           <div class="d-flex align-items-center gap-1 date-btn-group">
                                 <input type="date" name="from_date" class="form-control form-control-sm shadow-none"
                                     style="width: 130px; background-color: var(--bg-body); color: var(--text-main); border-color: var(--border-color);"
                                     value="{{ $fromDate }}" title="From Date">
@@ -664,7 +737,7 @@
                                 </button>
                             </div>
 
-                            <div class="input-group input-group-sm" style="width: 200px;">
+                            <div class="input-group input-group-sm search-container" style="width: 200px;">
                                 <span class="input-group-text bg-transparent border-end-0"
                                     style="border-color: var(--border-color);"><i
                                         class="bi bi-search text-muted"></i></span>
