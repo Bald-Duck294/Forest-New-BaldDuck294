@@ -406,7 +406,7 @@ class ForestReportConfigController extends Controller
 
     //         //     // 🔥 Grouping dynamically!
     //         //     $analytics['mining']['volume_by_range'][$group_name] = ($analytics['mining']['volume_by_range'][$group_name] ?? 0) + $vol;
-    //         // } 
+    //         // }
     //         elseif ($type === 'mining') {
     //             $minType = $data['mineral_type'] ?? 'Unknown';
     //             $vol = (float) ($data['volume_cum'] ?? 0);
@@ -708,7 +708,7 @@ class ForestReportConfigController extends Controller
             })->toArray();
 
         // =======================================================================
-        // 6. PARSE JSON DATA FOR ANALYTICAL CHARTS 
+        // 6. PARSE JSON DATA FOR ANALYTICAL CHARTS
         // =======================================================================
         $analytics = [
             'felling' => ['species_qty' => [], 'species_vol' => [], 'species_girth' => [], 'reasons' => [], 'ranges' => []],
@@ -748,10 +748,25 @@ class ForestReportConfigController extends Controller
             $group_name = $isRangeSelected ? $actual_beat_name : $actual_range_name;
 
             if ($type === 'felling') {
-                $speciesList = isset($data['species_group']) ? $data['species_group'] : [
-                    ['species' => $data['species'] ?? 'Unknown', 'qty' => $data['qty'] ?? 0, 'girth' => $data['girth'] ?? 0, 'volume' => $data['volume'] ?? 0]
+                // 1. Get the species_group data
+                $speciesGroup = $data['species_group'] ?? null;
+
+                // 2. Decode it if it was passed as a JSON string
+                if (is_string($speciesGroup)) {
+                    $speciesGroup = json_decode($speciesGroup, true);
+                }
+
+                // 3. Set the list, falling back to defaults if it's still not a valid array
+                $speciesList = is_array($speciesGroup) && !empty($speciesGroup) ? $speciesGroup : [
+                    [
+                        'species' => $data['species'] ?? 'Unknown',
+                        'qty'     => $data['qty'] ?? 0,
+                        'girth'   => $data['girth'] ?? 0,
+                        'volume'  => $data['volume'] ?? 0
+                    ]
                 ];
 
+                // 4. Safely loop through the array
                 foreach ($speciesList as $item) {
                     $sp = $item['species'] ?? 'Unknown';
                     $analytics['felling']['species_qty'][$sp] = ($analytics['felling']['species_qty'][$sp] ?? 0) + (float) ($item['qty'] ?? 0);
