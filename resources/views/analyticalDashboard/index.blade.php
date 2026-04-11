@@ -7,8 +7,37 @@
     .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
     /* Main Tabs */
-    .ana-main-tabs-container { display: flex; gap: 1.5rem; border-bottom: 1px solid #e2e8f0; margin-bottom: 1.5rem; overflow-x: auto; padding-left: 0.5rem; padding-right: 0.5rem; }
-    .ana-main-tab { padding-bottom: 0.5rem; font-size: 0.875rem; transition: all 0.2s; white-space: nowrap; border-bottom: 2px solid transparent; background: none; border-top: none; border-left: none; border-right: none; cursor: pointer; }
+  /* Main Tabs */
+    .ana-main-tabs-container {
+        display: flex;
+        gap: 1.5rem;
+        border-bottom: 1px solid #e2e8f0;
+        margin-bottom: 1.5rem;
+
+        /* 🔥 THE FIX: Force horizontal scrolling on mobile */
+        overflow-x: auto !important;
+        flex-wrap: nowrap !important;
+        -webkit-overflow-scrolling: touch; /* Smooth swiping on phones */
+
+        padding-left: 0.5rem;
+        padding-right: 0.5rem;
+    }
+
+    .ana-main-tab {
+        padding-bottom: 0.5rem;
+        font-size: 0.875rem;
+        transition: all 0.2s;
+        border-bottom: 2px solid transparent;
+        background: none;
+        border-top: none;
+        border-left: none;
+        border-right: none;
+        cursor: pointer;
+
+        /* 🔥 THE FIX: Never wrap text and never shrink the tab */
+        white-space: nowrap !important;
+        flex-shrink: 0 !important;
+    }
     .ana-main-tab.active { color: #059669; border-bottom-color: #059669; font-weight: 700; }
     .ana-main-tab:not(.active) { color: #64748b; font-weight: 600; }
     .ana-main-tab:not(.active):hover { color: #334155; }
@@ -45,16 +74,16 @@
     <div class="ana-main-tabs-container hide-scrollbar" id="main-tabs-nav">
     </div>
 
-    <div class="d-flex align-items-start justify-content-between w-100">
+   <div class="d-flex flex-column flex-lg-row align-items-start justify-content-between w-100">
 
-        <div id="sub-tabs-container" class="ana-tile-container hide-scrollbar flex-grow-1">
+        <div id="sub-tabs-container" class="ana-tile-container hide-scrollbar flex-grow-1 w-100" style="min-width: 0;">
         </div>
 
-        <div id="kpi-action-button" class="ms-3 flex-shrink-0"></div>
+        <div id="kpi-action-button" class="ms-lg-3 mt-2 mt-lg-0 flex-shrink-0"></div>
 
     </div>
 
-    <div id="charts-grid" class="row    ">
+    <div id="charts-grid" class="row g-3">
     </div>
 
 </div>

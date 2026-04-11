@@ -42,6 +42,74 @@ dd($dropdownBeats , "dpr beats");
         font-weight: 500;
         outline: none;
     }
+
+    /* 🔥 DASHBOARD MOBILE RESPONSIVENESS 🔥 */
+    @media (max-width: 1199px) {
+        /* Force wrapping when JS moves the filters inside the bottom row */
+        #dynamic-header-bottom {
+            flex-wrap: wrap !important;
+            gap: 12px !important;
+        }
+
+        /* Make the view toggles take full width on mobile */
+        #view-toggle-buttons {
+            width: 100%;
+        }
+        #view-toggle-buttons button {
+            flex: 1;
+            justify-content: center;
+        }
+
+        /* Convert the filters into a grid on mobile/tablet */
+        #global-filters-container {
+            display: grid !important;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px !important;
+            width: 100%;
+        }
+
+        #global-filters-container select {
+            width: 100% !important;
+            max-width: 100% !important;
+        }
+
+        #custom-date-inputs {
+            grid-column: span 2;
+            display: flex;
+            width: 100%;
+            gap: 8px !important;
+        }
+        #custom-date-inputs input {
+            flex: 1;
+            width: 100% !important;
+        }
+
+        /* Wrap buttons together */
+        .dash-action-btns {
+            grid-column: span 2;
+            display: flex;
+            gap: 8px;
+        }
+        .dash-action-btns button {
+            flex: 1;
+            justify-content: center;
+        }
+    }
+
+    @media (max-width: 575.98px) {
+        #global-filters-container {
+            grid-template-columns: 1fr;
+        }
+        #custom-date-inputs {
+            grid-column: span 1;
+            flex-direction: column;
+        }
+        #custom-date-inputs span { display: none; }
+        .dash-action-btns {
+            grid-column: span 1;
+        }
+    }
+
 </style>
 
 <div class="d-flex flex-column flex-md-row justify-content-between align-items-center w-100 mb-4"
@@ -65,10 +133,8 @@ dd($dropdownBeats , "dpr beats");
     <div class="d-flex flex-wrap gap-2 align-items-center justify-content-md-end" id="global-filters-container">
 
         {{-- Range Dropdown --}}
-        {{-- Range Dropdown --}}
         <select id="range_id" class="custom-input" style="width: auto; min-width: 150px;" onchange="filterBeats()">
             <option value="">All Ranges</option>
-            {{-- 🔥 Use $dropdownRanges --}}
             @foreach ($dropdownRanges ?? [] as $id => $name)
                 <option value="{{ $id }}"
                     {{ (string) request('range_id') == (string) $id ? 'selected' : '' }}>
@@ -77,13 +143,14 @@ dd($dropdownBeats , "dpr beats");
             @endforeach
         </select>
 
-        {{-- Beat Dropdown (Removed the broken onchange event) --}}
+        {{-- Beat Dropdown --}}
         <select id="site_id" class="custom-input" style="width: auto; min-width: 150px;">
             <option value="">All Beats</option>
         </select>
+
         {{-- Date Filters --}}
         @php
-            $currentDateFilter = request('date_filter', 'month'); // 🔥 Defaults to month in UI
+            $currentDateFilter = request('date_filter', 'month');
         @endphp
         <select id="date_filter" class="custom-input" style="width: auto; min-width: 130px;"
             onchange="toggleCustomDates()">

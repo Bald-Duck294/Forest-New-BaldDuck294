@@ -60,7 +60,7 @@
         const config = {
             categories: [{
                     id: 'criminal',
-                    label: 'Report a Forest Crime',
+                    label: 'Reported Forest Crime',
                     icon: 'bi-hammer',
                     sub: ['felling', 'transport', 'storage', 'poaching', 'encroachment', 'mining']
                 },
@@ -3097,13 +3097,13 @@
             //     </div>
             // `;
             const kpiButtonContainer = document.getElementById('kpi-action-button');
-if (kpiButtonContainer) {
-    kpiButtonContainer.innerHTML = `
-        <a href="${listUrl}" class="btn d-flex align-items-center justify-content-center gap-2" style="background-color: var(--sapphire-primary); color: white; border-radius: 8px; font-weight: 600; padding: 10px 24px; transition: all 0.2s ease; border: none; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2); white-space: nowrap;">
+           if (kpiButtonContainer) {
+            kpiButtonContainer.innerHTML = `
+             <a href="${listUrl}" class="btn d-flex align-items-center justify-content-center gap-2" style="background-color: var(--sapphire-primary); color: white; border-radius: 8px; font-weight: 600; padding: 10px 24px; transition: all 0.2s ease; border: none; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2); white-space: nowrap;">
             <i class="bi bi-table"></i> View Detailed List
-        </a>
-    `;
-}
+             </a>
+              `;
+            }
 
             chartsConfig.forEach(cfg => {
                 let togglesHtml = '';
